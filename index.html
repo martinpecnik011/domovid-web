@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Domovid – video pre realitných maklérov</title>
+<meta name="description" content="Z fotiek nehnuteľnosti urobíme video pre Instagram aj inzerát do 24 hodín. Pre realitných maklérov.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="sk_SK">
+<meta property="og:title" content="Domovid – z fotiek video, ktoré predáva">
+<meta property="og:description" content="Z fotiek nehnuteľnosti urobíme video pre Instagram aj inzerát do 24 hodín. Pre realitných maklérov.">
+<meta property="og:url" content="https://martinpecnik011.github.io/domovid-web/">
+<meta property="og:image" content="https://martinpecnik011.github.io/domovid-web/media/bg-vila.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#f3f7fa">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23142330'/%3E%3Cpath d='M14 34 32 18l18 16v14H14z' fill='none' stroke='%23e0ad55' stroke-width='5' stroke-linejoin='round'/%3E%3Cpath d='M28 48V38h8v10' fill='%23e0ad55'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://martinpecnik011.github.io/domovid-web/">
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one fixed daylight video "set" behind the whole page that crossfades per section;
+   frosted glass panels float above it at different scroll depths (parallax), cards tilt in 3D. */
+:root {
+  --sky: #f3f7fa;          /* page ground, cool daylight white */
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-strong: rgba(255, 255, 255, 0.9);
+  --ink: #142330;          /* slate, the shadow side of a facade */
+  --ink-muted: #4a5d6c;
+  --line: rgba(20, 35, 48, 0.12);
+  --brass: #a8741f;        /* Domovid accent, sunlit brass */
+  --brass-ink: #ffffff;
+  --brass-soft: rgba(168, 116, 31, 0.12);
+  --whatsapp: #1f8a49;
+  --danger: #b3261e;
+  --veil: rgba(243, 247, 250, 0.38);
+  --shadow: 0 18px 50px -20px rgba(20, 35, 48, 0.35);
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --sky: #0f171e;
+    --glass: rgba(16, 26, 34, 0.7);
+    --glass-strong: rgba(16, 26, 34, 0.9);
+    --ink: #eaf1f6;
+    --ink-muted: #a5b6c3;
+    --line: rgba(234, 241, 246, 0.14);
+    --brass: #e0ad55;
+    --brass-ink: #1a1307;
+    --brass-soft: rgba(224, 173, 85, 0.16);
+    --whatsapp: #3fb36a;
+    --danger: #ff8a80;
+    --veil: rgba(15, 23, 30, 0.42);
+    --shadow: 0 18px 50px -20px rgba(0, 0, 0, 0.7);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sky: #0f171e;
+  --glass: rgba(16, 26, 34, 0.7);
+  --glass-strong: rgba(16, 26, 34, 0.9);
+  --ink: #eaf1f6;
+  --ink-muted: #a5b6c3;
+  --line: rgba(234, 241, 246, 0.14);
+  --brass: #e0ad55;
+  --brass-ink: #1a1307;
+  --brass-soft: rgba(224, 173, 85, 0.16);
+  --whatsapp: #3fb36a;
+  --danger: #ff8a80;
+  --veil: rgba(15, 23, 30, 0.42);
+  --shadow: 0 18px 50px -20px rgba(0, 0, 0, 0.7);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--sky);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 1.02rem;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+img, video { max-width: 100%; display: block; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; border-radius: 6px; }
+
+h1, h2, h3 {
+  font-family: var(--f-display);
+  font-stretch: 112%;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.06;
+  margin: 0;
+  text-wrap: balance;
+}
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass);
+  font-weight: 500;
+}
+
+/* ---------- The fixed video set ---------- */
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--sky);
+}
+.stage video {
+  position: absolute;
+  inset: -6%;
+  width: 112%;
+  height: 112%;
+  max-width: none;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+  transform: translate3d(0, var(--shift, 0px), 0) scale(1.02);
+  will-change: opacity, transform;
+}
+.stage video.on { opacity: 1; }
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--veil);
+  transition: background 0.8s ease;
+}
+body[data-depth="deep"] .stage::after { background: color-mix(in srgb, var(--sky) 62%, transparent); }
+
+/* ---------- Shell ---------- */
+.wrap {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding-inline: clamp(16px, 5vw, 48px);
+}
+nav {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 40;
+  padding-block: 14px;
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 12px 10px 22px;
+  background: var(--glass);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.logo {
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-weight: 750;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+.logo span { color: var(--brass); }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border-radius: 999px;
+  font: 600 0.96rem/1 var(--f-body);
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease, background 0.2s ease;
+  white-space: nowrap;
+}
+.btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
+.btn-brass { background: var(--brass); color: var(--brass-ink); }
+.btn-wa { background: var(--whatsapp); color: #fff; }
+.btn-ghost { background: var(--glass-strong); border-color: var(--line); color: var(--ink); }
+.btn-sm { padding: 10px 18px; font-size: 0.88rem; }
+
+/* ---------- Glass panel + 3D tilt ---------- */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+.tilt-scene { perspective: 1100px; }
+.tilt {
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.5s cubic-bezier(.2,.7,.2,1);
+}
+.tilt.live { transition: transform 0.08s linear; }
+.tilt > .lift { transform: translateZ(28px); }
+.depth { transform: translate3d(0, var(--py, 0px), 0); will-change: transform; }
+
+section { padding-block: clamp(56px, 9vw, 110px); }
+.section-head { max-width: 46ch; margin-bottom: 40px; display: grid; gap: 14px; }
+.section-head h2 { font-size: clamp(1.9rem, 3.8vw, 2.9rem); }
+.section-head p { margin: 0; color: var(--ink-muted); }
+.section-head.glass { padding: 28px 30px; max-width: 620px; }
+
+/* ---------- Hero ---------- */
+.hero { padding-block: clamp(70px, 14vw, 170px) clamp(56px, 9vw, 110px); }
+.hero-card { max-width: 660px; padding: clamp(26px, 4vw, 44px); display: grid; gap: 20px; }
+.hero h1 { font-size: clamp(2.4rem, 6vw, 4.4rem); font-stretch: 118%; }
+.hero h1 em { font-style: normal; color: var(--brass); }
+.hero p { margin: 0; color: var(--ink-muted); font-size: 1.1rem; max-width: 46ch; }
+.ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+.spec {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.spec b { color: var(--ink); font-weight: 500; }
+
+/* ---------- Value ---------- */
+.value-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.value-item { padding: 28px; display: grid; gap: 10px; align-content: start; }
+.value-item .num {
+  font-family: var(--f-display);
+  font-stretch: 125%;
+  font-weight: 750;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--brass);
+}
+.value-item h3 { font-size: 1.2rem; }
+.value-item p { margin: 0; color: var(--ink-muted); font-size: 0.97rem; }
+
+/* ---------- Steps ---------- */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.step { padding: 28px; display: grid; gap: 12px; align-content: start; }
+.step-no { font-family: var(--f-mono); font-size: 0.8rem; color: var(--brass); letter-spacing: 0.08em; }
+.step h3 { font-size: 1.25rem; }
+.step p { margin: 0; color: var(--ink-muted); font-size: 0.97rem; }
+
+/* ---------- Gallery ---------- */
+.gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.gcard { padding: 12px; display: grid; gap: 12px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pane { position: relative; aspect-ratio: 9 / 16; border-radius: 14px; overflow: hidden; background: var(--line); max-width: 100%; }
+.pane img, .pane video { width: 100%; height: 100%; object-fit: cover; }
+.label {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #142330;
+}
+.pane.result .label { background: var(--brass); color: var(--brass-ink); }
+.meta { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 0 4px 4px; }
+.meta .name { font-weight: 600; }
+.meta .fmt { font-family: var(--f-mono); font-size: 0.74rem; color: var(--ink-muted); }
+.note { margin-top: 18px; font-size: 0.86rem; color: var(--ink-muted); }
+
+/* ---------- FAQ ---------- */
+.faq-list { max-width: 760px; padding: 6px 26px; }
+.faq-item { border-bottom: 1px solid var(--line); }
+.faq-item:last-child { border-bottom: 0; }
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 20px;
+  font-weight: 600;
+  font-size: 1.04rem;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary .plus { color: var(--brass); font-family: var(--f-mono); transition: transform 0.3s ease; }
+.faq-item[open] summary .plus { transform: rotate(45deg); }
+.faq-item p { margin: 0 0 20px; color: var(--ink-muted); max-width: 62ch; }
+
+/* ---------- Pricing ---------- */
+.price-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 380px)); gap: 20px; }
+.price-card { padding: 30px; display: grid; gap: 14px; align-content: start; position: relative; }
+.price-card.featured { background: var(--glass-strong); border-color: var(--brass); }
+.badge {
+  justify-self: start;
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--brass-soft);
+  color: var(--brass);
+}
+.price-card h3 { font-size: 1.3rem; }
+.amount { font-family: var(--f-display); font-stretch: 125%; font-weight: 750; font-size: 2.8rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.amount span { font-family: var(--f-body); font-size: 0.95rem; font-weight: 500; color: var(--ink-muted); }
+.price-card p { margin: 0; color: var(--ink-muted); }
+.price-card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.price-card li { display: flex; gap: 10px; }
+.price-card li::before { content: "→"; color: var(--brass); font-family: var(--f-mono); }
+
+/* ---------- Lead ---------- */
+.lead-panel { display: grid; grid-template-columns: 1fr 1.1fr; gap: 20px; align-items: start; }
+.lead-copy { padding: 30px; display: grid; gap: 14px; }
+.lead-copy h2 { font-size: clamp(1.9rem, 3.6vw, 2.7rem); }
+.lead-copy p { margin: 0; color: var(--ink-muted); }
+.wa-line { font-size: 0.92rem; color: var(--ink-muted); }
+.wa-line a { color: var(--brass); font-weight: 600; }
+.lead-form { padding: 30px; display: grid; gap: 16px; }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 0.84rem; font-weight: 600; }
+.field input, .field textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--glass-strong);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.field textarea { min-height: 110px; resize: vertical; }
+.field input:focus, .field textarea:focus { outline: 2px solid var(--brass); outline-offset: 0; border-color: transparent; }
+.form-note { margin: 0; font-size: 0.84rem; color: var(--ink-muted); }
+.form-status { margin: 0; font-size: 0.92rem; font-weight: 600; }
+.form-status.ok { color: var(--whatsapp); }
+.form-status.error { color: var(--danger); }
+.form-status a { color: inherit; }
+.field-err { font-size: 0.82rem; color: var(--danger); font-weight: 500; }
+.field [aria-invalid="true"] { border-color: var(--danger); }
+.consent { display: flex; gap: 10px; align-items: flex-start; font-size: 0.84rem; color: var(--ink-muted); cursor: pointer; }
+.consent input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--brass); flex: none; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+button:disabled { opacity: 0.6; cursor: wait; }
+
+/* ---------- Footer ---------- */
+footer { padding-block: 40px 56px; }
+.footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 18px; padding: 22px 28px; }
+.tagline { color: var(--ink-muted); font-size: 0.9rem; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 20px; }
+.footer-links a { text-decoration: none; font-weight: 600; }
+.footer-links a:hover { color: var(--brass); }
+
+/* ---------- Narrow ---------- */
+@media (max-width: 900px) {
+  .value-grid, .steps, .gallery-grid { grid-template-columns: 1fr; }
+  .gallery-grid { max-width: 460px; }
+  .lead-panel { grid-template-columns: 1fr; }
+  .price-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .nav-inner { padding-left: 16px; }
+  .nav-inner .btn { padding: 9px 14px; font-size: 0.82rem; }
+  .ctas .btn { flex: 1 1 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .stage video { transition: none; transform: none; }
+  .tilt, .depth { transform: none !important; transition: none; }
+  .btn:hover { transform: none; }
+}
+</style>
+
+<div class="stage" aria-hidden="true">
+  <video data-bg="vila" class="on" src="media/bg-vila.mp4" poster="media/bg-vila.jpg" autoplay muted loop playsinline preload="auto"></video>
+  <video data-bg="interier" src="media/bg-interier.mp4" poster="media/bg-interier.jpg" muted loop playsinline preload="auto"></video>
+  <video data-bg="byt" src="media/bg-byt.mp4" poster="media/bg-byt.jpg" muted loop playsinline preload="auto"></video>
+  <video data-bg="vecer" src="media/bg-vecer.mp4" poster="media/bg-vecer.jpg" muted loop playsinline preload="auto"></video>
+</div>
+
+<nav>
+  <div class="wrap">
+    <div class="nav-inner">
+      <a class="logo" href="#top">Domov<span>id</span></a>
+      <a class="btn btn-brass btn-sm" href="#dopyt">Chcem demo video</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top" data-scene="vila">
+  <div class="wrap tilt-scene">
+    <div class="hero-card glass depth tilt" data-speed="-0.12">
+      <div class="eyebrow">Pre realitných maklérov</div>
+      <h1>Z fotiek urobíme video, ktoré <em>predáva.</em></h1>
+      <p>Žiadna kamera, žiadny fotograf, žiadne čakanie týždne. Pošli fotky nehnuteľnosti a do 24 hodín máš video pripravené na Instagram aj pre klienta.</p>
+      <div class="ctas">
+        <a class="btn btn-brass" href="#dopyt">Chcem demo video</a>
+        <a class="btn btn-wa" href="https://wa.me/421915384940" target="_blank" rel="noopener">Napísať na WhatsApp</a>
+      </div>
+      <div class="spec"><span><b>4–6</b> fotiek</span><span><b>9:16</b> Reels formát</span><span><b>24 h</b> dodanie</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section data-scene="interier">
+    <div class="wrap tilt-scene">
+      <div class="value-grid">
+        <div class="value-item glass tilt depth" data-speed="-0.05">
+          <div class="num">24 h</div>
+          <h3>Od fotiek k videu</h3>
+          <p>Fotky pošleš dnes a hotové video máš najneskôr zajtra.</p>
+        </div>
+        <div class="value-item glass tilt depth" data-speed="-0.09">
+          <div class="num">0 €</div>
+          <h3>Bez produkcie</h3>
+          <p>Nepotrebuješ fotografa, kameramana ani strihača. Kamerové pohyby aj hudbu rieši AI.</p>
+        </div>
+        <div class="value-item glass tilt depth" data-speed="-0.13">
+          <div class="num">↑</div>
+          <h3>Viac záujemcov</h3>
+          <p>Inzerát s videom si všimne viac ľudí než ten so statickými fotkami.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section data-scene="interier">
+    <div class="wrap tilt-scene">
+      <div class="section-head glass">
+        <div class="eyebrow">Ako to funguje</div>
+        <h2>Tri kroky, žiadna réžia navyše</h2>
+        <p>Všetko beží na diaľku. Ty riešiš klientov, o video sa postaráme my.</p>
+      </div>
+      <div class="steps">
+        <div class="step glass tilt depth" data-speed="-0.04">
+          <div class="step-no">KROK 1</div>
+          <h3>Pošli fotky</h3>
+          <p>4–6 fotiek nehnuteľnosti cez WhatsApp alebo formulár nižšie. Stačia fotky z mobilu, bez nárokov na kvalitu či osvetlenie.</p>
+        </div>
+        <div class="step glass tilt depth" data-speed="-0.08">
+          <div class="step-no">KROK 2</div>
+          <h3>AI vytvorí video</h3>
+          <p>Kamerové pohyby, strih aj hudba sa poskladajú vo formáte 9:16, do 24 hodín od odoslania.</p>
+        </div>
+        <div class="step glass tilt depth" data-speed="-0.12">
+          <div class="step-no">KROK 3</div>
+          <h3>Publikuj alebo pošli klientovi</h3>
+          <p>Video ide rovno na Instagram, Facebook alebo do inzerátu. Ukážka má vodoznak, čistú verziu dostaneš po potvrdení.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section data-scene="byt" data-depth="deep">
+    <div class="wrap tilt-scene">
+      <div class="section-head glass">
+        <div class="eyebrow">Výsledok</div>
+        <h2>Z fotky na video</h2>
+        <p>Vľavo je zdrojová fotka, vpravo hotové video. Prehráva sa priamo tu.</p>
+      </div>
+      <div class="gallery-grid">
+        <div class="gcard glass tilt depth" data-speed="-0.04">
+          <div class="split lift">
+            <div class="pane"><img src="media/studio.jpg" alt="Zdrojová fotka štúdia" loading="lazy"><span class="label">Fotka</span></div>
+            <div class="pane result"><video src="media/studio.mp4" autoplay muted loop playsinline></video><span class="label">Video</span></div>
+          </div>
+          <div class="meta"><span class="name">Štúdio</span><span class="fmt">9:16 · 8 s</span></div>
+        </div>
+        <div class="gcard glass tilt depth" data-speed="-0.08">
+          <div class="split lift">
+            <div class="pane"><img src="media/vila.jpg" alt="Zdrojová fotka bielej vily" loading="lazy"><span class="label">Fotka</span></div>
+            <div class="pane result"><video src="media/vila.mp4" autoplay muted loop playsinline></video><span class="label">Video</span></div>
+          </div>
+          <div class="meta"><span class="name">Biela vila</span><span class="fmt">9:16 · 8 s</span></div>
+        </div>
+        <div class="gcard glass tilt depth" data-speed="-0.12">
+          <div class="split lift">
+            <div class="pane"><img src="media/byt.jpg" alt="Zdrojová fotka mestského bytu" loading="lazy"><span class="label">Fotka</span></div>
+            <div class="pane result"><video src="media/byt.mp4" autoplay muted loop playsinline></video><span class="label">Video</span></div>
+          </div>
+          <div class="meta"><span class="name">Mestský byt</span><span class="fmt">9:16 · 8 s</span></div>
+        </div>
+      </div>
+      <p class="note glass" style="display:inline-block;padding:10px 16px;border-radius:12px;">Ukážky sú AI koncepty štýlu Domovid, nie reálne inzeráty.</p>
+    </div>
+  </section>
+
+  <section data-scene="byt" data-depth="deep">
+    <div class="wrap">
+      <div class="section-head glass">
+        <div class="eyebrow">Časté otázky</div>
+        <h2>Ešte pár detailov</h2>
+      </div>
+      <div class="faq-list glass">
+        <details class="faq-item">
+          <summary>Aké fotky mám poslať?<span class="plus">+</span></summary>
+          <p>4–6 fotiek: exteriér, obývačka, kuchyňa a ďalšie miestnosti, ktoré chceš zvýrazniť. Stačí mobil.</p>
+        </details>
+        <details class="faq-item">
+          <summary>V akom formáte video dostanem?<span class="plus">+</span></summary>
+          <p>Vertikálne 9:16 pre Instagram a Facebook Reels. Na požiadanie pripravíme aj verziu pre realitný portál alebo web.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Čo ak sa mi výsledok nepáči?<span class="plus">+</span></summary>
+          <p>Prvá verzia príde s vodoznakom na posúdenie. Čistú verziu dostaneš až po tvojom potvrdení.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Ako dlho to naozaj trvá?<span class="plus">+</span></summary>
+          <p>Do 24 hodín od prijatia fotiek. Mesačný balík má prednostné spracovanie, keď potrebuješ viac ponúk naraz.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section data-scene="vecer">
+    <div class="wrap tilt-scene">
+      <div class="section-head glass">
+        <div class="eyebrow">Cenník</div>
+        <h2>Jednoduché, bez skrytých poplatkov</h2>
+      </div>
+      <div class="price-grid">
+        <div class="price-card glass tilt depth" data-speed="-0.05">
+          <h3>Jedno video</h3>
+          <div class="amount">50 € <span>/ video</span></div>
+          <p>Keď potrebuješ video na jednu konkrétnu ponuku.</p>
+          <ul>
+            <li>1 video do 24 hodín</li>
+            <li>Formát pre Instagram aj Facebook</li>
+            <li>Bez záväzku na ďalšie mesiace</li>
+          </ul>
+        </div>
+        <div class="price-card glass featured tilt depth" data-speed="-0.1">
+          <span class="badge">Odporúčané</span>
+          <h3>Mesačný balík</h3>
+          <div class="amount">140 € <span>/ mesiac</span></div>
+          <p>Pre maklérov, ktorí pridávajú nové ponuky pravidelne.</p>
+          <ul>
+            <li>4 videá mesačne</li>
+            <li>Prednostné spracovanie</li>
+            <li>Jednotný štýl pre všetky ponuky</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lead" id="dopyt" data-scene="vecer">
+    <div class="wrap lead-panel">
+      <div class="lead-copy glass">
+        <div class="eyebrow">Poďme na to</div>
+        <h2>Získaj svoje prvé demo video</h2>
+        <p>Napíš pár slov o sebe a koľko ponúk mesačne riešiš. Ozveme sa do 24 hodín s ďalším krokom.</p>
+        <span class="wa-line">Radšej rovno napísať? <a href="https://wa.me/421915384940" target="_blank" rel="noopener">WhatsApp +421 915 384 940</a></span>
+      </div>
+      <form class="lead-form glass" id="lead-form" novalidate>
+        <div class="field">
+          <label for="name">Meno a priezvisko *</label>
+          <input type="text" id="name" name="name" placeholder="Jana Nováková" autocomplete="name" required aria-describedby="name-err">
+          <span class="field-err" id="name-err" hidden>Napíš svoje meno.</span>
+        </div>
+        <div class="field">
+          <label for="phone">Telefón *</label>
+          <input type="tel" id="phone" name="phone" placeholder="+421 9XX XXX XXX" autocomplete="tel" required aria-describedby="phone-err">
+          <span class="field-err" id="phone-err" hidden>Zadaj telefónne číslo, aspoň 9 číslic.</span>
+        </div>
+        <div class="field">
+          <label for="email">E-mail (voliteľné)</label>
+          <input type="email" id="email" name="email" placeholder="jana@priklad.sk" autocomplete="email" aria-describedby="email-err">
+          <span class="field-err" id="email-err" hidden>Tento e-mail nevyzerá správne.</span>
+        </div>
+        <div class="field">
+          <label for="message">Správa</label>
+          <textarea id="message" name="message" placeholder="Napr. koľko ponúk mesačne riešiš a odkiaľ si"></textarea>
+        </div>
+        <div class="hp" aria-hidden="true">
+          <label for="company">Firma</label>
+          <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+        </div>
+        <label class="consent" for="consent">
+          <input type="checkbox" id="consent" name="consent" required aria-describedby="consent-err">
+          <span>Súhlasím so spracovaním mena a kontaktu, aby ma Domovid mohol kontaktovať ohľadom dopytu. Údaje nezdieľame s tretími stranami a na požiadanie ich vymažeme.</span>
+        </label>
+        <span class="field-err" id="consent-err" hidden>Bez súhlasu ti nevieme odpovedať.</span>
+        <button type="submit" class="btn btn-brass" id="submit-btn">Odoslať dopyt</button>
+        <p class="form-note">Ozveme sa do 24 hodín na WhatsApp alebo e-mail.</p>
+        <p class="form-status" id="form-status" role="status" hidden></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer data-scene="vecer">
+  <div class="wrap">
+    <div class="footer-inner glass">
+      <div>
+        <div class="logo">Domov<span>id</span></div>
+        <div class="tagline">Video pre realitných maklérov, ktoré predáva.</div>
+      </div>
+      <div class="footer-links">
+        <a href="https://wa.me/421915384940" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="https://www.instagram.com/domo_vid/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.facebook.com/1216967761499957" target="_blank" rel="noopener">Facebook</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var vids = {};
+  document.querySelectorAll('.stage video').forEach(function (v) { vids[v.dataset.bg] = v; });
+  var current = 'vila';
+
+  function show(name) {
+    if (!vids[name] || name === current) return;
+    var next = vids[name], prev = vids[current];
+    var p = next.play(); if (p && p.catch) p.catch(function () {});
+    next.classList.add('on');
+    prev.classList.remove('on');
+    setTimeout(function () { if (!prev.classList.contains('on')) prev.pause(); }, 1500);
+    current = name;
+  }
+
+  // Pick the scene whose section covers the middle of the viewport.
+  var scenes = Array.prototype.slice.call(document.querySelectorAll('[data-scene]'));
+  function pickScene() {
+    var mid = window.innerHeight * 0.5, found = null;
+    for (var i = 0; i < scenes.length; i++) {
+      var r = scenes[i].getBoundingClientRect();
+      if (r.top <= mid && r.bottom >= mid) { found = scenes[i]; break; }
+    }
+    if (!found) return;
+    show(found.dataset.scene);
+    document.body.dataset.depth = found.dataset.depth || '';
+  }
+
+  // Scroll parallax: background drifts, panels float at different depths.
+  var depths = Array.prototype.slice.call(document.querySelectorAll('.depth'));
+  function parallax() {
+    var y = window.scrollY, h = window.innerHeight;
+    Object.keys(vids).forEach(function (k) { vids[k].style.setProperty('--shift', (-(y * 0.04) % 60) + 'px'); });
+    depths.forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      var offset = (r.top + r.height / 2 - h / 2);
+      el.style.setProperty('--py', (offset * parseFloat(el.dataset.speed || 0)).toFixed(1) + 'px');
+    });
+  }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { pickScene(); if (!reduce) parallax(); ticking = false; });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  onScroll();
+
+  // Pointer tilt for cards (fine pointers only).
+  if (!reduce && window.matchMedia('(pointer: fine)').matches) {
+    document.querySelectorAll('.tilt').forEach(function (el) {
+      el.addEventListener('pointermove', function (e) {
+        var r = el.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width - 0.5;
+        var y = (e.clientY - r.top) / r.height - 0.5;
+        el.classList.add('live');
+        el.style.setProperty('--ry', (x * 9).toFixed(2) + 'deg');
+        el.style.setProperty('--rx', (-y * 7).toFixed(2) + 'deg');
+      });
+      el.addEventListener('pointerleave', function () {
+        el.classList.remove('live');
+        el.style.setProperty('--ry', '0deg');
+        el.style.setProperty('--rx', '0deg');
+      });
+    });
+  }
+
+  // The .depth translate and the tilt rotate share one transform; compose them.
+  document.querySelectorAll('.depth.tilt').forEach(function (el) {
+    el.style.transform = 'translate3d(0, var(--py, 0px), 0) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))';
+  });
+
+  // ---- Lead form → Google Apps Script (see apps-script/SETUP.md) ----
+  var FORM_ENDPOINT = ''; // DOMOVID_FORM_ENDPOINT
+  var form = document.getElementById('lead-form');
+  var statusEl = document.getElementById('form-status');
+  var btn = document.getElementById('submit-btn');
+
+  function setErr(id, bad) {
+    var input = document.getElementById(id);
+    document.getElementById(id + '-err').hidden = !bad;
+    input.setAttribute('aria-invalid', bad ? 'true' : 'false');
+    return bad;
+  }
+  function say(text, kind) {
+    statusEl.textContent = '';
+    statusEl.className = 'form-status ' + (kind || '');
+    statusEl.append(text);
+    if (kind === 'error') {
+      var a = document.createElement('a');
+      a.href = 'https://wa.me/421915384940';
+      a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = 'Napíš nám na WhatsApp +421 915 384 940.';
+      statusEl.append(' ', a);
+    }
+    statusEl.hidden = false;
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var el = function (id) { return document.getElementById(id); };
+    var name = el('name').value.trim();
+    var phone = el('phone').value.trim();
+    var email = el('email').value.trim();
+    var bad = [
+      setErr('name', name.length < 2),
+      setErr('phone', phone.replace(/\D/g, '').length < 9),
+      setErr('email', email !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
+      setErr('consent', !el('consent').checked)
+    ];
+    if (bad.indexOf(true) !== -1) {
+      var first = form.querySelector('[aria-invalid="true"]');
+      if (first) first.focus();
+      statusEl.hidden = true;
+      return;
+    }
+    if (el('company').value) { say('Ďakujeme, dopyt sme prijali.', 'ok'); form.reset(); return; }
+    if (!FORM_ENDPOINT) { say('Formulár ešte nie je pripojený.', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Odosielam…';
+    var body = new URLSearchParams({
+      name: name, phone: phone, email: email,
+      message: el('message').value.trim(),
+      page: location.href, sentAt: new Date().toISOString()
+    });
+    fetch(FORM_ENDPOINT, { method: 'POST', mode: 'no-cors', body: body })
+      .then(function () {
+        say('Ďakujeme! Dopyt sme prijali, ozveme sa do 24 hodín.', 'ok');
+        form.reset();
+      })
+      .catch(function () {
+        say('Dopyt sa nepodarilo odoslať, skontroluj pripojenie a skús znova.', 'error');
+      })
+      .finally(function () {
+        btn.disabled = false;
+        btn.textContent = 'Odoslať dopyt';
+      });
+  });
+})();
+</script>
+
+</body>
+</html>
