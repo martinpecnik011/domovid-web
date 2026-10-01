@@ -11,7 +11,7 @@ Jednorazovo, asi 3 minúty. Robí sa v tvojom Google účte (martinpecnik011@gma
    - Spustiť ako: **Ja**
    - Kto má prístup: **Ktokoľvek**
    Klikni **Nasadiť** a skopíruj **URL webovej aplikácie** (končí na `/exec`).
-6. Pošli mi tú URL do chatu. Vložím ju do webu (`FORM_ENDPOINT` v `index.html`) a pošlem testovací dopyt.
+6. URL vlož do webu: `python3 build.py <URL>` a pushni (aktuálne nasadené: Domovid leady backend, verzia 1).
 
 Každý dopyt potom pribudne ako nový riadok v hárku **Leady** a príde ti e-mail s odkazom na WhatsApp daného makléra.
 
