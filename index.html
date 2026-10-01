@@ -23,22 +23,23 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one fixed daylight video "set" behind the whole page that crossfades per section;
-   frosted glass panels float above it at different scroll depths (parallax), cards tilt in 3D. */
+/* Layout: bento. Each scene is one compact grid of glass tiles floating over a fixed daylight
+   video "set" that crossfades per scene; tiles drift at different depths and tilt in 3D. */
 :root {
-  --sky: #f3f7fa;          /* page ground, cool daylight white */
+  --sky: #f3f7fa;
   --glass: rgba(255, 255, 255, 0.72);
   --glass-strong: rgba(255, 255, 255, 0.9);
-  --ink: #142330;          /* slate, the shadow side of a facade */
+  --ink: #142330;
   --ink-muted: #4a5d6c;
   --line: rgba(20, 35, 48, 0.12);
-  --brass: #a8741f;        /* Domovid accent, sunlit brass */
+  --brass: #a8741f;
   --brass-ink: #ffffff;
   --brass-soft: rgba(168, 116, 31, 0.12);
   --whatsapp: #1f8a49;
   --danger: #b3261e;
   --veil: rgba(243, 247, 250, 0.38);
   --shadow: 0 18px 50px -20px rgba(20, 35, 48, 0.35);
+  --gap: 14px;
   --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --f-body: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
@@ -85,11 +86,12 @@ body {
   background: var(--sky);
   color: var(--ink);
   font-family: var(--f-body);
-  font-size: 1.02rem;
-  line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.55;
   overflow-x: hidden;
 }
 img, video { max-width: 100%; display: block; }
+[hidden] { display: none !important; }
 a { color: inherit; }
 :focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; border-radius: 6px; }
 
@@ -98,27 +100,23 @@ h1, h2, h3 {
   font-stretch: 112%;
   font-weight: 650;
   letter-spacing: -0.015em;
-  line-height: 1.06;
+  line-height: 1.08;
   margin: 0;
   text-wrap: balance;
 }
+p { margin: 0; }
 .eyebrow {
   font-family: var(--f-mono);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--brass);
   font-weight: 500;
 }
+.muted { color: var(--ink-muted); }
 
-/* ---------- The fixed video set ---------- */
-.stage {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  background: var(--sky);
-}
+/* ---------- Fixed video set ---------- */
+.stage { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--sky); }
 .stage video {
   position: absolute;
   inset: -6%;
@@ -132,252 +130,207 @@ h1, h2, h3 {
   will-change: opacity, transform;
 }
 .stage video.on { opacity: 1; }
-.stage::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--veil);
-  transition: background 0.8s ease;
-}
+.stage::after { content: ""; position: absolute; inset: 0; background: var(--veil); transition: background 0.8s ease; }
 body[data-depth="deep"] .stage::after { background: color-mix(in srgb, var(--sky) 62%, transparent); }
 
 /* ---------- Shell ---------- */
-.wrap {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding-inline: clamp(16px, 5vw, 48px);
-}
-nav {
-  position: sticky;
-  top: env(safe-area-inset-top, 0px);
-  z-index: 40;
-  padding-block: 14px;
-}
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 40px); }
+nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40; padding-block: 12px; }
 .nav-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 12px 10px 22px;
+  padding: 8px 10px 8px 20px;
   background: var(--glass);
   backdrop-filter: blur(16px) saturate(1.3);
   -webkit-backdrop-filter: blur(16px) saturate(1.3);
   border: 1px solid var(--line);
   border-radius: 999px;
 }
-.logo {
-  font-family: var(--f-display);
-  font-stretch: 125%;
-  font-weight: 750;
-  font-size: 1.2rem;
-  letter-spacing: -0.02em;
-  text-decoration: none;
-}
+.logo { font-family: var(--f-display); font-stretch: 125%; font-weight: 750; font-size: 1.15rem; letter-spacing: -0.02em; text-decoration: none; }
 .logo span { color: var(--brass); }
+.nav-links { display: flex; gap: 22px; font-size: 0.9rem; font-weight: 500; }
+.nav-links a { text-decoration: none; color: var(--ink-muted); }
+.nav-links a:hover { color: var(--ink); }
+
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 14px 26px;
+  padding: 13px 24px;
   border-radius: 999px;
-  font: 600 0.96rem/1 var(--f-body);
+  font: 600 0.95rem/1 var(--f-body);
   text-decoration: none;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 0.2s ease, filter 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, filter 0.2s ease;
   white-space: nowrap;
 }
 .btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
 .btn-brass { background: var(--brass); color: var(--brass-ink); }
 .btn-wa { background: var(--whatsapp); color: #fff; }
-.btn-ghost { background: var(--glass-strong); border-color: var(--line); color: var(--ink); }
-.btn-sm { padding: 10px 18px; font-size: 0.88rem; }
+.btn-sm { padding: 9px 16px; font-size: 0.86rem; }
+button:disabled { opacity: 0.6; cursor: wait; }
 
-/* ---------- Glass panel + 3D tilt ---------- */
-.glass {
+/* ---------- Bento ---------- */
+.scene { padding-block: clamp(14px, 2.4vw, 26px); }
+.bento { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); perspective: 1200px; }
+.tile {
   background: var(--glass);
   backdrop-filter: blur(18px) saturate(1.35);
   -webkit-backdrop-filter: blur(18px) saturate(1.35);
   border: 1px solid var(--line);
-  border-radius: 22px;
+  border-radius: 20px;
   box-shadow: var(--shadow);
+  padding: 22px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
 }
-.tilt-scene { perspective: 1100px; }
-.tilt {
-  transform-style: preserve-3d;
-  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transition: transform 0.5s cubic-bezier(.2,.7,.2,1);
-}
+.span-2 { grid-column: span 2; }
+.span-3 { grid-column: span 3; }
+.row-2 { grid-row: span 2; }
+.tile h2 { font-size: clamp(1.45rem, 2.4vw, 1.95rem); }
+.tile h3 { font-size: 1.08rem; }
+.tile p, .tile li { font-size: 0.93rem; }
+.tilt { transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(.2,.7,.2,1); }
 .tilt.live { transition: transform 0.08s linear; }
-.tilt > .lift { transform: translateZ(28px); }
-.depth { transform: translate3d(0, var(--py, 0px), 0); will-change: transform; }
 
-section { padding-block: clamp(56px, 9vw, 110px); }
-.section-head { max-width: 46ch; margin-bottom: 40px; display: grid; gap: 14px; }
-.section-head h2 { font-size: clamp(1.9rem, 3.8vw, 2.9rem); }
-.section-head p { margin: 0; color: var(--ink-muted); }
-.section-head.glass { padding: 28px 30px; max-width: 620px; }
+/* Hero */
+.hero-card { padding: clamp(24px, 3.4vw, 40px); gap: 16px; align-content: center; }
+.hero-card h1 { font-size: clamp(2.2rem, 4.6vw, 3.7rem); font-stretch: 118%; }
+.hero-card h1 em { font-style: normal; color: var(--brass); }
+.hero-card > p { font-size: 1.04rem; max-width: 46ch; color: var(--ink-muted); }
+.ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+.demo { grid-template-columns: 110px 1fr; align-items: center; gap: 16px; }
+.demo video { width: 110px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 12px; }
+.demo .tag { font-family: var(--f-mono); font-size: 0.72rem; color: var(--ink-muted); }
+.stats { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.stat .num { font-family: var(--f-display); font-stretch: 125%; font-weight: 750; font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1; color: var(--brass); }
+.stat .lbl { font-size: 0.8rem; color: var(--ink-muted); margin-top: 6px; line-height: 1.35; }
 
-/* ---------- Hero ---------- */
-.hero { padding-block: clamp(70px, 14vw, 170px) clamp(56px, 9vw, 110px); }
-.hero-card { max-width: 660px; padding: clamp(26px, 4vw, 44px); display: grid; gap: 20px; }
-.hero h1 { font-size: clamp(2.4rem, 6vw, 4.4rem); font-stretch: 118%; }
-.hero h1 em { font-style: normal; color: var(--brass); }
-.hero p { margin: 0; color: var(--ink-muted); font-size: 1.1rem; max-width: 46ch; }
-.ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
-.spec {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  font-family: var(--f-mono);
-  font-size: 0.78rem;
-  color: var(--ink-muted);
-  border-top: 1px solid var(--line);
-  padding-top: 16px;
-}
-.spec b { color: var(--ink); font-weight: 500; }
+/* Steps + info */
+.step-no { font-family: var(--f-mono); font-size: 0.74rem; color: var(--brass); letter-spacing: 0.08em; }
+.ticks { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.ticks li { display: flex; gap: 9px; }
+.ticks li::before { content: "→"; color: var(--brass); font-family: var(--f-mono); flex: none; }
+.ticks.cols { grid-template-columns: 1fr 1fr; column-gap: 18px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-size: 0.84rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--glass-strong); }
 
-/* ---------- Value ---------- */
-.value-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.value-item { padding: 28px; display: grid; gap: 10px; align-content: start; }
-.value-item .num {
-  font-family: var(--f-display);
-  font-stretch: 125%;
-  font-weight: 750;
-  font-size: 2.6rem;
-  line-height: 1;
-  color: var(--brass);
-}
-.value-item h3 { font-size: 1.2rem; }
-.value-item p { margin: 0; color: var(--ink-muted); font-size: 0.97rem; }
-
-/* ---------- Steps ---------- */
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.step { padding: 28px; display: grid; gap: 12px; align-content: start; }
-.step-no { font-family: var(--f-mono); font-size: 0.8rem; color: var(--brass); letter-spacing: 0.08em; }
-.step h3 { font-size: 1.25rem; }
-.step p { margin: 0; color: var(--ink-muted); font-size: 0.97rem; }
-
-/* ---------- Gallery ---------- */
-.gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.gcard { padding: 12px; display: grid; gap: 12px; }
-.split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.pane { position: relative; aspect-ratio: 9 / 16; border-radius: 14px; overflow: hidden; background: var(--line); max-width: 100%; }
+/* Gallery */
+.gcard { padding: 10px; gap: 10px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pane { position: relative; aspect-ratio: 9 / 16; border-radius: 12px; overflow: hidden; background: var(--line); }
 .pane img, .pane video { width: 100%; height: 100%; object-fit: cover; }
 .label {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  font-family: var(--f-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.88);
-  color: #142330;
+  position: absolute; left: 6px; top: 6px;
+  font-family: var(--f-mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.88); color: #142330;
 }
 .pane.result .label { background: var(--brass); color: var(--brass-ink); }
-.meta { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 0 4px 4px; }
+.meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 0 4px 2px; font-size: 0.9rem; }
 .meta .name { font-weight: 600; }
-.meta .fmt { font-family: var(--f-mono); font-size: 0.74rem; color: var(--ink-muted); }
-.note { margin-top: 18px; font-size: 0.86rem; color: var(--ink-muted); }
+.meta .fmt { font-family: var(--f-mono); font-size: 0.7rem; color: var(--ink-muted); }
+.small { font-size: 0.8rem; color: var(--ink-muted); }
 
-/* ---------- FAQ ---------- */
-.faq-list { max-width: 760px; padding: 6px 26px; }
+/* Pricing */
+.price.featured { background: var(--glass-strong); border-color: var(--brass); }
+.price-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.badge {
+  font-family: var(--f-mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 9px; border-radius: 999px; background: var(--brass-soft); color: var(--brass);
+}
+.amount { font-family: var(--f-display); font-stretch: 125%; font-weight: 750; font-size: 2.3rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.amount span { font-family: var(--f-body); font-size: 0.88rem; font-weight: 500; color: var(--ink-muted); }
+
+/* FAQ */
 .faq-item { border-bottom: 1px solid var(--line); }
 .faq-item:last-child { border-bottom: 0; }
 .faq-item summary {
-  list-style: none;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding-block: 20px;
-  font-weight: 600;
-  font-size: 1.04rem;
+  list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 14px;
+  padding-block: 11px; font-weight: 600; font-size: 0.95rem;
 }
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-item summary .plus { color: var(--brass); font-family: var(--f-mono); transition: transform 0.3s ease; }
 .faq-item[open] summary .plus { transform: rotate(45deg); }
-.faq-item p { margin: 0 0 20px; color: var(--ink-muted); max-width: 62ch; }
+.faq-item p { margin: 0 0 12px; color: var(--ink-muted); font-size: 0.9rem; }
 
-/* ---------- Pricing ---------- */
-.price-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 380px)); gap: 20px; }
-.price-card { padding: 30px; display: grid; gap: 14px; align-content: start; position: relative; }
-.price-card.featured { background: var(--glass-strong); border-color: var(--brass); }
-.badge {
-  justify-self: start;
-  font-family: var(--f-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: var(--brass-soft);
-  color: var(--brass);
-}
-.price-card h3 { font-size: 1.3rem; }
-.amount { font-family: var(--f-display); font-stretch: 125%; font-weight: 750; font-size: 2.8rem; line-height: 1; font-variant-numeric: tabular-nums; }
-.amount span { font-family: var(--f-body); font-size: 0.95rem; font-weight: 500; color: var(--ink-muted); }
-.price-card p { margin: 0; color: var(--ink-muted); }
-.price-card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
-.price-card li { display: flex; gap: 10px; }
-.price-card li::before { content: "→"; color: var(--brass); font-family: var(--f-mono); }
-
-/* ---------- Lead ---------- */
-.lead-panel { display: grid; grid-template-columns: 1fr 1.1fr; gap: 20px; align-items: start; }
-.lead-copy { padding: 30px; display: grid; gap: 14px; }
-.lead-copy h2 { font-size: clamp(1.9rem, 3.6vw, 2.7rem); }
-.lead-copy p { margin: 0; color: var(--ink-muted); }
-.wa-line { font-size: 0.92rem; color: var(--ink-muted); }
+/* Lead */
+.lead-copy { align-content: center; gap: 12px; }
+.lead-copy h2 { font-size: clamp(1.6rem, 2.8vw, 2.2rem); }
+.wa-line { font-size: 0.9rem; color: var(--ink-muted); }
 .wa-line a { color: var(--brass); font-weight: 600; }
-.lead-form { padding: 30px; display: grid; gap: 16px; }
-.field { display: grid; gap: 6px; }
-.field label { font-size: 0.84rem; font-weight: 600; }
+.lead-form { grid-template-columns: 1fr 1fr; column-gap: 14px; row-gap: 12px; }
+.lead-form .full { grid-column: 1 / -1; }
+.field { display: grid; gap: 5px; align-content: start; }
+.field label { font-size: 0.82rem; font-weight: 600; }
 .field input, .field textarea {
-  width: 100%;
-  font: inherit;
-  color: var(--ink);
-  background: var(--glass-strong);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px 14px;
+  width: 100%; font: inherit; font-size: 0.95rem; color: var(--ink);
+  background: var(--glass-strong); border: 1px solid var(--line); border-radius: 12px; padding: 10px 13px;
 }
-.field textarea { min-height: 110px; resize: vertical; }
+.field textarea { min-height: 74px; resize: vertical; }
 .field input:focus, .field textarea:focus { outline: 2px solid var(--brass); outline-offset: 0; border-color: transparent; }
-.form-note { margin: 0; font-size: 0.84rem; color: var(--ink-muted); }
-.form-status { margin: 0; font-size: 0.92rem; font-weight: 600; }
+.field [aria-invalid="true"] { border-color: var(--danger); }
+.field-err { font-size: 0.8rem; color: var(--danger); font-weight: 500; }
+.consent { display: flex; gap: 10px; align-items: flex-start; font-size: 0.8rem; color: var(--ink-muted); cursor: pointer; }
+.consent input { margin-top: 2px; width: 17px; height: 17px; accent-color: var(--brass); flex: none; }
+.form-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+.form-note { font-size: 0.82rem; color: var(--ink-muted); }
+.form-status { font-size: 0.9rem; font-weight: 600; }
 .form-status.ok { color: var(--whatsapp); }
 .form-status.error { color: var(--danger); }
 .form-status a { color: inherit; }
-.field-err { font-size: 0.82rem; color: var(--danger); font-weight: 500; }
-.field [aria-invalid="true"] { border-color: var(--danger); }
-.consent { display: flex; gap: 10px; align-items: flex-start; font-size: 0.84rem; color: var(--ink-muted); cursor: pointer; }
-.consent input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--brass); flex: none; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-button:disabled { opacity: 0.6; cursor: wait; }
 
-/* ---------- Footer ---------- */
-footer { padding-block: 40px 56px; }
-.footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 18px; padding: 22px 28px; }
-.tagline { color: var(--ink-muted); font-size: 0.9rem; }
-.footer-links { display: flex; flex-wrap: wrap; gap: 20px; }
+/* Footer */
+footer { padding-block: 10px 30px; }
+.footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; padding: 14px 22px; border-radius: 999px; }
+.footer-inner .tagline { font-size: 0.86rem; color: var(--ink-muted); }
+.footer-links { display: flex; flex-wrap: wrap; gap: 18px; font-size: 0.9rem; }
 .footer-links a { text-decoration: none; font-weight: 600; }
 .footer-links a:hover { color: var(--brass); }
 
-/* ---------- Narrow ---------- */
-@media (max-width: 900px) {
-  .value-grid, .steps, .gallery-grid { grid-template-columns: 1fr; }
-  .gallery-grid { max-width: 460px; }
-  .lead-panel { grid-template-columns: 1fr; }
-  .price-grid { grid-template-columns: 1fr; }
+/* ---------- Responsive ---------- */
+@media (max-width: 980px) {
+  .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .span-3 { grid-column: span 2; }
+  .hero-card { grid-column: 1 / -1; grid-row: auto; }
+  .nav-links { display: none; }
 }
-@media (max-width: 480px) {
-  .nav-inner { padding-left: 16px; }
-  .nav-inner .btn { padding: 9px 14px; font-size: 0.82rem; }
-  .ctas .btn { flex: 1 1 100%; }
+@media (max-width: 640px) {
+  :root { --gap: 10px; }
+  .bento { grid-template-columns: minmax(0, 1fr); }
+  .span-2, .span-3 { grid-column: auto; }
+  .tile { padding: 18px; }
+  .ticks.cols { grid-template-columns: 1fr; }
+  .lead-form { grid-template-columns: 1fr; }
+  .footer-inner { border-radius: 20px; }
+  /* Horizontal rails instead of tall stacks */
+  .rail {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 78%;
+    gap: var(--gap);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 6px;
+    margin-inline: -4px;
+    padding-inline: 4px;
+    scrollbar-width: none;
+  }
+  .rail::-webkit-scrollbar { display: none; }
+  .rail > * { scroll-snap-align: start; }
+  .rail.gal { grid-auto-columns: 66%; }
+  .rail .depth { transform: none !important; }
+  .rail-hint { display: block; }
+}
+@media (min-width: 641px) {
+  .rail { display: contents; }
+  .rail-hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -398,178 +351,182 @@ footer { padding-block: 40px 56px; }
   <div class="wrap">
     <div class="nav-inner">
       <a class="logo" href="#top">Domov<span>id</span></a>
+      <div class="nav-links">
+        <a href="#ako">Ako to funguje</a>
+        <a href="#ukazky">Ukážky</a>
+        <a href="#cennik">Cenník</a>
+      </div>
       <a class="btn btn-brass btn-sm" href="#dopyt">Chcem demo video</a>
     </div>
   </div>
 </nav>
 
-<header class="hero" id="top" data-scene="vila">
-  <div class="wrap tilt-scene">
-    <div class="hero-card glass depth tilt" data-speed="-0.12">
-      <div class="eyebrow">Pre realitných maklérov</div>
-      <h1>Z fotiek urobíme video, ktoré <em>predáva.</em></h1>
-      <p>Žiadna kamera, žiadny fotograf, žiadne čakanie týždne. Pošli fotky nehnuteľnosti a do 24 hodín máš video pripravené na Instagram aj pre klienta.</p>
-      <div class="ctas">
-        <a class="btn btn-brass" href="#dopyt">Chcem demo video</a>
-        <a class="btn btn-wa" href="https://wa.me/421915384940" target="_blank" rel="noopener">Napísať na WhatsApp</a>
-      </div>
-      <div class="spec"><span><b>4–6</b> fotiek</span><span><b>9:16</b> Reels formát</span><span><b>24 h</b> dodanie</span></div>
-    </div>
-  </div>
-</header>
-
 <main>
-  <section data-scene="interier">
-    <div class="wrap tilt-scene">
-      <div class="value-grid">
-        <div class="value-item glass tilt depth" data-speed="-0.05">
-          <div class="num">24 h</div>
-          <h3>Od fotiek k videu</h3>
-          <p>Fotky pošleš dnes a hotové video máš najneskôr zajtra.</p>
+  <!-- Scene 1: hero -->
+  <section class="scene" id="top" data-scene="vila">
+    <div class="wrap bento">
+      <div class="tile hero-card span-2 row-2 tilt depth" data-speed="-0.06">
+        <div class="eyebrow">Pre realitných maklérov</div>
+        <h1>Z fotiek urobíme video, ktoré <em>predáva.</em></h1>
+        <p>Žiadna kamera, žiadny fotograf, žiadne čakanie týždne. Pošli fotky nehnuteľnosti a do 24 hodín máš video pripravené na Instagram aj pre klienta.</p>
+        <div class="ctas">
+          <a class="btn btn-brass" href="#dopyt">Chcem demo video</a>
+          <a class="btn btn-wa" href="https://wa.me/421915384940" target="_blank" rel="noopener">Napísať na WhatsApp</a>
         </div>
-        <div class="value-item glass tilt depth" data-speed="-0.09">
-          <div class="num">0 €</div>
-          <h3>Bez produkcie</h3>
-          <p>Nepotrebuješ fotografa, kameramana ani strihača. Kamerové pohyby aj hudbu rieši AI.</p>
+      </div>
+      <div class="tile demo span-2 tilt depth" data-speed="-0.1">
+        <video src="media/vila.mp4" poster="media/vila.jpg" autoplay muted loop playsinline></video>
+        <div style="display:grid;gap:8px">
+          <div class="eyebrow">Ukážka výsledku</div>
+          <h3>Biela vila, 6 fotiek → 8 s Reels</h3>
+          <p class="muted">Kamerové pohyby, strih a hudba vznikli zo statických fotiek.</p>
+          <span class="tag">9:16 · 1080 × 1920</span>
         </div>
-        <div class="value-item glass tilt depth" data-speed="-0.13">
-          <div class="num">↑</div>
-          <h3>Viac záujemcov</h3>
-          <p>Inzerát s videom si všimne viac ľudí než ten so statickými fotkami.</p>
-        </div>
+      </div>
+      <div class="tile stats span-2 tilt depth" data-speed="-0.13">
+        <div class="stat"><div class="num">24 h</div><div class="lbl">od fotiek po hotové video</div></div>
+        <div class="stat"><div class="num">0 €</div><div class="lbl">za fotografa či kameramana</div></div>
+        <div class="stat"><div class="num">4–6</div><div class="lbl">fotiek z mobilu stačí</div></div>
       </div>
     </div>
   </section>
 
-  <section data-scene="interier">
-    <div class="wrap tilt-scene">
-      <div class="section-head glass">
+  <!-- Scene 2: how it works -->
+  <section class="scene" id="ako" data-scene="interier">
+    <div class="wrap bento">
+      <div class="tile span-2 tilt depth" data-speed="-0.04">
         <div class="eyebrow">Ako to funguje</div>
         <h2>Tri kroky, žiadna réžia navyše</h2>
-        <p>Všetko beží na diaľku. Ty riešiš klientov, o video sa postaráme my.</p>
+        <p class="muted">Všetko beží na diaľku. Ty riešiš klientov, o video sa postaráme my.</p>
       </div>
-      <div class="steps">
-        <div class="step glass tilt depth" data-speed="-0.04">
-          <div class="step-no">KROK 1</div>
-          <h3>Pošli fotky</h3>
-          <p>4–6 fotiek nehnuteľnosti cez WhatsApp alebo formulár nižšie. Stačia fotky z mobilu, bez nárokov na kvalitu či osvetlenie.</p>
+      <div class="rail span-3">
+        <div class="tile tilt depth" data-speed="-0.07">
+        <div class="step-no">KROK 1</div>
+        <h3>Pošli fotky</h3>
+        <p class="muted">4–6 fotiek cez WhatsApp alebo formulár. Stačí mobil, osvetlenie nevadí.</p>
+      </div>
+        <div class="tile tilt depth" data-speed="-0.1">
+        <div class="step-no">KROK 2</div>
+        <h3>AI vytvorí video</h3>
+        <p class="muted">Pohyby kamery, strih aj hudba vo formáte 9:16, do 24 hodín.</p>
+      </div>
+        <div class="tile tilt depth" data-speed="-0.07">
+        <div class="step-no">KROK 3</div>
+        <h3>Publikuj</h3>
+        <p class="muted">Na Instagram, Facebook alebo do inzerátu. Ukážka má vodoznak, čistú verziu dostaneš po potvrdení.</p>
+      </div>
+      </div>
+      <div class="tile tilt depth" data-speed="-0.1">
+        <div class="eyebrow">Pre koho</div>
+        <div class="chips">
+          <span class="chip">Samostatní makléri</span>
+          <span class="chip">Realitné kancelárie</span>
+          <span class="chip">Developerské projekty</span>
         </div>
-        <div class="step glass tilt depth" data-speed="-0.08">
-          <div class="step-no">KROK 2</div>
-          <h3>AI vytvorí video</h3>
-          <p>Kamerové pohyby, strih aj hudba sa poskladajú vo formáte 9:16, do 24 hodín od odoslania.</p>
-        </div>
-        <div class="step glass tilt depth" data-speed="-0.12">
-          <div class="step-no">KROK 3</div>
-          <h3>Publikuj alebo pošli klientovi</h3>
-          <p>Video ide rovno na Instagram, Facebook alebo do inzerátu. Ukážka má vodoznak, čistú verziu dostaneš po potvrdení.</p>
-        </div>
+        <p class="muted">Pre každého, kto chce, aby jeho inzerát vynikol medzi statickými fotkami.</p>
+      </div>
+      <div class="tile span-2 tilt depth" data-speed="-0.13">
+        <div class="eyebrow">Čo dostaneš</div>
+        <ul class="ticks cols">
+          <li>Vertikálne video 9:16 pre Reels</li>
+          <li>Plynulé pohyby kamery</li>
+          <li>Hudbu a strih na mieru</li>
+          <li>Ukážku s vodoznakom na schválenie</li>
+          <li>Čistú verziu pre IG, FB aj inzerát</li>
+          <li>Úpravu, ak niečo nesedí</li>
+        </ul>
       </div>
     </div>
   </section>
 
-  <section data-scene="byt" data-depth="deep">
-    <div class="wrap tilt-scene">
-      <div class="section-head glass">
+  <!-- Scene 3: gallery -->
+  <section class="scene" id="ukazky" data-scene="byt" data-depth="deep">
+    <div class="wrap bento">
+      <div class="tile tilt depth" data-speed="-0.04">
         <div class="eyebrow">Výsledok</div>
         <h2>Z fotky na video</h2>
-        <p>Vľavo je zdrojová fotka, vpravo hotové video. Prehráva sa priamo tu.</p>
+        <p class="muted">Vľavo zdrojová fotka, vpravo hotové video. Prehráva sa priamo tu.</p>
+        <p class="small">Ukážky sú AI koncepty štýlu Domovid, nie reálne inzeráty.</p>
+        <p class="small rail-hint">Potiahni do strany pre ďalšie ukážky →</p>
       </div>
-      <div class="gallery-grid">
-        <div class="gcard glass tilt depth" data-speed="-0.04">
-          <div class="split lift">
+      <div class="rail gal span-3">
+        <div class="tile gcard tilt depth" data-speed="-0.07">
+          <div class="split">
             <div class="pane"><img src="media/studio.jpg" alt="Zdrojová fotka štúdia" loading="lazy"><span class="label">Fotka</span></div>
             <div class="pane result"><video src="media/studio.mp4" autoplay muted loop playsinline></video><span class="label">Video</span></div>
           </div>
           <div class="meta"><span class="name">Štúdio</span><span class="fmt">9:16 · 8 s</span></div>
         </div>
-        <div class="gcard glass tilt depth" data-speed="-0.08">
-          <div class="split lift">
+        <div class="tile gcard tilt depth" data-speed="-0.1">
+          <div class="split">
             <div class="pane"><img src="media/vila.jpg" alt="Zdrojová fotka bielej vily" loading="lazy"><span class="label">Fotka</span></div>
             <div class="pane result"><video src="media/vila.mp4" autoplay muted loop playsinline></video><span class="label">Video</span></div>
           </div>
           <div class="meta"><span class="name">Biela vila</span><span class="fmt">9:16 · 8 s</span></div>
         </div>
-        <div class="gcard glass tilt depth" data-speed="-0.12">
-          <div class="split lift">
+        <div class="tile gcard tilt depth" data-speed="-0.13">
+          <div class="split">
             <div class="pane"><img src="media/byt.jpg" alt="Zdrojová fotka mestského bytu" loading="lazy"><span class="label">Fotka</span></div>
             <div class="pane result"><video src="media/byt.mp4" autoplay muted loop playsinline></video><span class="label">Video</span></div>
           </div>
           <div class="meta"><span class="name">Mestský byt</span><span class="fmt">9:16 · 8 s</span></div>
         </div>
       </div>
-      <p class="note glass" style="display:inline-block;padding:10px 16px;border-radius:12px;">Ukážky sú AI koncepty štýlu Domovid, nie reálne inzeráty.</p>
     </div>
   </section>
 
-  <section data-scene="byt" data-depth="deep">
-    <div class="wrap">
-      <div class="section-head glass">
+  <!-- Scene 4: pricing + FAQ + lead -->
+  <section class="scene" id="cennik" data-scene="vecer">
+    <div class="wrap bento">
+      <div class="tile price tilt depth" data-speed="-0.05">
+        <div class="price-top"><h3>Jedno video</h3></div>
+        <div class="amount">50 € <span>/ video</span></div>
+        <p class="muted">Na jednu konkrétnu ponuku.</p>
+        <ul class="ticks">
+          <li>1 video do 24 hodín</li>
+          <li>Formát pre IG aj FB</li>
+          <li>Bez záväzku</li>
+        </ul>
+      </div>
+      <div class="tile price featured tilt depth" data-speed="-0.08">
+        <div class="price-top"><h3>Mesačný balík</h3><span class="badge">Odporúčané</span></div>
+        <div class="amount">140 € <span>/ mesiac</span></div>
+        <p class="muted">Pre pravidelné nové ponuky.</p>
+        <ul class="ticks">
+          <li>4 videá mesačne</li>
+          <li>Prednostné spracovanie</li>
+          <li>Jednotný štýl</li>
+        </ul>
+      </div>
+      <div class="tile span-2 tilt depth" data-speed="-0.11">
         <div class="eyebrow">Časté otázky</div>
-        <h2>Ešte pár detailov</h2>
-      </div>
-      <div class="faq-list glass">
-        <details class="faq-item">
-          <summary>Aké fotky mám poslať?<span class="plus">+</span></summary>
-          <p>4–6 fotiek: exteriér, obývačka, kuchyňa a ďalšie miestnosti, ktoré chceš zvýrazniť. Stačí mobil.</p>
-        </details>
-        <details class="faq-item">
-          <summary>V akom formáte video dostanem?<span class="plus">+</span></summary>
-          <p>Vertikálne 9:16 pre Instagram a Facebook Reels. Na požiadanie pripravíme aj verziu pre realitný portál alebo web.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Čo ak sa mi výsledok nepáči?<span class="plus">+</span></summary>
-          <p>Prvá verzia príde s vodoznakom na posúdenie. Čistú verziu dostaneš až po tvojom potvrdení.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Ako dlho to naozaj trvá?<span class="plus">+</span></summary>
-          <p>Do 24 hodín od prijatia fotiek. Mesačný balík má prednostné spracovanie, keď potrebuješ viac ponúk naraz.</p>
-        </details>
-      </div>
-    </div>
-  </section>
-
-  <section data-scene="vecer">
-    <div class="wrap tilt-scene">
-      <div class="section-head glass">
-        <div class="eyebrow">Cenník</div>
-        <h2>Jednoduché, bez skrytých poplatkov</h2>
-      </div>
-      <div class="price-grid">
-        <div class="price-card glass tilt depth" data-speed="-0.05">
-          <h3>Jedno video</h3>
-          <div class="amount">50 € <span>/ video</span></div>
-          <p>Keď potrebuješ video na jednu konkrétnu ponuku.</p>
-          <ul>
-            <li>1 video do 24 hodín</li>
-            <li>Formát pre Instagram aj Facebook</li>
-            <li>Bez záväzku na ďalšie mesiace</li>
-          </ul>
-        </div>
-        <div class="price-card glass featured tilt depth" data-speed="-0.1">
-          <span class="badge">Odporúčané</span>
-          <h3>Mesačný balík</h3>
-          <div class="amount">140 € <span>/ mesiac</span></div>
-          <p>Pre maklérov, ktorí pridávajú nové ponuky pravidelne.</p>
-          <ul>
-            <li>4 videá mesačne</li>
-            <li>Prednostné spracovanie</li>
-            <li>Jednotný štýl pre všetky ponuky</li>
-          </ul>
+        <div>
+          <details class="faq-item">
+            <summary>Aké fotky mám poslať?<span class="plus">+</span></summary>
+            <p>4–6 fotiek: exteriér, obývačka, kuchyňa a ďalšie miestnosti, ktoré chceš zvýrazniť. Stačí mobil.</p>
+          </details>
+          <details class="faq-item">
+            <summary>V akom formáte video dostanem?<span class="plus">+</span></summary>
+            <p>Vertikálne 9:16 pre Instagram a Facebook Reels. Na požiadanie aj verziu pre realitný portál alebo web.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Čo ak sa mi výsledok nepáči?<span class="plus">+</span></summary>
+            <p>Prvá verzia príde s vodoznakom na posúdenie. Čistú verziu dostaneš až po tvojom potvrdení.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Ako dlho to naozaj trvá?<span class="plus">+</span></summary>
+            <p>Do 24 hodín od prijatia fotiek. Mesačný balík má prednostné spracovanie.</p>
+          </details>
         </div>
       </div>
-    </div>
-  </section>
 
-  <section class="lead" id="dopyt" data-scene="vecer">
-    <div class="wrap lead-panel">
-      <div class="lead-copy glass">
+      <div class="tile lead-copy tilt depth" id="dopyt" data-speed="-0.06">
         <div class="eyebrow">Poďme na to</div>
-        <h2>Získaj svoje prvé demo video</h2>
-        <p>Napíš pár slov o sebe a koľko ponúk mesačne riešiš. Ozveme sa do 24 hodín s ďalším krokom.</p>
-        <span class="wa-line">Radšej rovno napísať? <a href="https://wa.me/421915384940" target="_blank" rel="noopener">WhatsApp +421 915 384 940</a></span>
+        <h2>Získaj prvé demo video</h2>
+        <p class="muted">Napíš pár slov o sebe a koľko ponúk mesačne riešiš. Ozveme sa do 24 hodín.</p>
+        <span class="wa-line">Radšej rovno? <a href="https://wa.me/421915384940" target="_blank" rel="noopener">WhatsApp +421 915 384 940</a></span>
       </div>
-      <form class="lead-form glass" id="lead-form" novalidate>
+      <form class="tile lead-form span-3" id="lead-form" novalidate>
         <div class="field">
           <label for="name">Meno a priezvisko *</label>
           <input type="text" id="name" name="name" placeholder="Jana Nováková" autocomplete="name" required aria-describedby="name-err">
@@ -587,20 +544,24 @@ footer { padding-block: 40px 56px; }
         </div>
         <div class="field">
           <label for="message">Správa</label>
-          <textarea id="message" name="message" placeholder="Napr. koľko ponúk mesačne riešiš a odkiaľ si"></textarea>
+          <textarea id="message" name="message" rows="2" placeholder="Koľko ponúk mesačne riešiš a odkiaľ si"></textarea>
         </div>
         <div class="hp" aria-hidden="true">
           <label for="company">Firma</label>
           <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
         </div>
-        <label class="consent" for="consent">
-          <input type="checkbox" id="consent" name="consent" required aria-describedby="consent-err">
-          <span>Súhlasím so spracovaním mena a kontaktu, aby ma Domovid mohol kontaktovať ohľadom dopytu. Údaje nezdieľame s tretími stranami a na požiadanie ich vymažeme.</span>
-        </label>
-        <span class="field-err" id="consent-err" hidden>Bez súhlasu ti nevieme odpovedať.</span>
-        <button type="submit" class="btn btn-brass" id="submit-btn">Odoslať dopyt</button>
-        <p class="form-note">Ozveme sa do 24 hodín na WhatsApp alebo e-mail.</p>
-        <p class="form-status" id="form-status" role="status" hidden></p>
+        <div class="full" style="display:grid;gap:4px">
+          <label class="consent" for="consent">
+            <input type="checkbox" id="consent" name="consent" required aria-describedby="consent-err">
+            <span>Súhlasím so spracovaním mena a kontaktu, aby ma Domovid mohol kontaktovať ohľadom dopytu. Údaje nezdieľame s tretími stranami a na požiadanie ich vymažeme.</span>
+          </label>
+          <span class="field-err" id="consent-err" hidden>Bez súhlasu ti nevieme odpovedať.</span>
+        </div>
+        <div class="full form-row">
+          <button type="submit" class="btn btn-brass" id="submit-btn">Odoslať dopyt</button>
+          <span class="form-note">Ozveme sa do 24 hodín na WhatsApp alebo e-mail.</span>
+        </div>
+        <p class="full form-status" id="form-status" role="status" hidden></p>
       </form>
     </div>
   </section>
@@ -608,10 +569,10 @@ footer { padding-block: 40px 56px; }
 
 <footer data-scene="vecer">
   <div class="wrap">
-    <div class="footer-inner glass">
-      <div>
-        <div class="logo">Domov<span>id</span></div>
-        <div class="tagline">Video pre realitných maklérov, ktoré predáva.</div>
+    <div class="tile footer-inner">
+      <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px">
+        <span class="logo">Domov<span>id</span></span>
+        <span class="tagline">Video pre realitných maklérov, ktoré predáva.</span>
       </div>
       <div class="footer-links">
         <a href="https://wa.me/421915384940" target="_blank" rel="noopener">WhatsApp</a>
@@ -660,7 +621,8 @@ footer { padding-block: 40px 56px; }
     depths.forEach(function (el) {
       var r = el.getBoundingClientRect();
       var offset = (r.top + r.height / 2 - h / 2);
-      el.style.setProperty('--py', (offset * parseFloat(el.dataset.speed || 0)).toFixed(1) + 'px');
+      var py = Math.max(-10, Math.min(10, offset * parseFloat(el.dataset.speed || 0) * 0.25));
+      el.style.setProperty('--py', py.toFixed(1) + 'px');
     });
   }
 
