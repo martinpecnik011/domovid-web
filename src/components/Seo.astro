@@ -1,0 +1,170 @@
+---
+import {
+  SITE_URL,
+  OG_TITLE,
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  INSTAGRAM_URL,
+  FACEBOOK_URL,
+  LOGO_PATH,
+  SERVICE_TYPE,
+  AREA_SERVED,
+  WA_NUMBER,
+  WA_LINK,
+  PRICING,
+  FAQ,
+} from '../config/site';
+
+export interface Props {
+  title: string;
+  description: string;
+  /** Path relative to the site root, without leading slash ('' = home). */
+  path?: string;
+  ogTitle?: string;
+  /** Image path relative to the site root. */
+  image?: string;
+  /** true = keep the page out of search indexes (links are still followed). */
+  noindex?: boolean;
+  /** Open Graph type of the page. */
+  type?: 'website' | 'article';
+  /** schema.org type of the WebPage node, e.g. 'AboutPage', 'ContactPage'. */
+  pageType?: string;
+}
+
+const {
+  title,
+  description,
+  path = '',
+  ogTitle = OG_TITLE,
+  image = 'media/bg-vila.jpg',
+  noindex = false,
+  type = 'website',
+  pageType = 'WebPage',
+} = Astro.props;
+const url = SITE_URL + path;
+const isHome = path === '';
+const favicon =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E" +
+  "%3Crect width='64' height='64' rx='14' fill='%23142330'/%3E" +
+  "%3Cpath d='M14 34 32 18l18 16v14H14z' fill='none' stroke='%23e0ad55' stroke-width='5' stroke-linejoin='round'/%3E" +
+  "%3Cpath d='M28 48V38h8v10' fill='%23e0ad55'/%3E%3C/svg%3E";
+
+const robots = noindex
+  ? 'noindex, follow'
+  : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+
+// Every absolute URL derives from SITE_URL, so a custom domain is a one-line change in site.ts.
+const id = (frag: string) => SITE_URL + '#' + frag;
+const ogImage = SITE_URL + image;
+const organization = {
+  '@type': 'Organization',
+  '@id': id('organization'),
+  name: SITE_NAME,
+  url: SITE_URL,
+  logo: { '@type': 'ImageObject', url: SITE_URL + LOGO_PATH, width: 512, height: 512 },
+  image: ogImage,
+  sameAs: [INSTAGRAM_URL, FACEBOOK_URL],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'customer service',
+    telephone: WA_NUMBER,
+    url: WA_LINK,
+    areaServed: AREA_SERVED,
+    availableLanguage: ['sk'],
+  },
+};
+const website = {
+  '@type': 'WebSite',
+  '@id': id('website'),
+  url: SITE_URL,
+  name: SITE_NAME,
+  description: SITE_DESCRIPTION,
+  inLanguage: 'sk',
+  publisher: { '@id': id('organization') },
+};
+const webpage = {
+  '@type': pageType,
+  '@id': url + '#webpage',
+  url,
+  name: title,
+  description,
+  inLanguage: 'sk',
+  isPartOf: { '@id': id('website') },
+  about: { '@id': id('organization') },
+};
+const service = {
+  '@type': 'ProfessionalService',
+  '@id': id('service'),
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  image: ogImage,
+  telephone: WA_NUMBER,
+  serviceType: SERVICE_TYPE,
+  areaServed: AREA_SERVED.map((c) => ({ '@type': 'Country', name: c })),
+  parentOrganization: { '@id': id('organization') },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Cenník',
+    itemListElement: PRICING.map((p) => ({
+      '@type': 'Offer',
+      name: p.name,
+      description: [p.description, ...p.features].join(' · '),
+      url: SITE_URL + '#cennik',
+      price: p.price,
+      priceCurrency: 'EUR',
+      ...(p.billing
+        ? {
+            priceSpecification: {
+              '@type': 'UnitPriceSpecification',
+              price: p.price,
+              priceCurrency: 'EUR',
+              unitText: p.billing,
+            },
+          }
+        : {}),
+      itemOffered: {
+        '@type': 'Service',
+        name: SERVICE_TYPE,
+        serviceType: SERVICE_TYPE,
+        provider: { '@id': id('organization') },
+        areaServed: AREA_SERVED,
+      },
+    })),
+  },
+};
+// FAQPage only on home: the markup must match questions that are visible on the same page.
+const faqPage = {
+  '@type': 'FAQPage',
+  '@id': SITE_URL + '#faq',
+  url: SITE_URL + '#faq',
+  inLanguage: 'sk',
+  isPartOf: { '@id': id('website') },
+  mainEntity: FAQ.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
+const graph = isHome ? [organization, website, webpage, service, faqPage] : [organization, website, webpage];
+const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c');
+---
+<title>{title}</title>
+<meta name="description" content={description}>
+<meta name="robots" content={robots}>
+<meta property="og:type" content={type}>
+<meta property="og:locale" content="sk_SK">
+<meta property="og:site_name" content={SITE_NAME}>
+<meta property="og:title" content={ogTitle}>
+<meta property="og:description" content={description}>
+<meta property="og:url" content={url}>
+<meta property="og:image" content={ogImage}>
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#f3f7fa">
+<link rel="icon" href={favicon}>
+<link rel="canonical" href={url}>
+<link rel="sitemap" href={SITE_URL + 'sitemap-index.xml'}>
+<script type="application/ld+json" is:inline set:html={jsonLd} />

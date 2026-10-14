@@ -1,0 +1,37 @@
+---
+import '@fontsource-variable/archivo/wdth.css';
+import '@fontsource/figtree/400.css';
+import '@fontsource/figtree/500.css';
+import '@fontsource/figtree/600.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import '../styles/global.css';
+import Seo from '../components/Seo.astro';
+import CookieConsent from '../components/CookieConsent.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../config/site';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  /** Path relative to the site root, without leading slash ('' = home). */
+  path?: string;
+  noindex?: boolean;
+  type?: 'website' | 'article';
+  /** schema.org type of the WebPage node, e.g. 'AboutPage'. */
+  pageType?: string;
+}
+
+const { title = SITE_TITLE, description = SITE_DESCRIPTION, path = '', noindex, type, pageType } = Astro.props;
+---
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<Seo title={title} description={description} path={path} noindex={noindex} type={type} pageType={pageType} />
+</head>
+<body>
+<slot />
+<CookieConsent />
+</body>
+</html>

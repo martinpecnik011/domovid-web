@@ -1,0 +1,170 @@
+---
+import { GA4_ID, META_PIXEL_ID } from '../config/tracking';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const hasGa = GA4_ID !== '';
+const hasMeta = META_PIXEL_ID !== '';
+const tools = [hasGa && 'návštevnosť (Google Analytics)', hasMeta && 'účinnosť reklám (Meta Pixel)'].filter(Boolean).join(' a ');
+---
+<div id="cc" class="cc" role="dialog" aria-modal="false" aria-labelledby="cc-title" aria-describedby="cc-desc" data-mode="banner" hidden>
+  <div class="cc-box">
+    <h2 id="cc-title" class="cc-title" tabindex="-1">Cookies na Domovide</h2>
+    <p id="cc-desc" class="cc-desc">
+      {tools
+        ? <Fragment>Nevyhnutné úložisko používame vždy. Len s tvojím súhlasom meriame aj {tools}.</Fragment>
+        : <Fragment>Používame len nevyhnutné úložisko, ktoré si pamätá tvoju voľbu.</Fragment>}
+      {' '}Voľbu zmeníš kedykoľvek v pätičke. <a href={base + 'cookies/'}>Viac o cookies</a>
+    </p>
+
+    <div id="cc-settings" class="cc-settings" hidden>
+      <div class="cc-row">
+        <div>
+          <span class="cc-name" id="cc-n-nec">Nevyhnutné</span>
+          <span class="cc-note">Uloženie tvojej voľby a chod webu. Vždy zapnuté.</span>
+        </div>
+        <input type="checkbox" class="cc-switch" role="switch" checked disabled aria-labelledby="cc-n-nec">
+      </div>
+      <label class="cc-row" for="cc-analytics" hidden={!hasGa}>
+        <div>
+          <span class="cc-name">Analytické</span>
+          <span class="cc-note">Google Analytics 4 – štatistika návštevnosti.</span>
+        </div>
+        <input type="checkbox" class="cc-switch" id="cc-analytics" role="switch">
+      </label>
+      <label class="cc-row" for="cc-marketing" hidden={!hasMeta}>
+        <div>
+          <span class="cc-name">Marketingové</span>
+          <span class="cc-note">Meta Pixel – meranie reklám na Facebooku a Instagrame.</span>
+        </div>
+        <input type="checkbox" class="cc-switch" id="cc-marketing" role="switch">
+      </label>
+    </div>
+
+    <div class="cc-actions">
+      <button type="button" class="cc-btn" data-cc="accept">Prijať všetko</button>
+      <button type="button" class="cc-btn" data-cc="reject">Odmietnuť</button>
+      <button type="button" class="cc-link cc-only-banner" data-cc="settings">Nastavenia</button>
+      <button type="button" class="cc-btn cc-only-settings" data-cc="save">Uložiť výber</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import '../scripts/consent';
+</script>
+
+<style>
+  .cc {
+    position: fixed;
+    z-index: 60;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0 clamp(10px, 3vw, 24px) max(10px, env(safe-area-inset-bottom));
+    pointer-events: none;
+  }
+  .cc-box {
+    pointer-events: auto;
+    max-width: 760px;
+    margin: 0 auto;
+    display: grid;
+    gap: 10px;
+    padding: 16px 18px;
+    background: var(--glass-strong);
+    backdrop-filter: blur(18px) saturate(1.35);
+    -webkit-backdrop-filter: blur(18px) saturate(1.35);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+  .cc-title { font-size: 1.02rem; }
+  .cc-title:focus { outline: none; }
+  .cc-desc { font-size: 0.86rem; color: var(--ink-muted); }
+  .cc-desc a { color: var(--ink); font-weight: 600; }
+  .cc-settings { display: grid; gap: 2px; border-top: 1px solid var(--line); padding-top: 6px; }
+  .cc-settings[hidden], .cc-row[hidden] { display: none; }
+  .cc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .cc-row:last-child { border-bottom: 0; }
+  .cc-name { display: block; font-weight: 600; font-size: 0.92rem; }
+  .cc-note { display: block; font-size: 0.8rem; color: var(--ink-muted); }
+
+  /* Toggle switch */
+  .cc-switch {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: none;
+    position: relative;
+    width: 42px;
+    height: 24px;
+    margin: 0;
+    border-radius: 999px;
+    background: var(--line);
+    border: 1px solid var(--ink-muted);
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .cc-switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--ink-muted);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .cc-switch:checked { background: var(--ink); border-color: var(--ink); }
+  .cc-switch:checked::after { transform: translateX(18px); background: var(--sky); }
+  .cc-switch:disabled { opacity: 0.55; cursor: not-allowed; }
+  .cc-switch:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+
+  .cc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  /* Accept and reject share one style on purpose: equal visual weight (EDPB guidelines 03/2022). */
+  .cc-btn {
+    flex: 1 1 0;
+    min-width: 120px;
+    padding: 11px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--sky);
+    font: 600 0.92rem/1 var(--f-body);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+  }
+  .cc-btn:hover { filter: brightness(1.15); }
+  .cc-link {
+    flex: 0 0 auto;
+    padding: 11px 8px;
+    background: none;
+    border: 0;
+    color: var(--ink);
+    font: 600 0.9rem/1 var(--f-body);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .cc[data-mode="banner"] .cc-only-settings,
+  .cc[data-mode="settings"] .cc-only-banner { display: none; }
+
+  @media (max-width: 640px) {
+    .cc-box { padding: 13px 14px; gap: 8px; border-radius: 18px; }
+    .cc-desc { font-size: 0.8rem; }
+    .cc-btn { min-width: 0; padding: 10px 8px; font-size: 0.86rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cc-switch, .cc-switch::after, .cc-btn { transition: none; }
+  }
+</style>

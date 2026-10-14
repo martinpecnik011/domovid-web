@@ -1,0 +1,45 @@
+# Domovid — crawler policy. Everything is public; search and AI assistants are welcome.
+# Domain swap: replace the Sitemap URL below together with SITE_URL in src/config/site.ts.
+
+User-agent: *
+Allow: /
+
+# Search engines
+User-agent: Bingbot
+Allow: /
+
+# OpenAI (training, ChatGPT search, user-initiated browsing)
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic (Claude)
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Google Gemini / Apple Intelligence
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+Sitemap: https://martinpecnik011.github.io/domovid-web/sitemap-index.xml

@@ -1,0 +1,67 @@
+---
+import Legal from '../layouts/Legal.astro';
+import { GA4_ID, META_PIXEL_ID } from '../config/tracking';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const hasGa = GA4_ID !== '';
+const hasMeta = META_PIXEL_ID !== '';
+const gaSuffix = hasGa ? GA4_ID.replace(/^G-/, '') : '<ID>';
+
+const rows = [
+  { name: 'domovid-consent', kind: 'localStorage', type: 'Nevyhnutné', purpose: 'Pamätá si tvoju voľbu v nastaveniach cookies.', provider: 'Domovid', ttl: '12 mesiacov', on: true },
+  { name: '_ga', kind: 'cookie', type: 'Analytické', purpose: 'Rozlíši návštevníkov pre štatistiku návštevnosti.', provider: 'Google (Analytics 4)', ttl: '2 roky', on: hasGa },
+  { name: `_ga_${gaSuffix}`, kind: 'cookie', type: 'Analytické', purpose: 'Uchováva stav relácie pre Google Analytics 4.', provider: 'Google (Analytics 4)', ttl: '2 roky', on: hasGa },
+  { name: '_fbp', kind: 'cookie', type: 'Marketingové', purpose: 'Meria, či reklamy na Facebooku a Instagrame privádzajú dopyty.', provider: 'Meta Platforms (Pixel)', ttl: '3 mesiace', on: hasMeta },
+].filter((r) => r.on);
+---
+<Legal
+  title="Cookies"
+  description="Aké cookies a lokálne úložisko používa web Domovid, na čo slúžia, ako dlho platia a ako zmeníš svoj súhlas."
+  path="cookies/"
+  updated="13. 10. 2026"
+>
+  <p>
+    Cookies sú malé súbory, ktoré si prehliadač ukladá pri návšteve webu. Nevyhnutné úložisko používame vždy.
+    {(hasGa || hasMeta)
+      ? 'Analytické a marketingové cookies sa nastavia až po tvojom súhlase – dovtedy sa nástroje Google ani Meta vôbec nenačítajú.'
+      : 'Analytické ani marketingové nástroje momentálne nepoužívame.'}
+  </p>
+
+  <h2>Zoznam</h2>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Zoznam cookies">
+    <table>
+      <thead>
+        <tr><th scope="col">Názov</th><th scope="col">Kategória</th><th scope="col">Účel</th><th scope="col">Poskytovateľ</th><th scope="col">Platnosť</th></tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr>
+            <td><code>{r.name}</code>{r.kind !== 'cookie' && <Fragment> ({r.kind})</Fragment>}</td>
+            <td>{r.type}</td>
+            <td>{r.purpose}</td>
+            <td>{r.provider}</td>
+            <td>{r.ttl}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Zmena súhlasu</h2>
+  <p>Svoju voľbu môžeš kedykoľvek zmeniť alebo odvolať. Po odvolaní sa stránka znovu načíta bez meracích nástrojov a ich cookies vymažeme.</p>
+  <p><button type="button" class="cc-open-btn" data-cc-open>Zmeniť nastavenia cookies</button></p>
+  <p>Cookies môžeš zmazať aj v nastaveniach prehliadača. Viac o tom, ako spracúvame osobné údaje, nájdeš v časti <a href={base + 'ochrana-sukromia/'}>Ochrana osobných údajov</a>.</p>
+</Legal>
+
+<style>
+  .cc-open-btn {
+    padding: 11px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--sky);
+    font: 600 0.92rem/1 var(--f-body);
+    cursor: pointer;
+  }
+  .cc-open-btn:hover { filter: brightness(1.15); }
+</style>

@@ -1,0 +1,74 @@
+---
+import Legal from '../layouts/Legal.astro';
+import { WA_DISPLAY, WA_LINK } from '../config/site';
+import { GA4_ID, META_PIXEL_ID } from '../config/tracking';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const hasGa = GA4_ID !== '';
+const hasMeta = META_PIXEL_ID !== '';
+const EMAIL = 'martinpecnik011@gmail.com';
+---
+<Legal
+  title="Ochrana osobných údajov"
+  description="Ako Domovid spracúva osobné údaje z dopytu a z cookies: účel, právny základ, príjemcovia, doba uchovávania a tvoje práva podľa GDPR."
+  path="ochrana-sukromia/"
+  updated="13. 10. 2026"
+>
+  <p>
+    Tu nájdeš jednoducho a bez kľučiek, aké osobné údaje o tebe Domovid spracúva, prečo, ako dlho a aké máš práva.
+    Text vychádza z článku 13 nariadenia (EÚ) 2016/679 (GDPR).
+  </p>
+
+  <h2>1. Kto je prevádzkovateľ</h2>
+  <ul>
+    <li>Martin Pecník, Domovid</li>
+    <li><span class="todo">[DOPLNIŤ: adresa / IČO, ak podnikáš ako SZČO alebo s.r.o.]</span></li>
+    <li>E-mail: <a href={`mailto:${EMAIL}`}>{EMAIL}</a></li>
+    <li>WhatsApp: <a href={WA_LINK} target="_blank" rel="noopener">{WA_DISPLAY}</a></li>
+  </ul>
+  <p>Zodpovednú osobu (DPO) sme nevymenovali – nie je povinná. So všetkým sa obráť priamo na kontakty vyššie.</p>
+
+  <h2>2. Aké údaje a prečo</h2>
+  <p><strong>Odpoveď na tvoj dopyt.</strong> Keď vyplníš formulár, spracúvame meno, telefón, e-mail, správu, fotky nehnuteľnosti, ktoré pošleš, a údaje o tom, odkiaľ si na web prišiel (UTM parametre z odkazu, napr. názov kampane). Potrebujeme ich, aby sme ti mohli odpovedať, pripraviť ukážkové video a dohodnúť spoluprácu.</p>
+  <p><strong>Právny základ:</strong> opatrenia pred uzavretím zmluvy na tvoju žiadosť – čl. 6 ods. 1 písm. b) GDPR. Bez týchto údajov ti nevieme odpovedať.</p>
+  {(hasGa || hasMeta) && (
+    <Fragment>
+      <p><strong>Meranie návštevnosti a reklám.</strong> Len ak to povolíš v nastaveniach cookies,
+        {hasGa && ' meriame cez Google Analytics 4, ako sa web používa (navštívené stránky, zariadenie, približná poloha podľa IP)'}
+        {hasGa && hasMeta && ' a'}
+        {hasMeta && ' cez Meta Pixel meriame, či reklamy na Facebooku a Instagrame privádzajú dopyty'}.
+      </p>
+      <p><strong>Právny základ:</strong> tvoj súhlas – čl. 6 ods. 1 písm. a) GDPR a § 109 ods. 8 zákona č. 452/2021 Z. z. o elektronických komunikáciách. Súhlas môžeš kedykoľvek odvolať v <a href={base + 'cookies/'}>nastaveniach cookies</a>; odvolanie nemá vplyv na to, čo sa spracovalo predtým.</p>
+    </Fragment>
+  )}
+  <p>Automatizované rozhodovanie ani profilovanie s právnymi účinkami nerobíme.</p>
+
+  <h2>3. Komu údaje odovzdávame</h2>
+  <p>Údaje nepredávame. Pracujú s nimi len služby, ktoré pre nás údaje technicky spracúvajú (sprostredkovatelia):</p>
+  <ul>
+    <li><strong>Google Ireland Ltd. / Google LLC</strong> – Google Sheets, Drive, Gmail a Apps Script (uloženie dopytu a fotiek, e-mailové upozornenie){hasGa && ', Google Analytics'}.</li>
+    {hasMeta && <li><strong>Meta Platforms Ireland Ltd. / Meta Platforms, Inc.</strong> – Meta Pixel (meranie reklám), len so súhlasom.</li>}
+    <li><strong>GitHub, Inc.</strong> – hosting webu (GitHub Pages); pri návšteve spracúva technické údaje ako IP adresa.</li>
+  </ul>
+
+  <h2>4. Prenos mimo EÚ</h2>
+  <p>Google{hasMeta && ', Meta'} a GitHub môžu údaje spracúvať aj v USA. Prenos sa opiera o rozhodnutie Európskej komisie o primeranosti – rámec ochrany údajov EÚ – USA (EU-US Data Privacy Framework), ku ktorému sú tieto spoločnosti certifikované, a doplnkovo o štandardné zmluvné doložky.</p>
+
+  <h2>5. Ako dlho údaje uchovávame</h2>
+  <ul>
+    <li>Dopyty a fotky: 24 mesiacov od posledného kontaktu, alebo kým nepožiadaš o vymazanie – podľa toho, čo nastane skôr. Ak vznikne zmluva, účtovné doklady uchovávame tak dlho, ako vyžaduje zákon.</li>
+    {(hasGa || hasMeta) && <li>Cookies: podľa tabuľky na stránke <a href={base + 'cookies/'}>Cookies</a>.</li>}
+  </ul>
+
+  <h2>6. Tvoje práva</h2>
+  <ul>
+    <li>prístup k údajom a ich kópia (čl. 15),</li>
+    <li>oprava nesprávnych údajov (čl. 16),</li>
+    <li>vymazanie (čl. 17) a obmedzenie spracúvania (čl. 18),</li>
+    <li>prenosnosť údajov (čl. 20),</li>
+    <li>námietka proti spracúvaniu (čl. 21),</li>
+    <li>kedykoľvek odvolať súhlas, ak sa spracúvanie opiera o súhlas (čl. 7 ods. 3).</li>
+  </ul>
+  <p>Stačí napísať na <a href={`mailto:${EMAIL}`}>{EMAIL}</a> alebo na WhatsApp. Odpovieme bez zbytočného odkladu, najneskôr do 1 mesiaca.</p>
+  <p>Ak si myslíš, že s údajmi zaobchádzame nesprávne, môžeš podať sťažnosť dozornému orgánu: <strong>Úrad na ochranu osobných údajov Slovenskej republiky</strong>, Hraničná 12, 820 07 Bratislava, <a href="https://dataprotection.gov.sk" target="_blank" rel="noopener">dataprotection.gov.sk</a>.</p>
+</Legal>

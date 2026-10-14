@@ -1,0 +1,43 @@
+---
+const media = import.meta.env.BASE_URL.replace(/\/?$/, '/') + 'media/';
+---
+  <!-- Scene 3: gallery -->
+  <section class="scene" id="ukazky" data-scene="byt" data-depth="deep">
+    <div class="wrap bento">
+      <div class="tile tilt depth" data-speed="-0.04">
+        <div class="eyebrow">Výsledok</div>
+        <h2>Z fotky na video</h2>
+        <p class="muted">Vľavo zdrojová fotka, vpravo hotové video. Prehráva sa priamo tu.</p>
+        <p class="small">Ukážky sú AI koncepty štýlu Domovid, nie reálne inzeráty.</p>
+        <p class="small rail-hint">Potiahni do strany pre ďalšie ukážky →</p>
+      </div>
+      <div class="rail gal span-3" role="region" aria-label="Galéria ukážok videí" tabindex="0">
+        <div class="tile gcard tilt depth" data-speed="-0.07">
+          <div class="split">
+            <div class="pane"><picture><source srcset={media + 'studio.webp'} type="image/webp"><img src={media + 'studio.jpg'} alt="Zdrojová fotka štúdia" width="480" height="854" loading="lazy" decoding="async"></picture><span class="label">Fotka</span></div>
+            <div class="pane result"><video data-src={media + 'studio.mp4'} poster={media + 'studio.webp'} width="480" height="854" muted loop playsinline preload="none" aria-hidden="true"></video><span class="label">Video</span></div>
+          </div>
+          <div class="meta"><span class="name">Štúdio</span><span class="fmt">9:16 · 8 s</span></div>
+        </div>
+        <div class="tile gcard tilt depth" data-speed="-0.1">
+          <div class="split">
+            <div class="pane"><picture><source srcset={media + 'vila.webp'} type="image/webp"><img src={media + 'vila.jpg'} alt="Zdrojová fotka bielej vily" width="480" height="854" loading="lazy" decoding="async"></picture><span class="label">Fotka</span></div>
+            <div class="pane result"><video data-src={media + 'vila.mp4'} poster={media + 'vila.webp'} width="480" height="854" muted loop playsinline preload="none" aria-hidden="true"></video><span class="label">Video</span></div>
+          </div>
+          <div class="meta"><span class="name">Biela vila</span><span class="fmt">9:16 · 8 s</span></div>
+        </div>
+        <div class="tile gcard tilt depth" data-speed="-0.13">
+          <div class="split">
+            <div class="pane"><picture><source srcset={media + 'byt.webp'} type="image/webp"><img src={media + 'byt.jpg'} alt="Zdrojová fotka mestského bytu" width="480" height="854" loading="lazy" decoding="async"></picture><span class="label">Fotka</span></div>
+            <div class="pane result"><video data-src={media + 'byt.mp4'} poster={media + 'byt.webp'} width="480" height="854" muted loop playsinline preload="none" aria-hidden="true"></video><span class="label">Video</span></div>
+          </div>
+          <div class="meta"><span class="name">Mestský byt</span><span class="fmt">9:16 · 8 s</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<style>
+  /* <picture> must not become a box, so .pane img keeps filling the pane. */
+  .pane picture { display: contents; }
+</style>
