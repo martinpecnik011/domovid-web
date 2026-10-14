@@ -1,0 +1,54 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<footer data-scene="vecer">
+  <div class="wrap">
+    <div class="tile footer-inner">
+      <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px">
+        <span class="logo">Domov<span>id</span></span>
+        <span class="tagline">Video pre realitných maklérov, ktoré predáva.</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://wa.me/421915384940" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="https://www.instagram.com/domo_vid/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.facebook.com/1216967761499957" target="_blank" rel="noopener">Facebook</a>
+      </div>
+      <div class="legal-links">
+        <a href={base + 'ochrana-sukromia/'}>Ochrana osobných údajov</a>
+        <a href={base + 'cookies/'}>Cookies</a>
+        <button type="button" class="legal-btn" data-cc-open>Nastavenia cookies</button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /* 1.17rem (18.7px, weight 750) counts as WCAG large text, so the brass "id" passes 3:1. */
+  .logo { font-size: 1.17rem; }
+  /* Two rows now, so the pill radius from global.css would look pinched. */
+  .footer-inner { border-radius: 22px; }
+  .legal-links {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-size: 0.82rem;
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+  }
+  .legal-links a,
+  .legal-btn {
+    color: var(--ink-muted);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .legal-btn {
+    padding: 0;
+    background: none;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+  }
+  .legal-links a:hover,
+  .legal-btn:hover { color: var(--ink); }
+</style>

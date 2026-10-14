@@ -1,0 +1,36 @@
+---
+const media = import.meta.env.BASE_URL.replace(/\/?$/, '/') + 'media/';
+---
+  <!-- Scene 1: hero -->
+  <section class="scene" id="top" data-scene="vila">
+    <div class="wrap bento">
+      <div class="tile hero-card span-2 row-2 tilt depth" data-speed="-0.06">
+        <div class="eyebrow">Pre realitných maklérov</div>
+        <h1>Z fotiek urobíme video, ktoré <em>predáva.</em></h1>
+        <p>Žiadna kamera, žiadny fotograf, žiadne čakanie týždne. Pošli fotky nehnuteľnosti a do 24 hodín máš video pripravené na Instagram aj pre klienta.</p>
+        <div class="ctas">
+          <a class="btn btn-brass" href="#dopyt">Chcem demo video</a>
+          <a class="btn btn-wa" href="https://wa.me/421915384940" target="_blank" rel="noopener">Napísať na WhatsApp</a>
+        </div>
+      </div>
+      <div class="tile demo span-2 tilt depth" data-speed="-0.1">
+        <video data-src={media + 'vila.mp4'} poster={media + 'vila.webp'} muted loop playsinline preload="none" aria-hidden="true"></video>
+        <div style="display:grid;gap:8px">
+          <div class="eyebrow">Ukážka výsledku</div>
+          <h2 class="demo-title">Biela vila, 6 fotiek → 8 s Reels</h2>
+          <p class="muted">Kamerové pohyby, strih a hudba vznikli zo statických fotiek.</p>
+          <span class="tag">9:16 · 1080 × 1920</span>
+        </div>
+      </div>
+      <div class="tile stats span-2 tilt depth" data-speed="-0.13">
+        <div class="stat"><div class="num">24 h</div><div class="lbl">od fotiek po hotové video</div></div>
+        <div class="stat"><div class="num">0 €</div><div class="lbl">za fotografa či kameramana</div></div>
+        <div class="stat"><div class="num">4–6</div><div class="lbl">fotiek z mobilu stačí</div></div>
+      </div>
+    </div>
+  </section>
+
+<style>
+  /* Sits under the h1 in the outline, styled like the other tile titles. */
+  .tile h2.demo-title { font-size: 1.08rem; }
+</style>

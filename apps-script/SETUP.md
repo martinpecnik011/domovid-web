@@ -16,3 +16,20 @@ Jednorazovo, asi 3 minúty. Robí sa v tvojom Google účte (martinpecnik011@gma
 Každý dopyt potom pribudne ako nový riadok v hárku **Leady** a príde ti e-mail s odkazom na WhatsApp daného makléra.
 
 **Keď upravíš Code.gs:** Nasadiť → Spravovať nasadenia → ceruzka → Verzia: *Nová verzia* → Nasadiť. URL ostáva rovnaká.
+
+## Aktualizácia na verziu s fotkami
+
+Nová verzia `Code.gs` prijme k dopytu až 10 fotiek a uloží ich do tvojho Google Drive. Staré dopyty bez fotiek fungujú ďalej. Jednorazovo, asi 2 minúty:
+
+1. V tabuľke **Domovid leady** otvor **Rozšírenia → Apps Script**.
+2. Zmaž obsah `Code.gs`, vlož celý nový obsah súboru `apps-script/Code.gs` z tohto repa a ulož (Cmd+S).
+3. Hore vyber funkciu **setup** a klikni **Spustiť**. Google sa spýta na nové povolenie pre **Google Drive** — daj **Povoliť** (pri „Google tuto aplikaci neověřil“ opäť *Rozšířené → Přejít na…*).
+4. **Nasadiť → Spravovať nasadenia → ceruzka → Verzia: *Nová verzia* → Nasadiť.** URL webovej aplikácie ostáva rovnaká, na webe netreba nič meniť.
+
+Čo sa zmení:
+
+- Hárok **Leady** dostane na konci dva nové stĺpce: **Fotky** (odkaz na priečinok s fotkami daného dopytu, prázdne ak fotky neprišli) a **UTM** (odkiaľ návštevník prišiel). Existujúce riadky ostanú bez zmeny.
+- Fotky sa ukladajú do priečinka **Domovid leady – fotky** v koreni tvojho Google Drive; každý dopyt má vlastný podpriečinok `RRRR-MM-DD HH:MM – Meno`. Priečinky nie sú verejne zdieľané — otvoríš ich len pod svojím účtom.
+- V e-maile o novom dopyte pribudne riadok **Fotky: N – odkaz** (a **Preskočené súbory: K**, ak niektorý súbor nebol obrázok, bol väčší ako 8 MB alebo ich bolo viac ako 10).
+- Ak zákazník poslal fotky, potvrdzujúci e-mail mu napíše, že sme ich prijali, namiesto výzvy poslať ich na WhatsApp.
+- Ak priečinok **Domovid leady – fotky** zmažeš, pri ďalšom dopyte s fotkami sa vytvorí znova.

@@ -1,0 +1,36 @@
+---
+import LeadForm from './LeadForm.astro';
+import { PRICING } from '../config/site';
+---
+  <!-- Scene 4: pricing + lead (prices come from PRICING in site.ts, also used by the JSON-LD offers) -->
+  <section class="scene" id="cennik" data-scene="vecer">
+    <div class="wrap bento">
+      <div class="tile span-2 price-intro tilt depth" data-speed="-0.04">
+        <div class="eyebrow">Cenník</div>
+        <h2>Jedno video alebo mesačný balík</h2>
+        <p class="muted">Platíš za hotové video, nie za fotografa či kameramana.</p>
+      </div>
+      {PRICING.map((p, i) => (
+        <div class:list={['tile', 'price', { featured: p.featured }, 'tilt', 'depth']} data-speed={i ? '-0.08' : '-0.05'}>
+          <div class="price-top"><h3>{p.name}</h3>{p.featured && <span class="badge">Odporúčané</span>}</div>
+          <div class="amount">{p.price} € <span>/ {p.unit}</span></div>
+          <p class="muted">{p.description}</p>
+          <ul class="ticks">
+            {p.features.map((f) => <li>{f}</li>)}
+          </ul>
+        </div>
+      ))}
+
+      <div class="tile lead-copy tilt depth" id="dopyt" data-speed="-0.06">
+        <div class="eyebrow">Poďme na to</div>
+        <h2>Získaj prvé demo video</h2>
+        <p class="muted">Napíš pár slov o sebe a koľko ponúk mesačne riešiš. Ozveme sa do 24 hodín.</p>
+        <span class="wa-line">Radšej rovno? <a href="https://wa.me/421915384940" target="_blank" rel="noopener">WhatsApp +421 915 384 940</a></span>
+      </div>
+      <LeadForm />
+    </div>
+  </section>
+
+<style>
+  .price-intro { align-content: center; }
+</style>

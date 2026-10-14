@@ -1,0 +1,34 @@
+# Domovid
+
+> Domovid robí z fotiek nehnuteľnosti vertikálne video (9:16) pre realitných maklérov na Slovensku a v Česku. Stačí poslať 4–6 fotiek z mobilu a do 24 hodín je hotové video s pohybmi kamery, strihom a hudbou, pripravené na Instagram, Facebook aj do inzerátu. Bez kamery, fotografa či kameramana.
+
+## Služba
+
+- Pre koho: samostatní realitní makléri, realitné kancelárie a developerské projekty (Slovensko a Česko).
+- Čo dostaneš: vertikálne video 9:16 pre Reels (1080 × 1920), plynulé pohyby kamery, hudbu a strih na mieru, ukážku s vodoznakom na schválenie, čistú verziu pre IG, FB aj inzerát a úpravu, ak niečo nesedí.
+- Dodanie: do 24 hodín od prijatia fotiek. Na požiadanie aj verzia pre realitný portál alebo web.
+- Video vytvára AI zo statických fotiek; ukážky na webe sú AI koncepty štýlu Domovid, nie reálne inzeráty.
+
+## Cenník
+
+- Jedno video: 50 € za video. Na jednu konkrétnu ponuku, 1 video do 24 hodín, formát pre IG aj FB, bez záväzku.
+- Mesačný balík: 140 € mesačne. 4 videá mesačne, prednostné spracovanie, jednotný štýl.
+
+## Ako objednať
+
+1. Pošli 4–6 fotiek nehnuteľnosti (exteriér, obývačka, kuchyňa a ďalšie miestnosti) cez WhatsApp alebo formulár na webe. Stačí mobil.
+2. AI vytvorí video s pohybmi kamery, strihom a hudbou vo formáte 9:16, do 24 hodín.
+3. Prvá verzia príde s vodoznakom na posúdenie; čistú verziu dostaneš po potvrdení a publikuješ ju na Instagram, Facebook alebo do inzerátu.
+
+## Kontakt
+
+- WhatsApp: +421 915 384 940 (https://wa.me/421915384940)
+- Instagram: https://www.instagram.com/domo_vid/
+- Facebook: https://www.facebook.com/1216967761499957
+
+## Stránky
+
+- [Domov](https://martinpecnik011.github.io/domovid-web/): služba, ukážky, cenník a formulár na demo video
+- [Časté otázky](https://martinpecnik011.github.io/domovid-web/#faq): odpovede o cene, rýchlosti, fotkách a použití videa
+- [Ochrana súkromia](https://martinpecnik011.github.io/domovid-web/ochrana-sukromia/): spracúvanie osobných údajov
+- [Cookies](https://martinpecnik011.github.io/domovid-web/cookies/): zásady používania cookies

@@ -1,0 +1,64 @@
+---
+const media = import.meta.env.BASE_URL.replace(/\/?$/, '/') + 'media/';
+---
+<div class="stage" aria-hidden="true">
+  <!-- LCP-safe poster: a real image paints first; the scene videos fade in over it once loaded. -->
+  <img class="stage-poster" src={media + 'bg-vila.webp'} alt="" aria-hidden="true" width="1280" height="720" fetchpriority="high" decoding="async">
+  <video data-bg="vila" class="on" src={media + 'bg-vila-sm.mp4'} poster={media + 'bg-vila.webp'} muted loop playsinline preload="none"></video>
+  <video data-bg="interier" src={media + 'bg-interier-sm.mp4'} poster={media + 'bg-interier.webp'} muted loop playsinline preload="none"></video>
+  <video data-bg="byt" src={media + 'bg-byt.mp4'} poster={media + 'bg-byt.webp'} muted loop playsinline preload="none"></video>
+  <video data-bg="vecer" src={media + 'bg-vecer-sm.mp4'} poster={media + 'bg-vecer.webp'} muted loop playsinline preload="none"></video>
+</div>
+
+<style>
+  .stage-poster {
+    position: absolute;
+    inset: -6%;
+    width: 112%;
+    height: 112%;
+    max-width: none;
+    object-fit: cover;
+  }
+</style>
+
+<script>
+  import '../scripts/scenes';
+
+  // Media loading that never competes with the first paint:
+  // 1. the active background video starts only after the window `load` event;
+  // 2. inline videos (`video[data-src]`) get their source when they near the viewport and pause off-screen.
+  const startStage = () => {
+    const v = document.querySelector<HTMLVideoElement>('.stage video.on');
+    const p = v?.play();
+    if (p && p.catch) p.catch(() => {});
+  };
+  if (document.readyState === 'complete') startStage();
+  else window.addEventListener('load', startStage, { once: true });
+
+  const inline = document.querySelectorAll<HTMLVideoElement>('video[data-src]');
+  const play = (v: HTMLVideoElement) => {
+    if (!v.src) {
+      v.src = v.dataset.src || '';
+      v.preload = 'auto';
+    }
+    const p = v.play();
+    if (p && p.catch) p.catch(() => {});
+  };
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const v = e.target as HTMLVideoElement;
+          if (e.isIntersecting) play(v);
+          else if (v.src) v.pause();
+        }
+      },
+      { rootMargin: '200px 200px' },
+    );
+    const observe = () => inline.forEach((v) => io.observe(v));
+    if (document.readyState === 'complete') observe();
+    else window.addEventListener('load', observe, { once: true });
+  } else {
+    inline.forEach(play);
+  }
+</script>

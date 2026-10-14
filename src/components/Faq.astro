@@ -1,0 +1,26 @@
+---
+import { FAQ } from '../config/site';
+---
+  <!-- Scene: FAQ. Questions come from FAQ in site.ts, the same array Seo.astro emits as FAQPage JSON-LD. -->
+  <section class="scene" id="faq" data-scene="vecer" aria-labelledby="faq-title">
+    <div class="wrap bento">
+      <div class="tile faq-intro tilt depth" data-speed="-0.04">
+        <div class="eyebrow">Časté otázky</div>
+        <h2 id="faq-title">Na čo sa makléri pýtajú</h2>
+        <p class="muted">Rýchle odpovede o tom, ako Domovid funguje. Ďalšie otázky radi zodpovieme na WhatsAppe.</p>
+      </div>
+      <div class="tile span-3 faq-list tilt depth" data-speed="-0.08">
+        {FAQ.map((f) => (
+          <details class="faq-item">
+            <summary>{f.q}<span class="plus" aria-hidden="true">+</span></summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+<style>
+  .faq-intro { align-content: center; }
+  .faq-list { gap: 0; padding-block: 10px; }
+</style>
