@@ -131,18 +131,19 @@ const reply = (out) => JSON.parse(out.text);
 const jsonPost = (obj) => ({ parameter: {}, postData: { type: 'text/plain;charset=utf-8', contents: JSON.stringify(obj) } });
 const base = { name: 'Jana Nováková', phone: '0900 123 456', email: 'jana@example.sk', message: 'Byt', page: '/', sentAt: '2026-10-13T12:00:00Z', utm: 'utm_source=ig' };
 
-test('(a) legacy e.parameter submit appends a 9-column row with empty Fotky', () => {
+test('(a) legacy e.parameter submit appends a 10-column row with empty Fotky and code', () => {
   const env = makeEnv();
   const out = env.ctx.doPost({ parameter: { name: 'Peter', phone: '0911 222 333', email: '', message: 'Ahoj', page: '/', sentAt: 'x' } });
   assert.deepEqual(reply(out), { ok: true });
   const rows = env.getRows();
   assert.equal(rows.length, 2);
-  assert.equal(rows[0].length, 9);
-  assert.deepEqual(rows[0].slice(7), ['Fotky', 'UTM']);
-  assert.equal(rows[1].length, 9);
+  assert.equal(rows[0].length, 10);
+  assert.deepEqual(rows[0].slice(7), ['Fotky', 'UTM', 'Zľavový kód']);
+  assert.equal(rows[1].length, 10);
   assert.equal(rows[1][1], 'Peter');
   assert.equal(rows[1][7], '');
   assert.equal(rows[1][8], '');
+  assert.equal(rows[1][9], '');
   assert.equal(env.roots.length, 0, 'no Drive folder for a text-only lead');
   assert.equal(env.log.mails.length, 1, 'no confirmation without an e-mail');
   assert.doesNotMatch(env.log.mails[0].body, /Fotky:/);
@@ -220,16 +221,16 @@ test('(e) formula-injection name is stored prefixed with an apostrophe', () => {
   assert.equal(row[8], "'+cmd");
 });
 
-test('(f) existing 7-column header gets Fotky and UTM appended, old rows untouched', () => {
+test('(f) existing 7-column header gets Fotky, UTM and Zľavový kód appended, old rows untouched', () => {
   const oldRow = ['2026-01-01', 'Starý', '0900', '', '', '/', 'x'];
   const env = makeEnv({ sheetRows: [OLD_HEADERS, oldRow] });
   env.ctx.setup();
   const rows = env.getRows();
-  assert.deepEqual(rows[0], [...OLD_HEADERS, 'Fotky', 'UTM']);
+  assert.deepEqual(rows[0], [...OLD_HEADERS, 'Fotky', 'UTM', 'Zľavový kód']);
   assert.deepEqual(rows[1], oldRow);
   assert.equal(env.roots.length, 1, 'setup also creates the Drive root folder');
   env.ctx.doPost({ parameter: { name: 'Nový', phone: '0900' } });
-  assert.equal(env.getRows()[2].length, 9);
+  assert.equal(env.getRows()[2].length, 10);
 });
 
 test('(g) stale UPLOAD_FOLDER_ID → a new root folder is created and cached', () => {
@@ -278,4 +279,25 @@ test('file names are sanitised: control chars, separators, length', () => {
 test('doGet still answers the health check', () => {
   const env = makeEnv();
   assert.deepEqual(reply(env.ctx.doGet()), { ok: true, service: 'domovid-leads' });
+});
+
+test('(i) discount code is normalised into its own column and shown in both e-mails', () => {
+  const env = makeEnv();
+  const out = env.ctx.doPost(jsonPost({ ...base, discount: ' marek 10 ' }));
+  assert.deepEqual(reply(out), { ok: true });
+  assert.equal(env.getRows()[1][9], 'MAREK10');
+  const [notify, confirm] = env.log.mails;
+  assert.match(notify.body, /Zľavový kód: MAREK10/);
+  assert.match(confirm.body, /zľavový kód MAREK10 sme zaznamenali, zľavu 10 %/);
+});
+
+test('(j) confirmation names Martin Pecník, promises the result on WhatsApp and has no wa.me link', () => {
+  const env = makeEnv();
+  env.ctx.doPost(jsonPost(base));
+  const [notify, confirm] = env.log.mails;
+  assert.match(notify.body, /Zľavový kód: -/);
+  assert.match(confirm.body, /Hotové video ti pošleme na WhatsApp na číslo 0900 123 456\./);
+  assert.match(confirm.body, /Martin Pecník, Domovid/);
+  assert.doesNotMatch(confirm.body, /wa\.me|\+421 915/);
+  assert.match(confirm.body, /odpoveďou na tento e-mail/);
 });

@@ -6,14 +6,14 @@
  *
  * Wire formats accepted by doPost:
  *  - JSON body (Content-Type text/plain, fetch mode 'no-cors'):
- *    {"name","phone","email","message","page","sentAt","company","utm",
+ *    {"name","phone","email","message","page","sentAt","company","utm","discount",
  *     "files":[{"name","type","data":"<base64>"}]}
  *  - legacy URL-encoded form fields (e.parameter), text only.
  */
 
 var NOTIFY_EMAIL = 'martinpecnik011@gmail.com';
 var SHEET_NAME = 'Leady';
-var HEADERS = ['Prijaté', 'Meno', 'Telefón', 'E-mail', 'Správa', 'Stránka', 'Odoslané (prehliadač)', 'Fotky', 'UTM'];
+var HEADERS = ['Prijaté', 'Meno', 'Telefón', 'E-mail', 'Správa', 'Stránka', 'Odoslané (prehliadač)', 'Fotky', 'UTM', 'Zľavový kód'];
 
 var TIME_ZONE = 'Europe/Bratislava';
 var UPLOAD_FOLDER_NAME = 'Domovid leady – fotky';
@@ -32,6 +32,8 @@ function doPost(e) {
   }
 
   var name = clean(p.name, 120);
+  // Caller's discount code (validated by the website); stored as typed, upper-cased, for the monthly report.
+  var discount = clean(p.discount, 40).replace(/\s+/g, '').toUpperCase();
 
   // Drive writes happen outside the lock; only the sheet append is serialised.
   var photos = savePhotos(p.files, name);
@@ -49,7 +51,8 @@ function doPost(e) {
       clean(p.page, 300),
       clean(p.sentAt, 40),
       photos.url,
-      clean(p.utm && typeof p.utm === 'object' ? JSON.stringify(p.utm) : p.utm, 300)
+      clean(p.utm && typeof p.utm === 'object' ? JSON.stringify(p.utm) : p.utm, 300),
+      discount
     ]);
   } finally {
     lock.releaseLock();
@@ -65,14 +68,15 @@ function doPost(e) {
     body:
       'Meno: ' + name + '\n' +
       'Telefón: ' + clean(p.phone, 40) + '\n' +
-      'E-mail: ' + (clean(p.email, 160) || '-') + '\n\n' +
+      'E-mail: ' + (clean(p.email, 160) || '-') + '\n' +
+      'Zľavový kód: ' + (discount || '-') + '\n\n' +
       'Správa:\n' + (clean(p.message, 2000) || '-') + '\n\n' +
       photoLines +
       'WhatsApp: https://wa.me/' + waNumber(p.phone) + '\n' +
       'Tabuľka: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
   });
 
-  sendConfirmation(clean(p.email, 160), name, photos.saved);
+  sendConfirmation(clean(p.email, 160), name, photos.saved, clean(p.phone, 40), discount);
 
   return json({ ok: true });
 }
@@ -183,14 +187,17 @@ function getUploadRoot() {
 }
 
 // Confirmation to the customer, only when they left a valid-looking e-mail.
-function sendConfirmation(email, name, photoCount) {
+function sendConfirmation(email, name, photoCount, phone, discount) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
   var first = String(name).replace(/^'/, '').split(/\s+/)[0] || '';
   var next = photoCount > 0
     ? 'Prijali sme aj ' + photoCount + ' ' + fotiek(photoCount) + ' nehnuteľnosti, takže ich už ' +
       'nemusíš posielať. Prvú verziu videa dostaneš s vodoznakom na posúdenie.\n\n'
-    : 'Ak chceš začať hneď, pošli nám 4–6 fotiek nehnuteľnosti na WhatsApp +421 915 384 940 ' +
-      '(https://wa.me/421915384940). Prvú verziu videa dostaneš s vodoznakom na posúdenie.\n\n';
+    : 'Ak chceš začať hneď, pošli 4–6 fotiek nehnuteľnosti odpoveďou na tento e-mail. ' +
+      'Prvú verziu videa dostaneš s vodoznakom na posúdenie.\n\n';
+  var discountLine = discount
+    ? 'Tvoj zľavový kód ' + discount + ' sme zaznamenali, zľavu 10 % odpočítame na faktúre.\n\n'
+    : '';
   MailApp.sendEmail({
     to: email,
     replyTo: NOTIFY_EMAIL,
@@ -198,10 +205,11 @@ function sendConfirmation(email, name, photoCount) {
     subject: 'Domovid: tvoj dopyt sme prijali',
     body:
       'Ahoj' + (first ? ' ' + first : '') + ',\n\n' +
-      'ďakujeme za záujem o Domovid. Tvoj dopyt sme prijali a ozveme sa ti do 24 hodín ' +
-      'na WhatsApp alebo e-mail.\n\n' +
+      'ďakujeme za záujem o Domovid. Tvoj dopyt sme prijali a ozveme sa ti do 24 hodín. ' +
+      'Hotové video ti pošleme na WhatsApp' + (phone ? ' na číslo ' + phone : '') + '.\n\n' +
       next +
-      'Martin, Domovid\n' +
+      discountLine +
+      'Martin Pecník, Domovid\n' +
       'https://martinpecnik011.github.io/domovid-web/\n\n' +
       'Tento e-mail ti prišiel, lebo si vyplnil formulár na webe Domovid. ' +
       'Ak to nebol ty, stačí odpovedať a údaje vymažeme.'

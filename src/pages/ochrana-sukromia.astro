@@ -1,6 +1,5 @@
 ---
 import Legal from '../layouts/Legal.astro';
-import { WA_DISPLAY, WA_LINK } from '../config/site';
 import { GA4_ID, META_PIXEL_ID } from '../config/tracking';
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
@@ -24,7 +23,6 @@ const EMAIL = 'martinpecnik011@gmail.com';
     <li>Martin Pecník, Domovid</li>
     <li><span class="todo">[DOPLNIŤ: adresa / IČO, ak podnikáš ako SZČO alebo s.r.o.]</span></li>
     <li>E-mail: <a href={`mailto:${EMAIL}`}>{EMAIL}</a></li>
-    <li>WhatsApp: <a href={WA_LINK} target="_blank" rel="noopener">{WA_DISPLAY}</a></li>
   </ul>
   <p>Zodpovednú osobu (DPO) sme nevymenovali – nie je povinná. So všetkým sa obráť priamo na kontakty vyššie.</p>
 
@@ -69,6 +67,6 @@ const EMAIL = 'martinpecnik011@gmail.com';
     <li>námietka proti spracúvaniu (čl. 21),</li>
     <li>kedykoľvek odvolať súhlas, ak sa spracúvanie opiera o súhlas (čl. 7 ods. 3).</li>
   </ul>
-  <p>Stačí napísať na <a href={`mailto:${EMAIL}`}>{EMAIL}</a> alebo na WhatsApp. Odpovieme bez zbytočného odkladu, najneskôr do 1 mesiaca.</p>
+  <p>Stačí napísať na <a href={`mailto:${EMAIL}`}>{EMAIL}</a>. Odpovieme bez zbytočného odkladu, najneskôr do 1 mesiaca.</p>
   <p>Ak si myslíš, že s údajmi zaobchádzame nesprávne, môžeš podať sťažnosť dozornému orgánu: <strong>Úrad na ochranu osobných údajov Slovenskej republiky</strong>, Hraničná 12, 820 07 Bratislava, <a href="https://dataprotection.gov.sk" target="_blank" rel="noopener">dataprotection.gov.sk</a>.</p>
 </Legal>
