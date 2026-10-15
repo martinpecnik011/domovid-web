@@ -1,7 +1,7 @@
 // Lead form → Google Apps Script (see apps-script/SETUP.md). Endpoint lives in src/config/site.ts.
 // Wire format: JSON string body (text/plain, no-cors) with optional resized photos, see apps-script/Code.gs.
 import { FORM_ENDPOINT, OWNER_FROM, CONTACT_EMAIL } from '../config/site';
-import { DISCOUNT_PERCENT, normalizeCode, isValidCode } from '../config/discounts';
+import { DISCOUNT_PERCENT, normalizeCode, canonicalCode } from '../config/discounts';
 import { resizeImage, fileType, type ResizedImage } from './image-resize';
 
 const MAX_PHOTOS = 10;
@@ -69,11 +69,12 @@ if (form) {
   const checkDiscount = (final = false) => {
     if (!discountInput || !discountMsg) return true;
     const code = normalizeCode(discountInput.value);
-    const known = isValidCode(code);
+    const canonical = canonicalCode(code);
+    const known = canonical !== '';
     const bad = code !== '' && !known && (final || code.length >= 4);
     discountMsg.className = 'discount-msg' + (known ? ' ok' : bad ? ' error' : '');
     discountMsg.textContent = known
-      ? `Kód ${code} platí – zľava ${DISCOUNT_PERCENT} % sa odpočíta na faktúre.`
+      ? `Kód ${canonical} platí – zľava ${DISCOUNT_PERCENT} % sa odpočíta na faktúre.`
       : bad
         ? 'Tento kód nepoznáme. Skontroluj ho, alebo pole nechaj prázdne.'
         : '';
@@ -93,7 +94,7 @@ if (form) {
   // Callers can share a link with the code pre-filled: ?kod=MAREK10
   const codeFromUrl = new URLSearchParams(location.search).get('kod');
   if (discountInput && discountBox && discountToggle && codeFromUrl) {
-    discountInput.value = normalizeCode(codeFromUrl).slice(0, 40);
+    discountInput.value = (canonicalCode(codeFromUrl) || normalizeCode(codeFromUrl)).slice(0, 40);
     discountBox.hidden = false;
     discountToggle.setAttribute('aria-expanded', 'true');
     checkDiscount(true);
@@ -264,7 +265,7 @@ if (form) {
     try {
       const { files, left } = await preparePhotos();
       btn.textContent = 'Odosielam…';
-      const discount = discountInput && isValidCode(discountInput.value) ? normalizeCode(discountInput.value) : '';
+      const discount = discountInput ? canonicalCode(discountInput.value) : '';
       const body = JSON.stringify({
         name,
         phone,
