@@ -1,4 +1,8 @@
 ---
+import { DISCOUNT_CODES, DISCOUNT_PERCENT } from '../config/discounts';
+import { OWNER_FROM, CONTACT_EMAIL } from '../config/site';
+
+const hasCodes = Object.keys(DISCOUNT_CODES).length > 0;
 ---
       <form class="tile lead-form span-3" id="lead-form" novalidate>
         <div class="field">
@@ -12,9 +16,9 @@
           <span class="field-err" id="phone-err" hidden>Zadaj telefónne číslo, aspoň 9 číslic.</span>
         </div>
         <div class="field">
-          <label for="email">E-mail (voliteľné)</label>
-          <input type="email" id="email" name="email" placeholder="jana@priklad.sk" autocomplete="email" aria-describedby="email-err">
-          <span class="field-err" id="email-err" hidden>Tento e-mail nevyzerá správne.</span>
+          <label for="email">E-mail *</label>
+          <input type="email" id="email" name="email" placeholder="jana@priklad.sk" autocomplete="email" required aria-describedby="email-err">
+          <span class="field-err" id="email-err" hidden>Zadaj platný e-mail, pošleme naň potvrdenie.</span>
         </div>
         <div class="field">
           <label for="message">Správa</label>
@@ -37,6 +41,16 @@
           <ul class="thumbs" id="photos-list" aria-label="Vybrané fotky" hidden></ul>
           <span class="field-err" id="photos-err" role="alert" hidden></span>
         </div>
+        {hasCodes && (
+          <div class="field full discount">
+            <button type="button" class="discount-toggle" id="discount-toggle" aria-expanded="false" aria-controls="discount-box">Mám zľavový kód</button>
+            <div class="discount-box" id="discount-box" hidden>
+              <label for="discount">Zľavový kód (−{DISCOUNT_PERCENT} %)</label>
+              <input type="text" id="discount" name="discount" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" aria-describedby="discount-msg">
+              <span class="discount-msg" id="discount-msg" aria-live="polite"></span>
+            </div>
+          </div>
+        )}
         <div class="hp" aria-hidden="true">
           <label for="company">Firma</label>
           <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
@@ -50,7 +64,7 @@
         </div>
         <div class="full form-row">
           <button type="submit" class="btn btn-brass" id="submit-btn">Odoslať dopyt</button>
-          <span class="form-note">Ozveme sa do 24 hodín na WhatsApp alebo e-mail.</span>
+          <span class="form-note">Potvrdenie ti príde e-mailom od <strong>{OWNER_FROM}</strong> ({CONTACT_EMAIL}), hotové video ti pošleme na WhatsApp.</span>
         </div>
         <p class="full form-status" id="form-status" role="status" hidden></p>
       </form>
@@ -61,6 +75,24 @@
 
 <style>
   .photos { gap: 7px; }
+  .discount { gap: 8px; }
+  .discount-toggle {
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--brass);
+    font: 600 0.92rem/1.4 var(--f-body);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .discount-box { display: grid; gap: 6px; }
+  .discount-box[hidden] { display: none; }
+  .discount-box input { text-transform: uppercase; letter-spacing: 0.04em; }
+  .discount-msg { font-size: 0.88rem; min-height: 1.2em; }
+  .discount-msg.ok { color: var(--whatsapp); font-weight: 600; }
+  .discount-msg.error { color: var(--danger); }
   .dropzone {
     position: relative;
     display: flex;

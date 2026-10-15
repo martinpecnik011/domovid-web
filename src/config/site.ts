@@ -1,10 +1,10 @@
 /** Public site URL (GitHub Pages project site), with trailing slash. */
 export const SITE_URL = 'https://martinpecnik011.github.io/domovid-web/';
 
-/** WhatsApp number in display form and as a wa.me link. */
-export const WA_NUMBER = '+421915384940';
-export const WA_DISPLAY = '+421 915 384 940';
-export const WA_LINK = 'https://wa.me/421915384940';
+/** Who answers and from which address the confirmation e-mail comes (Apps Script runs under this account). */
+/** Genitive for "od …" (from …). */
+export const OWNER_FROM = 'Martina Pecníka';
+export const CONTACT_EMAIL = 'martinpecnik011@gmail.com';
 
 /** Lead form endpoint: Google Apps Script web app (see apps-script/SETUP.md). Empty string = form not connected. */
 export const FORM_ENDPOINT =
@@ -93,6 +93,6 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: 'Ako začať?',
-    a: 'Pošli 4–6 fotiek cez WhatsApp na +421 915 384 940 alebo vyplň formulár na tejto stránke. Ozveme sa do 24 hodín.',
+    a: 'Vyplň formulár na tejto stránke a prilož 4–6 fotiek. Potvrdenie ti hneď príde e-mailom od Martina Pecníka (martinpecnik011@gmail.com) a hotové video ti pošleme na WhatsApp.',
   },
 ];

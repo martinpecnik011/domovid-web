@@ -9,8 +9,7 @@ import {
   LOGO_PATH,
   SERVICE_TYPE,
   AREA_SERVED,
-  WA_NUMBER,
-  WA_LINK,
+  CONTACT_EMAIL,
   PRICING,
   FAQ,
 } from '../config/site';
@@ -67,8 +66,7 @@ const organization = {
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'customer service',
-    telephone: WA_NUMBER,
-    url: WA_LINK,
+    email: CONTACT_EMAIL,
     areaServed: AREA_SERVED,
     availableLanguage: ['sk'],
   },
@@ -99,7 +97,7 @@ const service = {
   url: SITE_URL,
   description: SITE_DESCRIPTION,
   image: ogImage,
-  telephone: WA_NUMBER,
+  email: CONTACT_EMAIL,
   serviceType: SERVICE_TYPE,
   areaServed: AREA_SERVED.map((c) => ({ '@type': 'Country', name: c })),
   parentOrganization: { '@id': id('organization') },

@@ -1,6 +1,7 @@
 // Lead form → Google Apps Script (see apps-script/SETUP.md). Endpoint lives in src/config/site.ts.
 // Wire format: JSON string body (text/plain, no-cors) with optional resized photos, see apps-script/Code.gs.
-import { FORM_ENDPOINT, WA_LINK, WA_DISPLAY } from '../config/site';
+import { FORM_ENDPOINT, OWNER_FROM, CONTACT_EMAIL } from '../config/site';
+import { DISCOUNT_PERCENT, normalizeCode, isValidCode } from '../config/discounts';
 import { resizeImage, fileType, type ResizedImage } from './image-resize';
 
 const MAX_PHOTOS = 10;
@@ -51,14 +52,52 @@ if (form) {
     statusEl.append(text);
     if (kind === 'error') {
       const a = document.createElement('a');
-      a.href = WA_LINK;
-      a.target = '_blank';
-      a.rel = 'noopener';
-      a.textContent = `Napíš nám na WhatsApp ${WA_DISPLAY}.`;
+      a.href = `mailto:${CONTACT_EMAIL}`;
+      a.textContent = `Alebo napíš na ${CONTACT_EMAIL}.`;
       statusEl.append(' ', a);
     }
     statusEl.hidden = false;
   };
+
+  // ---------- Discount code (rendered only when DISCOUNT_CODES is non-empty) ----------
+  const discountInput = document.getElementById('discount') as HTMLInputElement | null;
+  const discountToggle = document.getElementById('discount-toggle') as HTMLButtonElement | null;
+  const discountBox = document.getElementById('discount-box') as HTMLElement | null;
+  const discountMsg = document.getElementById('discount-msg') as HTMLElement | null;
+
+  /** Shows the code's state; returns false only for a non-empty unknown code. */
+  const checkDiscount = (final = false) => {
+    if (!discountInput || !discountMsg) return true;
+    const code = normalizeCode(discountInput.value);
+    const known = isValidCode(code);
+    const bad = code !== '' && !known && (final || code.length >= 4);
+    discountMsg.className = 'discount-msg' + (known ? ' ok' : bad ? ' error' : '');
+    discountMsg.textContent = known
+      ? `Kód ${code} platí – zľava ${DISCOUNT_PERCENT} % sa odpočíta na faktúre.`
+      : bad
+        ? 'Tento kód nepoznáme. Skontroluj ho, alebo pole nechaj prázdne.'
+        : '';
+    discountInput.setAttribute('aria-invalid', bad ? 'true' : 'false');
+    return code === '' || known;
+  };
+
+  discountToggle?.addEventListener('click', () => {
+    if (!discountBox) return;
+    const open = discountBox.hidden;
+    discountBox.hidden = !open;
+    discountToggle.setAttribute('aria-expanded', String(open));
+    if (open) discountInput?.focus();
+  });
+  discountInput?.addEventListener('input', () => checkDiscount());
+  discountInput?.addEventListener('blur', () => checkDiscount(true));
+  // Callers can share a link with the code pre-filled: ?kod=MAREK10
+  const codeFromUrl = new URLSearchParams(location.search).get('kod');
+  if (discountInput && discountBox && discountToggle && codeFromUrl) {
+    discountInput.value = normalizeCode(codeFromUrl).slice(0, 40);
+    discountBox.hidden = false;
+    discountToggle.setAttribute('aria-expanded', 'true');
+    checkDiscount(true);
+  }
 
   // ---------- Photos ----------
   const input = el('photos');
@@ -161,7 +200,14 @@ if (form) {
     drop.classList.remove('is-over');
     if (e.dataTransfer?.files.length) addFiles(e.dataTransfer.files);
   });
-  form.addEventListener('reset', clearPhotos);
+  form.addEventListener('reset', () => {
+    clearPhotos();
+    if (discountMsg) discountMsg.textContent = '';
+    if (discountBox && discountToggle) {
+      discountBox.hidden = true;
+      discountToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
 
   /** Resizes the picked photos one by one (low memory on phones) within the total payload cap. */
   const preparePhotos = async () => {
@@ -193,7 +239,8 @@ if (form) {
     const bad = [
       setErr('name', name.length < 2),
       setErr('phone', phone.replace(/\D/g, '').length < 9),
-      setErr('email', email !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
+      setErr('email', !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
+      !checkDiscount(true),
       setErr('consent', !el('consent').checked),
     ];
     if (bad.includes(true)) {
@@ -217,6 +264,7 @@ if (form) {
     try {
       const { files, left } = await preparePhotos();
       btn.textContent = 'Odosielam…';
+      const discount = discountInput && isValidCode(discountInput.value) ? normalizeCode(discountInput.value) : '';
       const body = JSON.stringify({
         name,
         phone,
@@ -226,17 +274,19 @@ if (form) {
         sentAt: new Date().toISOString(),
         company: '',
         utm,
+        discount,
         files,
       });
       await fetch(FORM_ENDPOINT, { method: 'POST', mode: 'no-cors', body });
       const n = files.length;
-      let text = n
-        ? `Ďakujeme! Dopyt aj ${n} ${photosWord(n)} sme prijali, ozveme sa do 24 hodín.`
-        : 'Ďakujeme! Dopyt sme prijali, ozveme sa do 24 hodín.';
-      if (left) text += ` ${left} ${photosWord(left)} sa nepodarilo priložiť – pošli ich prosím na WhatsApp ${WA_DISPLAY}.`;
+      let text = n ? `Ďakujeme! Dopyt aj ${n} ${photosWord(n)} sme prijali.` : 'Ďakujeme! Dopyt sme prijali.';
+      text += ` Potvrdenie ti práve odišlo na ${email} od ${OWNER_FROM} (${CONTACT_EMAIL}), pozri aj Spam alebo Promoakcie.`;
+      text += ` Ozveme sa do 24 hodín a hotové video ti pošleme na WhatsApp na číslo ${phone}.`;
+      if (discount) text += ` Zľava ${DISCOUNT_PERCENT} % s kódom ${discount} je zaznamenaná.`;
+      if (left) text += ` ${left} ${photosWord(left)} sa nepodarilo priložiť – pošli ich odpoveďou na potvrdzovací e-mail.`;
       say(text, 'ok');
       form.reset();
-      window.dispatchEvent(new CustomEvent('domovid:lead', { detail: { photos: n } }));
+      window.dispatchEvent(new CustomEvent('domovid:lead', { detail: { photos: n, discount: discount !== '' } }));
     } catch {
       say('Dopyt sa nepodarilo odoslať, skontroluj pripojenie a skús znova.', 'error');
     } finally {

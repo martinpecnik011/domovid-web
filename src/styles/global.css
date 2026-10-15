@@ -148,7 +148,7 @@ nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40; padding
 }
 .btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
 .btn-brass { background: var(--brass); color: var(--brass-ink); }
-.btn-wa { background: var(--whatsapp); color: var(--wa-ink); }
+.btn-ghost { background: var(--glass-strong); color: var(--ink); border-color: var(--line); }
 .btn-sm { padding: 9px 16px; font-size: 0.86rem; }
 button:disabled { opacity: 0.6; cursor: wait; }
 
@@ -240,8 +240,6 @@ button:disabled { opacity: 0.6; cursor: wait; }
 /* Lead */
 .lead-copy { align-content: center; gap: 12px; }
 .lead-copy h2 { font-size: clamp(1.6rem, 2.8vw, 2.2rem); }
-.wa-line { font-size: 0.9rem; color: var(--ink-muted); }
-.wa-line a { color: var(--brass); font-weight: 600; }
 .lead-form { grid-template-columns: 1fr 1fr; column-gap: 14px; row-gap: 12px; }
 .lead-form .full { grid-column: 1 / -1; }
 .field { display: grid; gap: 5px; align-content: start; }
