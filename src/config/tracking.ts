@@ -12,7 +12,7 @@
  *
  * Neither tracker loads before the visitor consents (see src/scripts/consent.ts).
  */
-export const GA4_ID: string = (import.meta.env.PUBLIC_GA4_ID || '').trim() || '';
+export const GA4_ID: string = (import.meta.env.PUBLIC_GA4_ID || '').trim() || 'G-JBBC0LTYD6';
 export const META_PIXEL_ID: string = (import.meta.env.PUBLIC_META_PIXEL_ID || '').trim() || '';
 
 /** Bump when the consent categories or their meaning change — everyone is asked again. */
