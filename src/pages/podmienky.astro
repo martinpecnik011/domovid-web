@@ -1,0 +1,45 @@
+---
+import Legal from '../layouts/Legal.astro';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const EMAIL = 'martinpecnik011@gmail.com';
+---
+<Legal
+  title="Podmienky používania"
+  description="Podmienky používania webu a služieb Domovid: ukážkové video zadarmo, objednávka, autorské práva k videám a obsah na sociálnych sieťach."
+  path="podmienky/"
+  updated="18. 10. 2026"
+>
+  <p>Tieto podmienky upravujú používanie webu Domovid, ukážkového videa zadarmo a obsahu, ktorý Domovid zverejňuje na sociálnych sieťach. Používaním webu s nimi súhlasíš.</p>
+
+  <h2>1. Kto poskytuje službu</h2>
+  <p>
+    Martin Pecník, Domovid<br />
+    E-mail: <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+  </p>
+
+  <h2>2. Čo Domovid robí</h2>
+  <p>Domovid pripravuje pre realitných maklérov a predávajúcich videá nehnuteľností z dodaných fotiek s pomocou nástrojov umelej inteligencie. Na webe si môžeš vyžiadať jedno ukážkové video zadarmo. Rozsah, cenu a termín platenej spolupráce si vždy dohodneme vopred (e-mailom alebo písomne) – až to je záväzná objednávka.</p>
+
+  <h2>3. Fotky, ktoré nám pošleš</h2>
+  <ul>
+    <li>Posielaš len fotky, ku ktorým máš právo (vlastné, alebo so súhlasom autora či vlastníka nehnuteľnosti).</li>
+    <li>Fotky použijeme iba na prípravu tvojho videa. Bez tvojho súhlasu ich ani hotové video nezverejníme.</li>
+    <li>Ako s fotkami a údajmi zaobchádzame, popisuje <a href={base + 'ochrana-sukromia/'}>Ochrana osobných údajov</a>.</li>
+  </ul>
+
+  <h2>4. Hotové video</h2>
+  <ul>
+    <li>Po zaplatení (pri ukážke zadarmo hneď po odovzdaní) môžeš video používať na propagáciu danej nehnuteľnosti – v inzerátoch, na webe a na sociálnych sieťach.</li>
+    <li>Video vzniká s pomocou AI, preto nemusí presne zobrazovať každý detail nehnuteľnosti. Pred zverejnením ho skontroluj; za to, ako ho v inzeráte použiješ, zodpovedáš ty.</li>
+    <li>Ukážky našej práce môžeme ukazovať vo vlastnom portfóliu, len ak s tým súhlasíš.</li>
+  </ul>
+
+  <h2>5. Obsah na sociálnych sieťach</h2>
+  <p>Na Instagrame, Facebooku, TikToku a YouTube zverejňujeme vlastné ukážkové a reklamné videá Domovidu. Na publikovanie používame oficiálne rozhrania týchto platforiem a pracujeme len s vlastnými účtami Domovidu. Pri používaní týchto platforiem platia aj ich vlastné podmienky.</p>
+
+  <h2>6. Zodpovednosť</h2>
+  <p>Web a ukážkové video poskytujeme tak, ako sú. Nezodpovedáme za výsledok predaja nehnuteľnosti ani za krátkodobú nedostupnosť webu. Zodpovednosť, ktorú nemožno podľa zákona vylúčiť, tým nie je dotknutá.</p>
+
+  <h2>7. Zmeny a kontakt</h2>
+  <p>Podmienky môžeme aktualizovať; platná verzia je vždy na tejto stránke s dátumom poslednej zmeny. Riadia sa právom Slovenskej republiky. Otázky posielaj na <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.</p>
+</Legal>
