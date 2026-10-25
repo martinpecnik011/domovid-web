@@ -111,12 +111,14 @@ const service = {
       url: SITE_URL + '#cennik',
       price: p.price,
       priceCurrency: 'EUR',
+      valueAddedTaxIncluded: false,
       ...(p.billing
         ? {
             priceSpecification: {
               '@type': 'UnitPriceSpecification',
               price: p.price,
               priceCurrency: 'EUR',
+              valueAddedTaxIncluded: false,
               unitText: p.billing,
             },
           }

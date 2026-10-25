@@ -47,7 +47,7 @@ export const PRICING: PricePlan[] = [
     unit: 'video',
     billing: '',
     description: 'Na jednu konkrétnu ponuku.',
-    features: ['1 video do 24 hodín', 'Formát pre IG aj FB', 'Bez záväzku'],
+    features: ['1 video do 24 hodín', 'Formát podľa teba: 9:16 alebo 16:9', 'Bez záväzku'],
   },
   {
     name: 'Mesačný balík',
@@ -55,7 +55,7 @@ export const PRICING: PricePlan[] = [
     unit: 'mesiac',
     billing: 'mesiac',
     description: 'Pre pravidelné nové ponuky.',
-    features: ['4 videá mesačne', 'Prednostné spracovanie', 'Jednotný štýl'],
+    features: ['4 videá mesačne', 'Formát podľa teba: 9:16 alebo 16:9', 'Prednostné spracovanie', 'Jednotný štýl'],
     featured: true,
   },
 ];
@@ -69,7 +69,7 @@ export interface FaqItem {
 export const FAQ: FaqItem[] = [
   {
     q: 'Čo je Domovid?',
-    a: 'Domovid je služba pre realitných maklérov, kancelárie a developerské projekty. Z fotiek nehnuteľnosti urobíme vertikálne video s pohybmi kamery, strihom a hudbou. Netreba kameru, fotografa ani kameramana.',
+    a: 'Domovid je služba pre realitných maklérov, kancelárie a developerské projekty. Z fotiek nehnuteľnosti urobíme video na výšku aj na šírku s pohybmi kamery, strihom a hudbou. Netreba kameru, fotografa ani kameramana.',
   },
   {
     q: 'Ako rýchlo dostanem hotové video?',
@@ -77,7 +77,7 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: 'Koľko stojí video z fotiek?',
-    a: 'Jedno video stojí 50 € a je bez záväzku. Mesačný balík stojí 140 € mesačne a obsahuje 4 videá, prednostné spracovanie a jednotný štýl.',
+    a: 'Jedno video stojí 50 € + DPH a je bez záväzku. Mesačný balík stojí 140 € + DPH mesačne a obsahuje 4 videá, prednostné spracovanie a jednotný štýl.',
   },
   {
     q: 'Aké fotky mám poslať?',
@@ -85,7 +85,7 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: 'Kde môžem video použiť?',
-    a: 'Video dostaneš vertikálne vo formáte 9:16 pre Instagram a Facebook Reels aj do inzerátu. Na požiadanie pripravíme aj verziu pre realitný portál alebo web.',
+    a: 'Formát si vyberieš ty. Vertikálne 9:16 je na sociálne siete (Instagram, Facebook, TikTok, Reels). Na šírku 16:9 je na realitný portál, web alebo YouTube. Môžeš chcieť aj oba formáty.',
   },
   {
     q: 'Čo ak sa mi výsledok nepáči?',

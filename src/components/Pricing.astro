@@ -9,11 +9,12 @@ import { PRICING } from '../config/site';
         <div class="eyebrow">Cenník</div>
         <h2>Jedno video alebo mesačný balík</h2>
         <p class="muted">Platíš za hotové video, nie za fotografa či kameramana.</p>
+        <p class="small muted">Ceny sú uvedené bez DPH.</p>
       </div>
       {PRICING.map((p, i) => (
         <div class:list={['tile', 'price', { featured: p.featured }, 'tilt', 'depth']} data-speed={i ? '-0.08' : '-0.05'}>
           <div class="price-top"><h3>{p.name}</h3>{p.featured && <span class="badge">Odporúčané</span>}</div>
-          <div class="amount">{p.price} € <span>/ {p.unit}</span></div>
+          <div class="amount">{p.price} € <span class="per"><span class="vat">+ DPH</span> / {p.unit}</span></div>
           <p class="muted">{p.description}</p>
           <ul class="ticks">
             {p.features.map((f) => <li>{f}</li>)}
@@ -32,4 +33,6 @@ import { PRICING } from '../config/site';
 
 <style>
   .price-intro { align-content: center; }
+  .amount .vat { font-size: 0.8rem; }
+  .amount .per { white-space: nowrap; }
 </style>

@@ -266,11 +266,14 @@ if (form) {
       const { files, left } = await preparePhotos();
       btn.textContent = 'Odosielam…';
       const discount = discountInput ? canonicalCode(discountInput.value) : '';
+      const msg = el<HTMLTextAreaElement>('message').value.trim();
+      const format = form.querySelector<HTMLInputElement>('input[name="format"]:checked')?.value;
+      const message = format ? (msg ? `${msg}\n\nFormát videa: ${format}` : `Formát videa: ${format}`) : msg;
       const body = JSON.stringify({
         name,
         phone,
         email,
-        message: el<HTMLTextAreaElement>('message').value.trim(),
+        message,
         page: location.href,
         sentAt: new Date().toISOString(),
         company: '',
