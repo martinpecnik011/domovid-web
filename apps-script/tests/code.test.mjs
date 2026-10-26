@@ -40,6 +40,13 @@ function makeEnv({ sheetRows = null, props = {}, existingFolders = [] } = {}) {
   const roots = [];
 
   let rows = sheetRows ? sheetRows.map((r) => r.slice()) : null;
+  let reviewRows = null; // second sheet 'Schválenia'
+  const reviewSheet = {
+    getLastRow: () => reviewRows.length,
+    getLastColumn: () => reviewRows.reduce((m, r) => Math.max(m, r.length), 0),
+    appendRow(row) { log.events.push('append'); reviewRows.push(Array.from(row)); },
+    setFrozenRows() {}
+  };
   const sheet = {
     frozen: 0,
     getLastRow: () => rows.length,
@@ -68,8 +75,12 @@ function makeEnv({ sheetRows = null, props = {}, existingFolders = [] } = {}) {
     JSON,
     SpreadsheetApp: {
       getActiveSpreadsheet: () => ({
-        getSheetByName: () => (rows ? sheet : null),
-        insertSheet: () => { rows = []; return sheet; },
+        getSheetByName: (name) => (name === 'Schválenia' ? (reviewRows ? reviewSheet : null) : rows ? sheet : null),
+        insertSheet: (name) => {
+          if (name === 'Schválenia') { reviewRows = []; return reviewSheet; }
+          rows = [];
+          return sheet;
+        },
         getUrl: () => 'https://docs.google.com/spreadsheets/d/test'
       })
     },
@@ -123,7 +134,7 @@ function makeEnv({ sheetRows = null, props = {}, existingFolders = [] } = {}) {
   };
   vm.createContext(ctx);
   vm.runInContext(SOURCE, ctx);
-  return { ctx, log, store, folders, roots, getRows: () => rows };
+  return { ctx, log, store, folders, roots, getRows: () => rows, getReviewRows: () => reviewRows };
 }
 
 const jpeg = (kb = 1) => Buffer.alloc(kb * 1024, 0xff).toString('base64');
@@ -300,4 +311,69 @@ test('(j) confirmation names Martin Pecník, promises the result on WhatsApp and
   assert.match(confirm.body, /Martin Pecník, Domovid/);
   assert.doesNotMatch(confirm.body, /wa\.me|\+421 915/);
   assert.match(confirm.body, /odpoveďou na tento e-mail/);
+});
+
+const review = { type: 'review', id: 'abc12345xyz', client: 'Jana Nováková', title: 'Byt Ružinov', action: 'approve', message: '', page: '/video/?id=abc12345xyz', sentAt: '2026-10-26T10:00:00Z' };
+
+test('(k) review approve → one row in Schválenia, approve mail, no lead row, no confirmation', () => {
+  const env = makeEnv();
+  const out = env.ctx.doPost(jsonPost(review));
+  assert.deepEqual(reply(out), { ok: true });
+  const rows = env.getReviewRows();
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows[0], ['Prijaté', 'ID videa', 'Klient', 'Video', 'Akcia', 'Pripomienky', 'Stránka', 'Odoslané (prehliadač)']);
+  assert.deepEqual(rows[1].slice(1), ['abc12345xyz', 'Jana Nováková', 'Byt Ružinov', 'Schválené', '', '/video/?id=abc12345xyz', '2026-10-26T10:00:00Z']);
+  assert.equal(env.getRows(), null, 'Leady untouched');
+  assert.equal(env.log.mails.length, 1);
+  assert.equal(env.log.mails[0].subject, 'Domovid: klient schválil video – Jana Nováková');
+  assert.equal(env.log.locks, 1);
+});
+
+test('(l) review changes → row with message and mail containing it', () => {
+  const env = makeEnv();
+  const out = env.ctx.doPost(jsonPost({ ...review, action: 'changes', message: 'Zmeň hudbu' }));
+  assert.deepEqual(reply(out), { ok: true });
+  const row = env.getReviewRows()[1];
+  assert.equal(row[4], 'Úprava');
+  assert.equal(row[5], 'Zmeň hudbu');
+  const [mail] = env.log.mails;
+  assert.equal(mail.to, 'martinpecnik011@gmail.com');
+  assert.equal(mail.subject, 'Domovid: klient chce úpravu – Jana Nováková');
+  assert.match(mail.body, /Zmeň hudbu/);
+  assert.match(mail.body, /ID videa: abc12345xyz/);
+  assert.match(mail.body, /docs\.google\.com\/spreadsheets/);
+});
+
+test('(m) review with invalid id → ok:false, no row, no mail', () => {
+  for (const id of ['short', 'ABC12345XYZ', 'abc 12345xyz', 'a'.repeat(33), '', undefined]) {
+    const env = makeEnv();
+    assert.deepEqual(reply(env.ctx.doPost(jsonPost({ ...review, id }))), { ok: false });
+    assert.equal(env.getReviewRows(), null);
+    assert.equal(env.log.mails.length, 0);
+  }
+});
+
+test('(n) review with invalid action or empty changes message → ok:false, no row, no mail', () => {
+  for (const patch of [{ action: 'delete' }, { action: undefined }, { action: 'changes', message: '   ' }]) {
+    const env = makeEnv();
+    assert.deepEqual(reply(env.ctx.doPost(jsonPost({ ...review, ...patch }))), { ok: false });
+    assert.equal(env.getReviewRows(), null);
+    assert.equal(env.log.mails.length, 0);
+  }
+});
+
+test('(o) review honeypot → ok:true silently, nothing written or sent', () => {
+  const env = makeEnv();
+  assert.deepEqual(reply(env.ctx.doPost(jsonPost({ ...review, company: 'Spam' }))), { ok: true });
+  assert.equal(env.getReviewRows(), null);
+  assert.equal(env.log.mails.length, 0);
+  assert.equal(env.log.locks, 0);
+});
+
+test('(p) review fields are cleaned against formula injection', () => {
+  const env = makeEnv();
+  env.ctx.doPost(jsonPost({ ...review, client: '=EVIL()', action: 'changes', message: '+cmd' }));
+  const row = env.getReviewRows()[1];
+  assert.equal(row[2], "'=EVIL()");
+  assert.equal(row[5], "'+cmd");
 });

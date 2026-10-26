@@ -15,6 +15,9 @@ var NOTIFY_EMAIL = 'martinpecnik011@gmail.com';
 var SHEET_NAME = 'Leady';
 var HEADERS = ['Prijaté', 'Meno', 'Telefón', 'E-mail', 'Správa', 'Stránka', 'Odoslané (prehliadač)', 'Fotky', 'UTM', 'Zľavový kód'];
 
+var REVIEW_SHEET_NAME = 'Schválenia';
+var REVIEW_HEADERS = ['Prijaté', 'ID videa', 'Klient', 'Video', 'Akcia', 'Pripomienky', 'Stránka', 'Odoslané (prehliadač)'];
+
 var TIME_ZONE = 'Europe/Bratislava';
 var UPLOAD_FOLDER_NAME = 'Domovid leady – fotky';
 var UPLOAD_FOLDER_PROP = 'UPLOAD_FOLDER_ID';
@@ -25,6 +28,8 @@ var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'ima
 function doPost(e) {
   var p = parsePayload(e);
   if (!p) return json({ ok: false });
+
+  if (p.type === 'review') return handleReview(p);
 
   // Honeypot / minimal validation: silently accept junk so bots learn nothing.
   if (p.company || !p.name || !p.phone) {
@@ -77,6 +82,45 @@ function doPost(e) {
   });
 
   sendConfirmation(clean(p.email, 160), name, photos.saved, clean(p.phone, 40), discount);
+
+  return json({ ok: true });
+}
+
+// Client's verdict on a delivered video: logged to the review sheet, owner notified by e-mail.
+function handleReview(p) {
+  if (p.company) return json({ ok: true });
+  var id = String(p.id || '');
+  if (!/^[a-z0-9]{8,32}$/.test(id)) return json({ ok: false });
+  if (p.action !== 'approve' && p.action !== 'changes') return json({ ok: false });
+  var approve = p.action === 'approve';
+  var message = clean(p.message, 2000);
+  if (!approve && !message) return json({ ok: false });
+
+  var client = clean(p.client, 120);
+  var title = clean(p.title, 200);
+  var page = clean(p.page, 300);
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    getSheet(REVIEW_SHEET_NAME, REVIEW_HEADERS).appendRow([
+      new Date(), id, client, title, approve ? 'Schválené' : 'Úprava', message, page, clean(p.sentAt, 40)
+    ]);
+  } finally {
+    lock.releaseLock();
+  }
+
+  MailApp.sendEmail({
+    to: NOTIFY_EMAIL,
+    subject: (approve ? 'Domovid: klient schválil video – ' : 'Domovid: klient chce úpravu – ') + client,
+    body:
+      'ID videa: ' + id + '\n' +
+      'Klient: ' + (client || '-') + '\n' +
+      'Video: ' + (title || '-') + '\n\n' +
+      'Pripomienky:\n' + (message || '-') + '\n\n' +
+      'Stránka: ' + (page || '-') + '\n' +
+      'Tabuľka: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
+  });
 
   return json({ ok: true });
 }
@@ -196,7 +240,7 @@ function sendConfirmation(email, name, photoCount, phone, discount) {
     : 'Ak chceš začať hneď, pošli 4–6 fotiek nehnuteľnosti odpoveďou na tento e-mail. ' +
       'Prvú verziu videa dostaneš s vodoznakom na posúdenie.\n\n';
   var discountLine = discount
-    ? 'Tvoj zľavový kód ' + discount + ' sme zaznamenali, zľavu 10 % odpočítame na faktúre.\n\n'
+    ? 'Tvoj zľavový kód ' + discount + ' sme zaznamenali, zľavu 10 % odpočítame z ceny. Číslo účtu (IBAN) na úhradu ti pošleme.\n\n'
     : '';
   MailApp.sendEmail({
     to: email,
@@ -235,18 +279,20 @@ function doGet() {
   return json({ ok: true, service: 'domovid-leads' });
 }
 
-// Creates the sheet with HEADERS, or appends header cells missing from an older sheet.
-function getSheet() {
+// Creates the sheet (default: Leady) with its headers, or appends header cells missing from an older sheet.
+function getSheet(name, headers) {
+  name = name || SHEET_NAME;
+  headers = headers || HEADERS;
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
+  var sheet = ss.getSheetByName(name) || ss.insertSheet(name);
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(HEADERS);
+    sheet.appendRow(headers);
     sheet.setFrozenRows(1);
     return sheet;
   }
   var lastCol = sheet.getLastColumn();
-  if (lastCol < HEADERS.length) {
-    sheet.getRange(1, lastCol + 1, 1, HEADERS.length - lastCol).setValues([HEADERS.slice(lastCol)]);
+  if (lastCol < headers.length) {
+    sheet.getRange(1, lastCol + 1, 1, headers.length - lastCol).setValues([headers.slice(lastCol)]);
   }
   return sheet;
 }

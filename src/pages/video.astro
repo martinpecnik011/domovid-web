@@ -1,0 +1,93 @@
+---
+// Private client delivery page: /video/?id=<token>. Not linked anywhere, kept out of the index and sitemap.
+import Base from '../layouts/Base.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<Base title="Vaše video – Domovid" description="Súkromná stránka na schválenie a stiahnutie vášho videa." path="video/" noindex nofollow tracking={false}>
+  <nav>
+    <div class="wrap">
+      <div class="nav-inner">
+        <a class="logo" href={base}>Domov<span>id</span></a>
+      </div>
+    </div>
+  </nav>
+  <main class="wrap delivery">
+    <section id="state-loading" class="tile box" aria-live="polite">
+      <p>Načítavame vaše video…</p>
+    </section>
+
+    <section id="state-error" class="tile box" hidden>
+      <h1>Video sa nepodarilo načítať</h1>
+      <p id="error-text">Skontrolujte odkaz, ktorý ste dostali, a skúste to znova.</p>
+      <p id="error-contact"></p>
+    </section>
+
+    <section id="state-ready" class="tile box" hidden>
+      <header>
+        <h1 id="video-title"></h1>
+        <p id="video-client" class="muted"></p>
+      </header>
+      <p id="video-message" class="note" hidden></p>
+      <video id="video-player" controls playsinline preload="metadata"></video>
+
+      <div id="review">
+        <div id="review-actions" class="actions">
+          <button id="btn-approve" class="btn btn-brass" type="button">Schvaľujem video</button>
+          <button id="btn-changes" class="btn btn-ghost" type="button" aria-expanded="false">Chcem úpravu</button>
+        </div>
+        <div id="changes-box" class="field" hidden>
+          <label for="changes-text">Čo by sme mali upraviť?</label>
+          <textarea id="changes-text" rows="4" maxlength="2000" required></textarea>
+          <button id="btn-send-changes" class="btn btn-brass" type="button">Odoslať požiadavku</button>
+        </div>
+        <p id="review-status" class="form-status" role="status" hidden></p>
+      </div>
+
+      <div id="downloads-locked" class="locked" hidden>
+        <p id="locked-text"></p>
+      </div>
+      <div id="downloads-wrap" hidden>
+        <h2>Na stiahnutie</h2>
+        <div id="downloads" class="downloads"></div>
+        <p class="note">Stiahnite si video priamo do telefónu. Neposielajte ho cez WhatsApp ani Messenger – zničia kvalitu.</p>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .logo { font-size: 1.17rem; }
+  .delivery { padding-block: 14px 40px; }
+  .box { max-width: 520px; margin: 0 auto; padding: clamp(18px, 4vw, 30px); gap: 16px; background: var(--glass-strong); }
+  h1 { font-size: clamp(1.4rem, 5vw, 1.9rem); }
+  h2 { font-size: 1.1rem; }
+  .muted { color: var(--ink-muted); font-size: 0.9rem; }
+  .note { font-size: 0.88rem; color: var(--ink-muted); }
+  .box a { font-weight: 600; text-underline-offset: 3px; }
+  #video-player {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    max-height: 80vh;
+    margin-inline: auto;
+    background: #000;
+    border-radius: 14px;
+  }
+  .actions { display: grid; gap: 10px; }
+  #changes-box { margin-top: 12px; }
+  #review-status { margin-top: 12px; }
+  .locked {
+    padding: 14px 16px;
+    border: 1px dashed var(--brass);
+    border-radius: 12px;
+    background: var(--brass-soft);
+    font-weight: 600;
+  }
+  .downloads { display: grid; gap: 10px; margin-block: 10px; }
+  .downloads :global(.btn) { white-space: normal; text-align: center; flex-direction: column; gap: 4px; }
+  .downloads :global(small) { font-weight: 500; opacity: 0.85; }
+</style>
+
+<script>
+  import '../scripts/video-delivery';
+</script>

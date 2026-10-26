@@ -13,6 +13,7 @@ export default defineConfig({
   build: { inlineStylesheets: 'auto' },
   integrations: [
     sitemap({
+      filter: (page) => !page.includes('/video'),
       serialize(item) {
         const isHome = /\/domovid-web\/?$/.test(item.url);
         return {
