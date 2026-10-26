@@ -74,7 +74,7 @@ if (form) {
     const bad = code !== '' && !known && (final || code.length >= 4);
     discountMsg.className = 'discount-msg' + (known ? ' ok' : bad ? ' error' : '');
     discountMsg.textContent = known
-      ? `Kód ${canonical} platí – zľava ${DISCOUNT_PERCENT} % sa odpočíta na faktúre.`
+      ? `Kód ${canonical} platí – zľava ${DISCOUNT_PERCENT} % sa odpočíta z ceny. Číslo účtu (IBAN) na úhradu ti pošleme.`
       : bad
         ? 'Tento kód nepoznáme. Skontroluj ho, alebo pole nechaj prázdne.'
         : '';

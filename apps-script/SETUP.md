@@ -33,3 +33,19 @@ Nová verzia `Code.gs` prijme k dopytu až 10 fotiek a uloží ich do tvojho Goo
 - V e-maile o novom dopyte pribudne riadok **Fotky: N – odkaz** (a **Preskočené súbory: K**, ak niektorý súbor nebol obrázok, bol väčší ako 8 MB alebo ich bolo viac ako 10).
 - Ak zákazník poslal fotky, potvrdzujúci e-mail mu napíše, že sme ich prijali, namiesto výzvy poslať ich na WhatsApp.
 - Ak priečinok **Domovid leady – fotky** zmažeš, pri ďalšom dopyte s fotkami sa vytvorí znova.
+
+## Schvaľovanie videí klientmi
+
+Rovnaký endpoint (`/exec` URL) prijíma aj odpoveď klienta na hotové video. Stránka s videom pošle JSON s `type: "review"`, ID videa (malé písmená a číslice, 8–32 znakov), akciou `approve` (schválené) alebo `changes` (chcem úpravu, pripomienky sú povinné), menom klienta, názvom videa a stránkou.
+
+Čo sa stane:
+
+- Odpoveď sa zapíše ako nový riadok do hárku **Schválenia** (stĺpce: Prijaté, ID videa, Klient, Video, Akcia, Pripomienky, Stránka, Odoslané). Hárok sa vytvorí sám pri prvej odpovedi, nič netreba robiť ručne.
+- Tebe príde e-mail s predmetom „Domovid: klient schválil video – meno“ alebo „Domovid: klient chce úpravu – meno“, s pripomienkami a odkazom na tabuľku. Klientovi sa nič neposiela.
+- Neplatné ID, neznáma akcia alebo úprava bez pripomienok sa zahodia bez zápisu a bez e-mailu. Dopyty z formulára fungujú ďalej bez zmeny.
+
+Nasadenie novej verzie (URL ostáva rovnaká, na webe nič nemeníš):
+
+1. V tabuľke **Domovid leady** otvor **Rozšírenia → Apps Script**.
+2. Zmaž obsah `Code.gs`, vlož celý nový obsah súboru `apps-script/Code.gs` z tohto repa a ulož (Cmd+S).
+3. **Nasadiť → Spravovať nasadenia → ceruzka → Verzia: *Nová verzia* → Nasadiť.**

@@ -24,6 +24,8 @@ export interface Props {
   image?: string;
   /** true = keep the page out of search indexes (links are still followed). */
   noindex?: boolean;
+  /** With noindex: also tell crawlers not to follow links ('noindex, nofollow'). */
+  nofollow?: boolean;
   /** Open Graph type of the page. */
   type?: 'website' | 'article';
   /** schema.org type of the WebPage node, e.g. 'AboutPage', 'ContactPage'. */
@@ -37,6 +39,7 @@ const {
   ogTitle = OG_TITLE,
   image = 'media/bg-vila.jpg',
   noindex = false,
+  nofollow = false,
   type = 'website',
   pageType = 'WebPage',
 } = Astro.props;
@@ -49,7 +52,9 @@ const favicon =
   "%3Cpath d='M28 48V38h8v10' fill='%23e0ad55'/%3E%3C/svg%3E";
 
 const robots = noindex
-  ? 'noindex, follow'
+  ? nofollow
+    ? 'noindex, nofollow'
+    : 'noindex, follow'
   : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
 
 // Every absolute URL derives from SITE_URL, so a custom domain is a one-line change in site.ts.

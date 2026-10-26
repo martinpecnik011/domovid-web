@@ -16,22 +16,25 @@ export interface Props {
   /** Path relative to the site root, without leading slash ('' = home). */
   path?: string;
   noindex?: boolean;
+  nofollow?: boolean;
+  /** false = no consent banner and no analytics/pixel scripts on this page (default true). */
+  tracking?: boolean;
   type?: 'website' | 'article';
   /** schema.org type of the WebPage node, e.g. 'AboutPage'. */
   pageType?: string;
 }
 
-const { title = SITE_TITLE, description = SITE_DESCRIPTION, path = '', noindex, type, pageType } = Astro.props;
+const { title = SITE_TITLE, description = SITE_DESCRIPTION, path = '', noindex, nofollow, tracking = true, type, pageType } = Astro.props;
 ---
 <!doctype html>
 <html lang="sk">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<Seo title={title} description={description} path={path} noindex={noindex} type={type} pageType={pageType} />
+<Seo title={title} description={description} path={path} noindex={noindex} nofollow={nofollow} type={type} pageType={pageType} />
 </head>
 <body>
 <slot />
-<CookieConsent />
+{tracking && <CookieConsent />}
 </body>
 </html>
