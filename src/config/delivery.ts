@@ -10,6 +10,9 @@ export const DELIVERY_ID_RE = /^[a-z0-9]{8,32}$/;
 /** Shown instead of the download while the invoice is unpaid. Single source of the copy. */
 export const LOCKED_TEXT = 'Stiahnutie v plnej kvalite sa odomkne po prijatí platby. Číslo účtu (IBAN) na úhradu vám pošleme.';
 
+/** Locked text when the price block shows the IBAN (manifest `price.iban`). */
+export const LOCKED_TEXT_WITH_IBAN = 'Stiahnutie v plnej kvalite sa odomkne po prijatí platby.';
+
 /** `${DELIVERY_BASE}/${id}/manifest.json`. All files below are relative to `${DELIVERY_BASE}/${id}/`. */
 export interface DeliveryManifest {
   version: 1;
@@ -30,5 +33,5 @@ export interface DeliveryManifest {
   downloads: { label: string; file: string; bytes: number }[];
   message?: string;
   /** Optional price shown next to the payment text while unpaid. `net` in EUR, `vat_rate` as a fraction (0.23). */
-  price?: { label: string; net: number; vat_rate: number; reference: string };
+  price?: { label: string; net: number; vat_rate: number; reference: string; iban?: string };
 }

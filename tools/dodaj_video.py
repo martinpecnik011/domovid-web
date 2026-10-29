@@ -131,12 +131,32 @@ def price_from_args(a):
         die("--price-net musi byt vacsie ako 0")
     if not a.price_label or not a.reference:
         die("k --price-net zadaj aj --price-label a --reference")
-    return {"label": a.price_label, "net": a.price_net, "vat_rate": a.vat_rate, "reference": a.reference}
+    price = {"label": a.price_label, "net": a.price_net, "vat_rate": a.vat_rate, "reference": a.reference}
+    iban = read_iban(a.iban_file)
+    if iban:
+        price["iban"] = iban
+    return price
+
+
+def read_iban(path):
+    """IBAN zo suboru (prvy neprazdny riadok, bez medzier, velkymi); None, ak subor chyba. Neplatny = die()."""
+    p = Path(path).expanduser()
+    if not p.is_file():
+        return None
+    lines = [l for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
+    iban = "".join(lines[0].split()).upper() if lines else ""
+    if not re.fullmatch(r"[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}", iban):
+        die("IBAN v %s ma neplatny format" % p)
+    digits = "".join(str(int(c, 36)) for c in iban[4:] + iban[:4])
+    if int(digits) % 97 != 1:
+        die("IBAN v %s ma neplatny kontrolny sucet" % p)
+    return iban
 
 
 def set_price_in(mf, price):
     m = json.loads(mf.read_text(encoding="utf-8"))
-    m["price"] = price
+    old_iban = (m.get("price") or {}).get("iban")
+    m["price"] = dict(price, iban=old_iban) if old_iban and "iban" not in price else price
     write_manifest(mf, m)
 
 
@@ -192,6 +212,7 @@ def main():
     ap.add_argument("--price-label", help="popis ceny, napr. nazov balika")
     ap.add_argument("--reference", help="referencia platby, napr. HALO-2026-10")
     ap.add_argument("--vat-rate", type=float, default=0.23, help="sadzba DPH (default 0.23)")
+    ap.add_argument("--iban-file", default="~/.config/domovid/iban.txt", help="subor s IBAN (default ~/.config/domovid/iban.txt); cita sa len pri zadanej cene")
     ap.add_argument("--set-price", metavar="ID", help="dodatocne nastavit cenu v manifeste (bez prekodovania)")
     ap.add_argument("--out-dir")
     ap.add_argument("--r2-bucket")
@@ -228,7 +249,7 @@ def main():
         staged = staging_root / id_ / "manifest.json"
         if staged.exists():
             set_price_in(staged, price)
-        print("Cena nastavena: %s (%s bez DPH, ref. %s)" % (id_, price["net"], price["reference"]))
+        print("Cena nastavena: %s (%s bez DPH, ref. %s, IBAN: %s)" % (id_, price["net"], price["reference"], "ano" if price.get("iban") else "nie"))
         return
 
     if a.mark_paid:

@@ -5,14 +5,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const require = createRequire(process.env.PW_PATH + '/');
 const { chromium } = require('playwright');
-const { IDA, IDB, IDC, IDD, IDE, IDF, SCR } = process.env;
+const { IDA, IDB, IDC, IDD, IDE, IDF, IDG, SCR } = process.env;
 const FAKE = process.env.FAKE_R2 || path.join(path.dirname(fileURLToPath(import.meta.url)), 'fake-r2');
 const BASE = 'http://localhost:4321/domovid-web/video/?id=';
 const fails = [];
 const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name} ${info}`); if (!ok) fails.push(name); };
 
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+const ctx = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'], viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 const posts = [];
 await ctx.route('https://script.google.com/**', async (route) => {
   const r = route.request();
@@ -178,6 +178,21 @@ if (IDF) {
   check('F paid: #price-box not visible', !(await page.locator('#price-box').isVisible()));
   check('F paid: no price text', !/172,20/.test(await bodyText()));
 } else console.log('SKIP IDF (paid with price)');
+if (IDG) {
+  // IDG = unpaid, price + iban. The expected IBAN is read from the fixture manifest, never hard-coded.
+  const iban = JSON.parse(fs.readFileSync(path.join(FAKE, IDG, 'manifest.json'), 'utf8')).price.iban;
+  await open(IDG);
+  const t = await bodyText();
+  check('G IBAN shown formatted', t.includes('IBAN: ' + iban.replace(/(.{4})(?=.)/g, '$1 ')), t);
+  check('G "Kopírovať" button visible', await page.getByRole('button', { name: 'Kopírovať' }).isVisible());
+  check('G locked text with iban, no "vám pošleme"', t.includes('Stiahnutie v plnej kvalite sa odomkne po prijatí platby.') && !t.includes('vám pošleme'));
+  await page.getByRole('button', { name: 'Kopírovať' }).click();
+  await page.waitForFunction(() => document.getElementById('iban-copied').textContent === 'Skopírované', null, { timeout: 3000 }).catch(() => {});
+  check('G "Skopírované" visible', await page.getByText('Skopírované', { exact: true }).isVisible());
+  const clip = await page.evaluate(() => navigator.clipboard.readText());
+  check('G clipboard == iban without spaces', clip === iban);
+  await shot('11_unpaid_iban.png');
+} else console.log('SKIP IDG (unpaid with price + iban)');
 check('no GTM/FB/GA requests across whole run', thirdParty.length === 0, JSON.stringify(thirdParty));
 console.log('console/page errors:', JSON.stringify(errs));
 await browser.close();

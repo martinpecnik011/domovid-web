@@ -2,7 +2,7 @@
 // posts the client's review to the lead form endpoint and (once paid) lists the downloads.
 // Manifest data is only ever written with textContent / properties, never as HTML.
 import { FORM_ENDPOINT, CONTACT_EMAIL } from '../config/site';
-import { DELIVERY_BASE, DELIVERY_ID_RE, LOCKED_TEXT, type DeliveryManifest } from '../config/delivery';
+import { DELIVERY_BASE, DELIVERY_ID_RE, LOCKED_TEXT, LOCKED_TEXT_WITH_IBAN, type DeliveryManifest } from '../config/delivery';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -52,8 +52,9 @@ async function load() {
 const formatEur = (cents: number) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
 
 /** Price block for an unpaid video; skipped when the manifest has no (valid) price. */
-function showPrice(p: DeliveryManifest['price']) {
-  if (!p || !Number.isFinite(p.net) || p.net <= 0 || !Number.isFinite(p.vat_rate) || p.vat_rate < 0) return;
+/** Returns true when the price block (and, if the manifest has an iban, the IBAN row) is shown. */
+function showPrice(p: DeliveryManifest['price']): boolean {
+  if (!p || !Number.isFinite(p.net) || p.net <= 0 || !Number.isFinite(p.vat_rate) || p.vat_rate < 0) return false;
   const netC = Math.round(p.net * 100);
   const vatC = Math.round(netC * p.vat_rate);
   $('price-label').textContent = p.label;
@@ -62,7 +63,22 @@ function showPrice(p: DeliveryManifest['price']) {
   $('price-vat').textContent = formatEur(vatC);
   $('price-total').textContent = formatEur(netC + vatC);
   $('price-ref').textContent = p.reference;
+  const iban = typeof p.iban === 'string' ? p.iban.replace(/\s+/g, '').toUpperCase() : '';
+  if (iban) {
+    $('price-iban').textContent = iban.replace(/(.{4})(?=.)/g, '$1 ');
+    $('iban-copy').addEventListener('click', async () => {
+      let msg = 'Skopírujte ručne';
+      try {
+        await navigator.clipboard.writeText(iban);
+        msg = 'Skopírované';
+      } catch {}
+      $('iban-copied').textContent = msg;
+      setTimeout(() => ($('iban-copied').textContent = ''), 2500);
+    });
+    $('price-iban-row').hidden = false;
+  }
   $('price-box').hidden = false;
+  return !!iban;
 }
 
 function render(m: DeliveryManifest, dir: string) {
@@ -87,8 +103,8 @@ function render(m: DeliveryManifest, dir: string) {
   setupReview(m);
 
   if (!m.paid) {
-    showPrice(m.price);
-    $('locked-text').textContent = LOCKED_TEXT;
+    const withIban = showPrice(m.price);
+    $('locked-text').textContent = withIban ? LOCKED_TEXT_WITH_IBAN : LOCKED_TEXT;
     $('downloads-locked').hidden = false;
     return;
   }
