@@ -29,4 +29,6 @@ export interface DeliveryManifest {
   /** One or two entries: the 9:16 master ("Originál – plná kvalita (1080×1920)"), plus the 16:9 one when preview_16x9 is set. */
   downloads: { label: string; file: string; bytes: number }[];
   message?: string;
+  /** Optional price shown next to the payment text while unpaid. `net` in EUR, `vat_rate` as a fraction (0.23). */
+  price?: { label: string; net: number; vat_rate: number; reference: string };
 }

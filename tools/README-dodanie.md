@@ -44,6 +44,22 @@ nastavenie ako 9:16) a do `manifest.json` pridá `preview_16x9`, `poster_16x9` a
 Bez `--video-16x9` je výstup rovnaký ako doteraz. Pri `--mark-paid` sa publikujú všetky mastre; ak 16:9 master
 v staging chýba, pridaj `--source-16x9 VIDEO` (9:16 master doplní `--source`).
 
+### Cena v manifeste
+
+Voliteľne zapíš cenu, ktorú stránka ukáže klientovi: `--price-net 140 --price-label "Mesačný balík" --reference HALO-2026-10`
+(`--price-net` je suma bez DPH, DPH sa berie z `--vat-rate`, predvolene `0.23`). Všetky tri argumenty idú spolu;
+bez `--price-net` pole `price` v manifeste nie je.
+
+Cenu môžeš doplniť aj dodatočne, bez prekódovania a bez nahrávania videí:
+
+```bash
+python3 tools/dodaj_video.py --set-price ID --price-net 140 --price-label "Mesačný balík" \
+  --reference HALO-2026-10 --r2-bucket domovid-videa
+```
+
+Prepíše sa len `manifest.json` (pri `--out-dir` aj v `.master/<id>/`, pri R2 sa stiahne, upraví a nahrá späť;
+staging kópia sa upraví tiež, aby ju `--mark-paid` nezahodil).
+
 ### Kde ostáva master do zaplatenia
 
 Master (a `manifest.json`) sa pri nezaplatenom videu **nenahráva**, ale ostáva v lokálnom staging priečinku
@@ -116,5 +132,6 @@ nikto nemôže stiahnuť podľa uhádnutej URL.
 - `downloads` má jedinú položku – 9:16 master; s `--video-16x9` pribudne druhá (1920×1080) a v manifeste aj
   `"preview_16x9": { "file": "preview_16x9.mp4", "width": 1920, "height": 1080 }` a `"poster_16x9": "poster_16x9.jpg"`.
 - `downloads` sa zapisuje vždy (aj pri `paid: false`), súbory z neho sú v bucketi len po zaplatení.
+- Voliteľné pole `price`: `{"label": "...", "net": 140.0, "vat_rate": 0.23, "reference": "HALO-2026-10"}` (net bez DPH).
 - Voliteľné pole `message` (text pre klienta) skript nezapisuje; môžeš ho doplniť do `manifest.json` ručne.
 - Súbory sú v bucketi pod `<id>/<file>`; manifest sa nahráva ako posledný s `cache-control: no-store`.
