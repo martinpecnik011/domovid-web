@@ -48,6 +48,23 @@ async function load() {
   show('ready');
 }
 
+/** 17220 cents -> "172,20 €" (Slovak decimal comma, non-breaking space before the euro sign). */
+const formatEur = (cents: number) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
+
+/** Price block for an unpaid video; skipped when the manifest has no (valid) price. */
+function showPrice(p: DeliveryManifest['price']) {
+  if (!p || !Number.isFinite(p.net) || p.net <= 0 || !Number.isFinite(p.vat_rate) || p.vat_rate < 0) return;
+  const netC = Math.round(p.net * 100);
+  const vatC = Math.round(netC * p.vat_rate);
+  $('price-label').textContent = p.label;
+  $('price-net').textContent = formatEur(netC);
+  $('price-vat-label').textContent = `DPH ${Math.round(p.vat_rate * 100)} %`;
+  $('price-vat').textContent = formatEur(vatC);
+  $('price-total').textContent = formatEur(netC + vatC);
+  $('price-ref').textContent = p.reference;
+  $('price-box').hidden = false;
+}
+
 function render(m: DeliveryManifest, dir: string) {
   document.title = `${m.title} – Domovid`;
   $('video-title').textContent = m.title;
@@ -70,6 +87,7 @@ function render(m: DeliveryManifest, dir: string) {
   setupReview(m);
 
   if (!m.paid) {
+    showPrice(m.price);
     $('locked-text').textContent = LOCKED_TEXT;
     $('downloads-locked').hidden = false;
     return;

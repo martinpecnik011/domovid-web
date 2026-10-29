@@ -12,6 +12,7 @@ import shutil
 import string
 import subprocess
 import sys
+import tempfile
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
@@ -120,6 +121,25 @@ def write_manifest(path, m):
     path.write_text(json.dumps(m, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def price_from_args(a):
+    """Volitelne pole price do manifestu; None, ak nebolo zadane --price-net."""
+    if a.price_net is None:
+        if a.price_label or a.reference:
+            die("--price-label/--reference bez --price-net")
+        return None
+    if a.price_net <= 0:
+        die("--price-net musi byt vacsie ako 0")
+    if not a.price_label or not a.reference:
+        die("k --price-net zadaj aj --price-label a --reference")
+    return {"label": a.price_label, "net": a.price_net, "vat_rate": a.vat_rate, "reference": a.reference}
+
+
+def set_price_in(mf, price):
+    m = json.loads(mf.read_text(encoding="utf-8"))
+    m["price"] = price
+    write_manifest(mf, m)
+
+
 # ---- publikovanie (local / R2) ----
 CTYPES = {".mp4": "video/mp4", ".jpg": "image/jpeg", ".json": "application/json"}
 
@@ -168,6 +188,11 @@ def main():
     ap.add_argument("--video-16x9", help="volitelna 16:9 verzia (1920x1080) toho isteho videa")
     ap.add_argument("--source", help="pri --mark-paid: znovu zakodovat z tohto videa, ak chyba master v staging")
     ap.add_argument("--source-16x9", help="pri --mark-paid: znovu zakodovat 16:9 master z tohto videa, ak chyba v staging")
+    ap.add_argument("--price-net", type=float, help="cena bez DPH (volitelne pole price v manifeste)")
+    ap.add_argument("--price-label", help="popis ceny, napr. nazov balika")
+    ap.add_argument("--reference", help="referencia platby, napr. HALO-2026-10")
+    ap.add_argument("--vat-rate", type=float, default=0.23, help="sadzba DPH (default 0.23)")
+    ap.add_argument("--set-price", metavar="ID", help="dodatocne nastavit cenu v manifeste (bez prekodovania)")
     ap.add_argument("--out-dir")
     ap.add_argument("--r2-bucket")
     ap.add_argument("--staging-dir", help="kde ostane master do zaplatenia (default: OUT/.master alebo ~/.domovid-delivery)")
@@ -179,6 +204,32 @@ def main():
         need_tool(tool)
     t = Target(a.out_dir, a.r2_bucket)
     staging_root = Path(a.staging_dir or (Path(a.out_dir) / ".master" if a.out_dir else Path.home() / ".domovid-delivery"))
+
+    price = price_from_args(a)
+
+    if a.set_price:
+        id_ = a.set_price
+        if not ID_RE.match(id_):
+            die("neplatne ID (povolene [a-z0-9]{8,32})")
+        if not price:
+            die("--set-price vyzaduje --price-net, --price-label a --reference")
+        if a.out_dir:
+            pub = Path(a.out_dir) / id_ / "manifest.json"
+            if not pub.exists():
+                die("nenasiel som %s" % pub)
+            set_price_in(pub, price)
+        else:
+            with tempfile.TemporaryDirectory() as tmp:
+                pub = Path(tmp) / "manifest.json"
+                run(["npx", "wrangler", "r2", "object", "get", "%s/%s/manifest.json" % (a.r2_bucket, id_),
+                     "--remote", "--file", str(pub)])
+                set_price_in(pub, price)
+                t.put(id_, "manifest.json", pub)
+        staged = staging_root / id_ / "manifest.json"
+        if staged.exists():
+            set_price_in(staged, price)
+        print("Cena nastavena: %s (%s bez DPH, ref. %s)" % (id_, price["net"], price["reference"]))
+        return
 
     if a.mark_paid:
         id_ = a.mark_paid
@@ -227,6 +278,8 @@ def main():
         "poster": "poster.jpg",
         "downloads": [],
     }
+    if price:
+        m["price"] = price
     public = ["preview.mp4", "poster.jpg"]
     variants = [(src, PORTRAIT, "preview.mp4", "poster.jpg")]
     if src16:

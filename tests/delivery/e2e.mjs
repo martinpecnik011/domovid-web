@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const require = createRequire(process.env.PW_PATH + '/');
 const { chromium } = require('playwright');
-const { IDA, IDB, IDC, IDD, SCR } = process.env;
+const { IDA, IDB, IDC, IDD, IDE, IDF, SCR } = process.env;
 const FAKE = process.env.FAKE_R2 || path.join(path.dirname(fileURLToPath(import.meta.url)), 'fake-r2');
 const BASE = 'http://localhost:4321/domovid-web/video/?id=';
 const fails = [];
@@ -52,6 +52,7 @@ check('no GTM/FB/GA requests on /video/', thirdParty.length === 0, JSON.stringif
 check('A no anchors', (await page.locator('#downloads a').count()) === 0 && !(await page.locator('#downloads-wrap').isVisible()));
 check('A 16:9 player hidden', !(await page.locator('#video-player-16x9').isVisible()));
 check('A video readyState', (await page.evaluate(() => document.getElementById('video-player').readyState)) >= 1);
+check('A #price-box not visible', !(await page.locator('#price-box').isVisible()));
 await shot('01_unpaid_preview.png');
 
 // empty validation
@@ -94,6 +95,7 @@ const anchors = page.locator('#downloads a[download]');
 check('B exactly 1 download anchor, labelled master', (await anchors.count()) === 1 && /Originál – plná kvalita \(1080×1920\)/.test((await anchors.first().textContent()).replace(/\s+/g, ' ')), (await anchors.first().textContent()).replace(/\s+/g, ' ').trim());
 check('B downloads visible', (await anchors.count()) === 1 && (await page.locator('#downloads-wrap').isVisible()) && !(await page.locator('#downloads-locked').isVisible()), `n=${await anchors.count()}`);
 check('B 16:9 player hidden', !(await page.locator('#video-player-16x9').isVisible()));
+check('B #price-box not visible', !(await page.locator('#price-box').isVisible()));
 await shot('05_paid_downloads.png');
 const href = await anchors.first().getAttribute('href');
 const size = fs.statSync(path.join(FAKE, IDB, decodeURIComponent(href.split('/').pop()))).size;
@@ -142,6 +144,7 @@ if (IDC) {
   await ready169(IDC);
   await both('C');
   check('C 0 anchors + locked visible', (await page.locator('#downloads a').count()) === 0 && (await page.locator('#downloads-locked').isVisible()));
+  check('C #price-box not visible', !(await page.locator('#price-box').isVisible()));
   await shot('08_unpaid_16x9.png');
 } else console.log('SKIP IDC (16:9 unpaid)');
 if (IDD) {
@@ -156,8 +159,25 @@ if (IDD) {
     const hd = await ctx.request.fetch(h, { method: 'HEAD' });
     check(`D HEAD 200 + CL==size #${i}`, hd.status() === 200 && Number(hd.headers()['content-length']) === sz, `${hd.status()} ${hd.headers()['content-length']} vs ${sz}`);
   }
+  check('D #price-box not visible', !(await page.locator('#price-box').isVisible()));
   await shot('09_paid_16x9.png');
 } else console.log('SKIP IDD (16:9 paid)');
+// 10 price block (optional): IDE = unpaid with price, IDF = paid with price
+const bodyText = async () => (await page.locator('body').innerText()).replace(/[\s\u00a0]+/g, ' ');
+if (IDE) {
+  await open(IDE);
+  const t = await bodyText();
+  check('E #price-box visible', await page.locator('#price-box').isVisible());
+  for (const part of ['140,00 €', '32,20 €', '172,20 €', 'DPH 23 %', 'HALO-2026-10', 'Mesačný balík – 4 videá do 28. 11. 2026', 'Číslo účtu (IBAN) na úhradu vám pošleme'])
+    check(`E text contains "${part}"`, t.includes(part));
+  check('E no IBAN number / "faktúra" in text', !/SK\d{2}/.test(t) && !/faktúr/i.test(t));
+  await shot('10_unpaid_price.png');
+} else console.log('SKIP IDE (unpaid with price)');
+if (IDF) {
+  await open(IDF);
+  check('F paid: #price-box not visible', !(await page.locator('#price-box').isVisible()));
+  check('F paid: no price text', !/172,20/.test(await bodyText()));
+} else console.log('SKIP IDF (paid with price)');
 check('no GTM/FB/GA requests across whole run', thirdParty.length === 0, JSON.stringify(thirdParty));
 console.log('console/page errors:', JSON.stringify(errs));
 await browser.close();
