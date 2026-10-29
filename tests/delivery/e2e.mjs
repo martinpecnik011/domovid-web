@@ -5,8 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const require = createRequire(process.env.PW_PATH + '/');
 const { chromium } = require('playwright');
-const { IDA, IDB, SCR } = process.env;
-const FAKE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fake-r2');
+const { IDA, IDB, IDC, IDD, SCR } = process.env;
+const FAKE = process.env.FAKE_R2 || path.join(path.dirname(fileURLToPath(import.meta.url)), 'fake-r2');
 const BASE = 'http://localhost:4321/domovid-web/video/?id=';
 const fails = [];
 const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name} ${info}`); if (!ok) fails.push(name); };
@@ -50,6 +50,7 @@ check('robots meta == "noindex, nofollow"', (await page.locator('meta[name="robo
 check('no cookie banner element (#cc)', (await page.locator('#cc').count()) === 0 && (await page.locator('.cc').count()) === 0);
 check('no GTM/FB/GA requests on /video/', thirdParty.length === 0, JSON.stringify(thirdParty));
 check('A no anchors', (await page.locator('#downloads a').count()) === 0 && !(await page.locator('#downloads-wrap').isVisible()));
+check('A 16:9 player hidden', !(await page.locator('#video-player-16x9').isVisible()));
 check('A video readyState', (await page.evaluate(() => document.getElementById('video-player').readyState)) >= 1);
 await shot('01_unpaid_preview.png');
 
@@ -92,6 +93,7 @@ await media();
 const anchors = page.locator('#downloads a[download]');
 check('B exactly 1 download anchor, labelled master', (await anchors.count()) === 1 && /Originál – plná kvalita \(1080×1920\)/.test((await anchors.first().textContent()).replace(/\s+/g, ' ')), (await anchors.first().textContent()).replace(/\s+/g, ' ').trim());
 check('B downloads visible', (await anchors.count()) === 1 && (await page.locator('#downloads-wrap').isVisible()) && !(await page.locator('#downloads-locked').isVisible()), `n=${await anchors.count()}`);
+check('B 16:9 player hidden', !(await page.locator('#video-player-16x9').isVisible()));
 await shot('05_paid_downloads.png');
 const href = await anchors.first().getAttribute('href');
 const size = fs.statSync(path.join(FAKE, IDB, decodeURIComponent(href.split('/').pop()))).size;
@@ -123,6 +125,39 @@ check('desktop no horizontal overflow', !ovf);
 await page.setViewportSize({ width: 390, height: 844 });
 await page.goto(BASE + IDB); await page.waitForSelector('#state-ready:not([hidden])');
 check('mobile no horizontal overflow', !(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)));
+// 08 landscape (16:9) manifests, optional
+async function ready169(id) {
+  await open(id);
+  await page.waitForFunction(() => ['video-player', 'video-player-16x9'].every((i) => document.getElementById(i).readyState >= 1), null, { timeout: 15000 }).catch(() => {});
+  await page.waitForTimeout(500);
+}
+const both = async (tag) => {
+  for (const i of ['video-player', 'video-player-16x9']) {
+    check(`${tag} #${i} visible + readyState>=1`, (await page.locator('#' + i).isVisible()) && (await page.evaluate((x) => document.getElementById(x).readyState, i)) >= 1);
+  }
+  check(`${tag} captions`, (await page.locator('#caption-916').innerText()) === 'Na výšku (9:16)' && /Na šírku \(16:9\)/.test(await page.locator('#preview-169 figcaption').innerText()));
+  check(`${tag} mobile no horizontal overflow`, !(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)));
+};
+if (IDC) {
+  await ready169(IDC);
+  await both('C');
+  check('C 0 anchors + locked visible', (await page.locator('#downloads a').count()) === 0 && (await page.locator('#downloads-locked').isVisible()));
+  await shot('08_unpaid_16x9.png');
+} else console.log('SKIP IDC (16:9 unpaid)');
+if (IDD) {
+  await ready169(IDD);
+  await both('D');
+  const as = page.locator('#downloads a[download]');
+  const labels = (await as.allTextContents()).map((t) => t.replace(/\s+/g, ' '));
+  check('D exactly 2 anchors, 1080×1920 then 1920×1080', (await as.count()) === 2 && labels[0].includes('1080×1920') && labels[1].includes('1920×1080'), labels.join(' | '));
+  for (let i = 0; i < (await as.count()); i++) {
+    const h = await as.nth(i).getAttribute('href');
+    const sz = fs.statSync(path.join(FAKE, IDD, decodeURIComponent(h.split('/').pop()))).size;
+    const hd = await ctx.request.fetch(h, { method: 'HEAD' });
+    check(`D HEAD 200 + CL==size #${i}`, hd.status() === 200 && Number(hd.headers()['content-length']) === sz, `${hd.status()} ${hd.headers()['content-length']} vs ${sz}`);
+  }
+  await shot('09_paid_16x9.png');
+} else console.log('SKIP IDD (16:9 paid)');
 check('no GTM/FB/GA requests across whole run', thirdParty.length === 0, JSON.stringify(thirdParty));
 console.log('console/page errors:', JSON.stringify(errs));
 await browser.close();

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fake-r2');
+const ROOT = process.env.FAKE_R2 || path.join(path.dirname(fileURLToPath(import.meta.url)), 'fake-r2');
 const PORT = Number(process.env.PORT || 8788);
 const TYPES = { '.json': 'application/json', '.mp4': 'video/mp4', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
 

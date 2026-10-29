@@ -28,7 +28,7 @@ FONTS = [
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
 ]
 ID_RE = re.compile(r"^[a-z0-9]{8,32}$")
-SCALE = "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1"
+PORTRAIT, LANDSCAPE = (1080, 1920), (1920, 1080)
 
 
 def die(msg):
@@ -69,31 +69,36 @@ def has_audio(video):
     return bool(out.strip())
 
 
-def watermark_filter():
+def scale(w, h):
+    return "scale=%d:%d:force_original_aspect_ratio=decrease,pad=%d:%d:(ow-iw)/2:(oh-ih)/2:black,setsar=1" % (w, h, w, h)
+
+
+def watermark_filter(w, h):
     font = dt_escape(find_font())
     text = dt_escape(WATERMARK)
-    parts = [SCALE]
+    big = 84 if h > w else 64
+    parts = [scale(w, h)]
     for y in ("h*0.22", "h*0.50", "h*0.78"):
-        parts.append("drawtext=fontfile='%s':text='%s':fontsize=84:fontcolor=white@0.35:"
-                     "shadowcolor=black@0.25:shadowx=2:shadowy=2:x=(w-text_w)/2:y=%s-text_h/2" % (font, text, y))
+        parts.append("drawtext=fontfile='%s':text='%s':fontsize=%d:fontcolor=white@0.35:"
+                     "shadowcolor=black@0.25:shadowx=2:shadowy=2:x=(w-text_w)/2:y=%s-text_h/2" % (font, text, big, y))
     parts.append("drawtext=fontfile='%s':text='%s':fontsize=36:fontcolor=white@0.8:"
                  "box=1:boxcolor=black@0.35:boxborderw=12:x=40:y=60" % (font, text))
     return ",".join(parts)
 
 
-def encode_preview(src, dst):
-    cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(src), "-vf", watermark_filter(),
+def encode_preview(src, dst, w, h):
+    cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(src), "-vf", watermark_filter(w, h),
            "-c:v", "libx264", "-crf", "23", "-preset", "medium", "-pix_fmt", "yuv420p"]
     cmd += ["-c:a", "aac", "-b:a", "128k"] if has_audio(src) else ["-an"]
     run(cmd + ["-movflags", "+faststart", str(dst)])
 
 
-def encode_poster(src, dst):
-    run(["ffmpeg", "-y", "-v", "error", "-ss", "1", "-i", str(src), "-vf", SCALE, "-frames:v", "1", "-q:v", "3", str(dst)])
+def encode_poster(src, dst, w, h):
+    run(["ffmpeg", "-y", "-v", "error", "-ss", "1", "-i", str(src), "-vf", scale(w, h), "-frames:v", "1", "-q:v", "3", str(dst)])
 
 
-def encode_master(src, dst):
-    cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(src), "-vf", SCALE, "-c:v", "libx264", "-profile:v", "high",
+def encode_master(src, dst, w, h):
+    cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(src), "-vf", scale(w, h), "-c:v", "libx264", "-profile:v", "high",
            "-crf", "12", "-preset", "slow", "-maxrate", "30M", "-bufsize", "60M", "-pix_fmt", "yuv420p"]
     cmd += ["-c:a", "aac", "-b:a", "320k"] if has_audio(src) else ["-an"]
     run(cmd + ["-movflags", "+faststart", str(dst)])
@@ -103,12 +108,12 @@ def probe_duration(video):
     return float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(video)]).strip())
 
 
-def master_name(title):
-    return "%s_Domovid_1080x1920.mp4" % slugify(title)
+def master_name(title, w, h):
+    return "%s_Domovid_%dx%d.mp4" % (slugify(title), w, h)
 
 
-def build_downloads(title, master_bytes):
-    return [{"label": "Originál – plná kvalita (1080×1920)", "file": master_name(title), "bytes": master_bytes}]
+def download_entry(title, w, h, master_bytes):
+    return {"label": "Originál – plná kvalita (%d×%d)" % (w, h), "file": master_name(title, w, h), "bytes": master_bytes}
 
 
 def write_manifest(path, m):
@@ -138,13 +143,13 @@ class Target:
 
 
 def publish_master(t, id_, m, stage):
-    master = stage / m["downloads"][0]["file"]
-    t.put(id_, m["downloads"][0]["file"], master)
+    for d in m["downloads"]:
+        t.put(id_, d["file"], stage / d["file"])
 
 
 def summary(id_, stage, m):
     print("\nID: %s" % id_)
-    for d in m["downloads"][:1]:
+    for d in m["downloads"]:
         mb = d["bytes"] / 1e6
         dur = probe_duration(stage / d["file"])
         print("Master: %s  %.1f MB  %.1f Mb/s" % (d["file"], mb, d["bytes"] * 8 / dur / 1e6))
@@ -160,7 +165,9 @@ def main():
     ap.add_argument("--id")
     ap.add_argument("--paid", action="store_true", help="hned publikovat aj master")
     ap.add_argument("--mark-paid", metavar="ID", help="oznacit za zaplatene a publikovat master")
+    ap.add_argument("--video-16x9", help="volitelna 16:9 verzia (1920x1080) toho isteho videa")
     ap.add_argument("--source", help="pri --mark-paid: znovu zakodovat z tohto videa, ak chyba master v staging")
+    ap.add_argument("--source-16x9", help="pri --mark-paid: znovu zakodovat 16:9 master z tohto videa, ak chyba v staging")
     ap.add_argument("--out-dir")
     ap.add_argument("--r2-bucket")
     ap.add_argument("--staging-dir", help="kde ostane master do zaplatenia (default: OUT/.master alebo ~/.domovid-delivery)")
@@ -182,13 +189,14 @@ def main():
         if not mf.exists():
             die("nenasiel som %s - bolo video pripravene s tymto staging adresarom?" % mf)
         m = json.loads(mf.read_text(encoding="utf-8"))
-        master = stage / m["downloads"][0]["file"]
-        if not master.exists():
-            if not a.source:
-                die("master chyba v %s, zadaj --source VIDEO" % stage)
-            print("Master chyba, kodujem znova zo --source ...")
-            encode_master(a.source, master)
-            m["downloads"][0]["bytes"] = master.stat().st_size
+        for d, (flag, source, (w, h)) in zip(m["downloads"], (("--source", a.source, PORTRAIT), ("--source-16x9", a.source_16x9, LANDSCAPE))):
+            master = stage / d["file"]
+            if not master.exists():
+                if not source:
+                    die("master %s chyba v %s, zadaj %s VIDEO" % (d["file"], stage, flag))
+                print("Master chyba, kodujem znova zo %s ..." % flag)
+                encode_master(source, master, w, h)
+                d["bytes"] = master.stat().st_size
         m["paid"] = True
         publish_master(t, id_, m, stage)
         write_manifest(mf, m)
@@ -205,25 +213,38 @@ def main():
     if not ID_RE.match(id_):
         die("neplatne ID (povolene [a-z0-9]{8,32})")
 
+    src16 = Path(a.video_16x9) if a.video_16x9 else None
+    if src16 and not src16.is_file():
+        die("zdrojove 16:9 video neexistuje: %s" % src16)
+
     stage = staging_root / id_
     stage.mkdir(parents=True, exist_ok=True)
-    print("Kodujem nahlad ...")
-    encode_preview(src, stage / "preview.mp4")
-    encode_poster(stage / "preview.mp4", stage / "poster.jpg")  # z náhľadu, aby aj obálka mala vodoznak
-    print("Kodujem master (pomale, preset slow) ...")
-    mname = master_name(a.title)
-    encode_master(src, stage / mname)
     m = {
         "version": 1, "id": id_, "client": a.client, "title": a.title,
         "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "paid": False,
         "preview": {"file": "preview.mp4", "width": 1080, "height": 1920},
         "poster": "poster.jpg",
-        "downloads": build_downloads(a.title, (stage / mname).stat().st_size),
+        "downloads": [],
     }
+    public = ["preview.mp4", "poster.jpg"]
+    variants = [(src, PORTRAIT, "preview.mp4", "poster.jpg")]
+    if src16:
+        variants.append((src16, LANDSCAPE, "preview_16x9.mp4", "poster_16x9.jpg"))
+        m["preview_16x9"] = {"file": "preview_16x9.mp4", "width": 1920, "height": 1080}
+        m["poster_16x9"] = "poster_16x9.jpg"
+        public += ["preview_16x9.mp4", "poster_16x9.jpg"]
+    for vsrc, (w, h), pname, postername in variants:
+        print("Kodujem nahlad %dx%d ..." % (w, h))
+        encode_preview(vsrc, stage / pname, w, h)
+        encode_poster(stage / pname, stage / postername, w, h)  # z náhľadu, aby aj obálka mala vodoznak
+        print("Kodujem master %dx%d (pomale, preset slow) ..." % (w, h))
+        mname = master_name(a.title, w, h)
+        encode_master(vsrc, stage / mname, w, h)
+        m["downloads"].append(download_entry(a.title, w, h, (stage / mname).stat().st_size))
     mf = stage / "manifest.json"
     write_manifest(mf, m)
-    for name in ("preview.mp4", "poster.jpg"):
+    for name in public:
         t.put(id_, name, stage / name)
     if a.paid:
         m["paid"] = True

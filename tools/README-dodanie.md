@@ -36,6 +36,14 @@ python3 tools/dodaj_video.py --mark-paid ID --r2-bucket domovid-videa
 Na konci skript vypíše odkaz pre klienta `https://martinpecnik011.github.io/domovid-web/video/?id=ID`,
 veľkosť a bitrate mastera.
 
+### Voliteľná 16:9 verzia
+
+Pre to isté ID môžeš doručiť aj horizontálnu verziu: `--video-16x9 ~/Desktop/video_16x9.mp4`. Skript vyrobí navyše
+`preview_16x9.mp4` (1920×1080, vodoznak), `poster_16x9.jpg` a master `<Nazov>_Domovid_1920x1080.mp4` (rovnaké
+nastavenie ako 9:16) a do `manifest.json` pridá `preview_16x9`, `poster_16x9` a druhú položku v `downloads`.
+Bez `--video-16x9` je výstup rovnaký ako doteraz. Pri `--mark-paid` sa publikujú všetky mastre; ak 16:9 master
+v staging chýba, pridaj `--source-16x9 VIDEO` (9:16 master doplní `--source`).
+
 ### Kde ostáva master do zaplatenia
 
 Master (a `manifest.json`) sa pri nezaplatenom videu **nenahráva**, ale ostáva v lokálnom staging priečinku
@@ -105,7 +113,8 @@ nikto nemôže stiahnuť podľa uhádnutej URL.
 }
 ```
 
-- `downloads` má jedinú položku – master.
+- `downloads` má jedinú položku – 9:16 master; s `--video-16x9` pribudne druhá (1920×1080) a v manifeste aj
+  `"preview_16x9": { "file": "preview_16x9.mp4", "width": 1920, "height": 1080 }` a `"poster_16x9": "poster_16x9.jpg"`.
 - `downloads` sa zapisuje vždy (aj pri `paid: false`), súbory z neho sú v bucketi len po zaplatení.
 - Voliteľné pole `message` (text pre klienta) skript nezapisuje; môžeš ho doplniť do `manifest.json` ručne.
 - Súbory sú v bucketi pod `<id>/<file>`; manifest sa nahráva ako posledný s `cache-control: no-store`.
