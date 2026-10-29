@@ -60,6 +60,15 @@ python3 tools/dodaj_video.py --set-price ID --price-net 140 --price-label "Mesa�
 Prepíše sa len `manifest.json` (pri `--out-dir` aj v `.master/<id>/`, pri R2 sa stiahne, upraví a nahrá späť;
 staging kópia sa upraví tiež, aby ju `--mark-paid` nezahodil).
 
+### IBAN v manifeste
+
+Pri zadanej cene (vytvorenie s `--price-net` aj `--set-price`) skript načíta IBAN zo súboru
+`~/.config/domovid/iban.txt` (inú cestu zadaj cez `--iban-file`) a zapíše ho do manifestu ako `price.iban`.
+Súbor obsahuje IBAN v prvom neprázdnom riadku, napr. `SKxx xxxx xxxx xxxx xxxx xxxx` (medzery sa odstránia,
+písmená sa zväčšia). Neplatný IBAN (formát alebo kontrolný súčet mod 97) skript zastaví skôr, než zapíše manifest.
+Ak súbor chýba, `price.iban` sa nezapíše; pri `--set-price` sa existujúci `price.iban` zachová.
+IBAN sa nikdy nevypisuje do výstupu (len „IBAN: áno/nie“) a do repozitára ho nedávaj.
+
 ### Kde ostáva master do zaplatenia
 
 Master (a `manifest.json`) sa pri nezaplatenom videu **nenahráva**, ale ostáva v lokálnom staging priečinku
@@ -132,6 +141,7 @@ nikto nemôže stiahnuť podľa uhádnutej URL.
 - `downloads` má jedinú položku – 9:16 master; s `--video-16x9` pribudne druhá (1920×1080) a v manifeste aj
   `"preview_16x9": { "file": "preview_16x9.mp4", "width": 1920, "height": 1080 }` a `"poster_16x9": "poster_16x9.jpg"`.
 - `downloads` sa zapisuje vždy (aj pri `paid: false`), súbory z neho sú v bucketi len po zaplatení.
-- Voliteľné pole `price`: `{"label": "...", "net": 140.0, "vat_rate": 0.23, "reference": "HALO-2026-10"}` (net bez DPH).
+- Voliteľné pole `price`: `{"label": "...", "net": 140.0, "vat_rate": 0.23, "reference": "HALO-2026-10"}` (net bez DPH),
+  voliteľne aj `"iban"` (pozri vyššie).
 - Voliteľné pole `message` (text pre klienta) skript nezapisuje; môžeš ho doplniť do `manifest.json` ručne.
 - Súbory sú v bucketi pod `<id>/<file>`; manifest sa nahráva ako posledný s `cache-control: no-store`.

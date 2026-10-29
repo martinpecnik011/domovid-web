@@ -58,6 +58,11 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
           <p class="price-row"><span id="price-vat-label"></span> <span id="price-vat"></span></p>
           <p class="price-total">Spolu na úhradu <span id="price-total"></span></p>
           <p class="price-ref">Do správy pre prijímateľa: <strong id="price-ref"></strong></p>
+          <p id="price-iban-row" class="price-iban" hidden>
+            IBAN: <strong id="price-iban"></strong>
+            <button id="iban-copy" class="btn btn-ghost" type="button">Kopírovať</button>
+            <span id="iban-copied" aria-live="polite"></span>
+          </p>
         </div>
         <p id="locked-text"></p>
       </div>
@@ -109,6 +114,8 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
   .price { display: grid; gap: 4px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--brass); }
   .price p { margin: 0; }
   .price-row { font-weight: 500; }
+  .price-iban { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .price-iban[hidden] { display: none; }
   .price-total { font-size: 1.3rem; font-weight: 800; }
   .price-ref { font-weight: 500; font-size: 0.9rem; }
   .downloads { display: grid; gap: 10px; margin-block: 10px; }
