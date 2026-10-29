@@ -29,7 +29,14 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
         <p id="video-client" class="muted"></p>
       </header>
       <p id="video-message" class="note" hidden></p>
-      <video id="video-player" controls playsinline preload="metadata"></video>
+      <figure class="preview">
+        <video id="video-player" controls playsinline preload="metadata"></video>
+        <figcaption id="caption-916" class="muted" hidden>Na výšku (9:16)</figcaption>
+      </figure>
+      <figure id="preview-169" class="preview" hidden>
+        <video id="video-player-16x9" controls playsinline preload="metadata"></video>
+        <figcaption class="muted">Na šírku (16:9)</figcaption>
+      </figure>
 
       <div id="review">
         <div id="review-actions" class="actions">
@@ -73,6 +80,15 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
     background: #000;
     border-radius: 14px;
   }
+  #video-player-16x9 {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    display: block;
+    background: #000;
+    border-radius: 14px;
+  }
+  .preview { margin: 0; display: grid; gap: 6px; }
+  .preview figcaption { text-align: center; }
   .actions { display: grid; gap: 10px; }
   #changes-box { margin-top: 12px; }
   #review-status { margin-top: 12px; }

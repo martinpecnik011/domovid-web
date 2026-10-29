@@ -59,6 +59,13 @@ function render(m: DeliveryManifest, dir: string) {
   const player = $<HTMLVideoElement>('video-player');
   if (m.poster) player.poster = dir + m.poster;
   player.src = dir + m.preview.file;
+  const player169 = $<HTMLVideoElement>('video-player-16x9');
+  if (m.preview_16x9?.file) {
+    if (m.poster_16x9) player169.poster = dir + m.poster_16x9;
+    player169.src = dir + m.preview_16x9.file;
+    $('preview-169').hidden = false;
+    $('caption-916').hidden = false;
+  }
 
   setupReview(m);
 
@@ -67,17 +74,18 @@ function render(m: DeliveryManifest, dir: string) {
     $('downloads-locked').hidden = false;
     return;
   }
-  const d = m.downloads[0];
-  if (!d) return;
-  const a = document.createElement('a');
-  a.className = 'btn btn-brass';
-  a.href = dir + d.file;
-  a.setAttribute('download', '');
-  a.append(d.label);
-  const small = document.createElement('small');
-  small.textContent = formatSize(d.bytes);
-  a.append(small);
-  $('downloads').append(a);
+  for (const d of m.downloads) {
+    const a = document.createElement('a');
+    a.className = 'btn btn-brass';
+    a.href = dir + d.file;
+    a.setAttribute('download', '');
+    a.append(d.label);
+    const small = document.createElement('small');
+    small.textContent = formatSize(d.bytes);
+    a.append(small);
+    $('downloads').append(a);
+  }
+  if (!m.downloads.length) return;
   $('downloads-wrap').hidden = false;
 }
 
