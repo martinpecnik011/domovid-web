@@ -281,13 +281,15 @@ if (form) {
         discount,
         files,
       });
-      await fetch(FORM_ENDPOINT, { method: 'POST', mode: 'no-cors', body });
+      const res = await fetch(FORM_ENDPOINT, { method: 'POST', body });
+      const warning: unknown = await res.json().then((d) => d?.warning, () => '');
       const n = files.length;
       let text = n ? `Ďakujeme! Dopyt aj ${n} ${photosWord(n)} sme prijali.` : 'Ďakujeme! Dopyt sme prijali.';
       text += ` Potvrdenie ti práve odišlo na ${email} od ${OWNER_FROM} (${CONTACT_EMAIL}), pozri aj Spam alebo Promoakcie.`;
       text += ` Ozveme sa do 24 hodín a hotové video ti pošleme na WhatsApp na číslo ${phone}.`;
       if (discount) text += ` Zľava ${DISCOUNT_PERCENT} % s kódom ${discount} je zaznamenaná.`;
       if (left) text += ` ${left} ${photosWord(left)} sa nepodarilo priložiť – pošli ich odpoveďou na potvrdzovací e-mail.`;
+      if (typeof warning === 'string' && warning) text += ` ${warning}`;
       say(text, 'ok');
       form.reset();
       window.dispatchEvent(new CustomEvent('domovid:lead', { detail: { photos: n, discount: discount !== '' } }));

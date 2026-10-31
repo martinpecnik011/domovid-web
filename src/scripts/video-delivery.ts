@@ -2,7 +2,7 @@
 // posts the client's review to the lead form endpoint and (once paid) lists the downloads.
 // Manifest data is only ever written with textContent / properties, never as HTML.
 import { FORM_ENDPOINT, CONTACT_EMAIL } from '../config/site';
-import { DELIVERY_BASE, DELIVERY_ID_RE, LOCKED_TEXT, LOCKED_TEXT_WITH_IBAN, type DeliveryManifest } from '../config/delivery';
+import { DELIVERY_BASE, DELIVERY_ID_RE, LOCKED_TEXT, LOCKED_TEXT_WITH_IBAN, RENEWAL_HEADING, RENEWAL_TEXT, RENEWAL_REF_LABEL, RENEW_YES, RENEW_NO, RENEW_YES_DONE, RENEW_NO_DONE, type DeliveryManifest } from '../config/delivery';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -51,13 +51,46 @@ async function load() {
 /** 17220 cents -> "172,20 €" (Slovak decimal comma, non-breaking space before the euro sign). */
 const formatEur = (cents: number) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
 
+/** POSTs a review event to the lead form endpoint (fire-and-forget, no-cors) — shared by the review and renewal buttons. */
+const postReview = (m: DeliveryManifest, action: string, message: string, extra: Record<string, string> = {}) =>
+  fetch(FORM_ENDPOINT, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      type: 'review',
+      id,
+      action,
+      message,
+      ...extra,
+      client: m.client,
+      title: m.title,
+      page: location.href,
+      sentAt: new Date().toISOString(),
+      company: '',
+    }),
+  });
+
+/** Slovak plural: 1 video, 2–4 videá, 5+ videí. */
+const videosText = (n: number) => `${n} ${n === 1 ? 'video' : n >= 2 && n <= 4 ? 'videá' : 'videí'}`;
+
+/** Renewal heading + explanation above the (reused) price block; the price block gets the renewal offer as its label. */
+function showRenewal(m: DeliveryManifest, r: NonNullable<DeliveryManifest['renewal']>) {
+  $('renewal-heading').textContent = RENEWAL_HEADING[r.reason] ?? RENEWAL_HEADING.exhausted;
+  $('renewal-text').textContent = RENEWAL_TEXT;
+  $('renewal-box').hidden = false;
+  $('review').hidden = true;
+  setupRenewalButtons(m, r);
+  $('price-ref-label').textContent = RENEWAL_REF_LABEL;
+}
+
 /** Price block for an unpaid video; skipped when the manifest has no (valid) price. */
 /** Returns true when the price block (and, if the manifest has an iban, the IBAN row) is shown. */
-function showPrice(p: DeliveryManifest['price']): boolean {
+function showPrice(p: DeliveryManifest['price'], labelOverride?: string): boolean {
   if (!p || !Number.isFinite(p.net) || p.net <= 0 || !Number.isFinite(p.vat_rate) || p.vat_rate < 0) return false;
   const netC = Math.round(p.net * 100);
   const vatC = Math.round(netC * p.vat_rate);
-  $('price-label').textContent = p.label;
+  $('price-label').textContent = labelOverride || p.label;
   $('price-net').textContent = formatEur(netC);
   $('price-vat-label').textContent = `DPH ${Math.round(p.vat_rate * 100)} %`;
   $('price-vat').textContent = formatEur(vatC);
@@ -103,7 +136,8 @@ function render(m: DeliveryManifest, dir: string) {
   setupReview(m);
 
   if (!m.paid) {
-    const withIban = showPrice(m.price);
+    if (m.renewal) showRenewal(m, m.renewal);
+    const withIban = showPrice(m.price, m.renewal && `Obnoviť balík ${m.renewal.package_id} – ${videosText(m.renewal.videos)}`);
     $('locked-text').textContent = withIban ? LOCKED_TEXT_WITH_IBAN : LOCKED_TEXT;
     $('downloads-locked').hidden = false;
     return;
@@ -121,6 +155,30 @@ function render(m: DeliveryManifest, dir: string) {
   }
   if (!m.downloads.length) return;
   $('downloads-wrap').hidden = false;
+}
+
+function setupRenewalButtons(m: DeliveryManifest, r: NonNullable<DeliveryManifest['renewal']>) {
+  const yes = $<HTMLButtonElement>('btn-renew');
+  const no = $<HTMLButtonElement>('btn-decline');
+  const status = $('renewal-status');
+  yes.textContent = RENEW_YES;
+  no.textContent = RENEW_NO;
+  const send = async (action: 'renew' | 'decline') => {
+    yes.disabled = no.disabled = true;
+    try {
+      await postReview(m, action, '', action === 'renew' ? { package_id: r.package_id } : {});
+      status.className = 'form-status ok';
+      status.textContent = action === 'renew' ? RENEW_YES_DONE.replace('{ID}', r.package_id) : RENEW_NO_DONE;
+    } catch {
+      status.className = 'form-status error';
+      status.textContent = 'Odoslanie sa nepodarilo.';
+      yes.disabled = no.disabled = false;
+    }
+    status.hidden = false;
+  };
+  yes.addEventListener('click', () => send('renew'));
+  no.addEventListener('click', () => send('decline'));
+  $('renewal-review').hidden = false;
 }
 
 function setupReview(m: DeliveryManifest) {
@@ -144,22 +202,7 @@ function setupReview(m: DeliveryManifest) {
   async function submit(action: 'approve' | 'changes', message: string) {
     busy(true);
     try {
-      await fetch(FORM_ENDPOINT, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          type: 'review',
-          id,
-          action,
-          message,
-          client: m.client,
-          title: m.title,
-          page: location.href,
-          sentAt: new Date().toISOString(),
-          company: '',
-        }),
-      });
+      await postReview(m, action, message);
       $('review-actions').hidden = true;
       box.hidden = true;
       say(

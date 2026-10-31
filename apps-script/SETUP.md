@@ -49,3 +49,15 @@ Nasadenie novej verzie (URL ostáva rovnaká, na webe nič nemeníš):
 1. V tabuľke **Domovid leady** otvor **Rozšírenia → Apps Script**.
 2. Zmaž obsah `Code.gs`, vlož celý nový obsah súboru `apps-script/Code.gs` z tohto repa a ulož (Cmd+S).
 3. **Nasadiť → Spravovať nasadenia → ceruzka → Verzia: *Nová verzia* → Nasadiť.**
+
+## Upozornenie na vyčerpaný balík
+
+Keď existujúci klient (e-mail z formulára sa zhoduje s e-mailom v hárku **Klienti**) pošle dopyt a jeho posledný mesačný balík je zaplatený a vyčerpaný (počet videí v hárku **Videá** dosiahol počet v balíku) alebo už uplynul jeho koniec, fotky sa uložia ako vždy, no odpoveď obsahuje `warning`. Upozornenie sa zobrazí vo formulári, pridá sa do potvrdzujúceho e-mailu klientovi a do e-mailu tebe (s menom klienta a ID balíka). Ak kontrola zlyhá alebo nie je nastavená, dopyt sa spracuje bez upozornenia.
+
+Hárky Klienti / Balíky / Videá sú v inej tabuľke než Leady, preto jednorazovo:
+
+1. V Apps Script otvor **Nastavenia projektu → Vlastnosti skriptu → Pridať vlastnosť**: `KLIENTI_SHEET_ID` = `1Zrc_k0x3GuTlQxI9XwfX3K8IT1M_3lyli8OFaCPo1Mo`.
+2. Skript musí mať prístup k tej tabuľke (otvor ju pod rovnakým Google účtom, ktorému skript patrí, alebo ju zdieľaj naň). Pri ďalšom spustení Google môže vypýtať povolenie pre Tabuľky — daj **Povoliť**.
+3. Vlož nový `Code.gs` a **Nasadiť → Spravovať nasadenia → ceruzka → Verzia: *Nová verzia* → Nasadiť.**
+
+Formulár na webe už neposiela požiadavku v režime `no-cors`, aby si vedel prečítať odpoveď; Apps Script na takú požiadavku odpovedá aj pre iný pôvod.

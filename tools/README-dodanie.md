@@ -79,6 +79,41 @@ Master (a `manifest.json`) sa pri nezaplatenom videu **nenahráva**, ale ostáva
 - Ak master v staging chýba, `--mark-paid ID --source VIDEO` ho zakóduje znova zo zdroja.
 - Staging priečinok nemaž, kým klient nezaplatí.
 
+## Balíky (Google Sheet „Domovid – klienti a zisk“)
+
+`tools/balik.py` číta/zapisuje Sheet (záložky `Klienti`, `Balíky`, `Videá`) cez `composio proxy` (toolkit `googledrive`,
+účet `domovid-upload`). Vzorcové stĺpce (Balíky G, H, K; Videá I, K, L) sa nikdy nezapisujú.
+
+Dodanie s referenciou balíka: `--reference HALO-2026-10` (bez `--price-net` sa popis a cena odvodia z balíka).
+
+- Balík je zaplatený (`Zaplatené dňa`), má voľné miesto (počet videí s týmto `Balík ID`, bez práve dodávaného, je menej než
+  `Videí v balíku`) a dnes je najneskôr `Koniec` → video sa odomkne hneď (ako `--paid`).
+- Balík nie je zaplatený → video je zamknuté, cena z balíka (ako doteraz).
+- Balík je zaplatený, ale vyčerpaný alebo po termíne → video je zamknuté a manifest dostane blok `renewal`
+  (`package_id` ďalšieho balíka, napr. `HALO-2026-12` → `HALO-2027-01`, `previous_package_id`, `label`, `videos`, `net`,
+  `vat_rate`, `reference`, `iban`, `reason`: `exhausted` | `expired`); `price` odkazuje na obnovu. Skript vypíše `POZOR`.
+- Neznámy balík alebo nedostupný Sheet → video ostáva zamknuté a skript vypíše upozornenie (dodanie samotné prebehne).
+- Každé dodanie s `--reference` pridá riadok do `Videá` (Stav: `odomknuté` / `čaká na platbu` / `balík vyčerpaný`);
+  opakované dodanie s rovnakým Video ID len aktualizuje Stav. Voliteľne `--kling-credits N`.
+
+Po prijatí platby za balík:
+
+```bash
+python3 tools/dodaj_video.py --package-paid HALO-2026-10 [--paid-date 2026-10-12] --r2-bucket domovid-videa
+```
+
+Zapíše len `Balíky!J` (ak je prázdne; `I` – Splatnosť – sa nemení), odomkne všetky videá balíka (rovnaká cesta ako `--mark-paid`; staging musí
+existovať, rovnako ako pri `--out-dir`) a nastaví Stav `zaplatené – odomknuté`. Opakované spustenie nič nemení.
+
+Platba obnovy: ak balík `PKG` v `Balíky` ešte nie je, ale nejaký odložený manifest ho ponúka v `renewal.package_id`,
+skript najprv pridá riadok do `Balíky` (Začiatok = dátum platby, Koniec = dátum platby + 1 mesiac − 1 deň, cena a počet
+videí z `renewal`, `Zaplatené dňa` = dátum platby; vzorcové stĺpce a Splatnosť ostávajú prázdne), presunie `Videá!C`
+tohto videa na nový balík, odstráni z manifestu blok `renewal` (aj z publikovanej kópie) a video odomkne. Neznámy balík
+bez zhodnej obnovy skončí chybou.
+
+Na skúšku bez živého Sheetu: `DOMOVID_SHEET_FAKE=/cesta/fake.json` (vzor `tests/delivery/fixtures/sheet.json`).
+Testy: `python3 -m unittest tests/delivery/test_balik.py -v`.
+
 ## Jednorazové nastavenie Cloudflare R2
 
 1. `npx wrangler login` (otvorí OAuth v prehliadači).
@@ -143,5 +178,6 @@ nikto nemôže stiahnuť podľa uhádnutej URL.
 - `downloads` sa zapisuje vždy (aj pri `paid: false`), súbory z neho sú v bucketi len po zaplatení.
 - Voliteľné pole `price`: `{"label": "...", "net": 140.0, "vat_rate": 0.23, "reference": "HALO-2026-10"}` (net bez DPH),
   voliteľne aj `"iban"` (pozri vyššie).
+- Voliteľné pole `renewal` (výzva na obnovu balíka, pozri „Balíky“): `{"package_id", "previous_package_id", "label", "videos", "net", "vat_rate", "reference", "iban", "reason"}`.
 - Voliteľné pole `message` (text pre klienta) skript nezapisuje; môžeš ho doplniť do `manifest.json` ručne.
 - Súbory sú v bucketi pod `<id>/<file>`; manifest sa nahráva ako posledný s `cache-control: no-store`.

@@ -8,7 +8,7 @@ import vm from 'node:vm';
 const SOURCE = readFileSync(fileURLToPath(new URL('../Code.gs', import.meta.url)), 'utf8');
 const OLD_HEADERS = ['Prijaté', 'Meno', 'Telefón', 'E-mail', 'Správa', 'Stránka', 'Odoslané (prehliadač)'];
 
-function makeEnv({ sheetRows = null, props = {}, existingFolders = [] } = {}) {
+function makeEnv({ sheetRows = null, props = {}, existingFolders = [], klienti = null, openThrows = false } = {}) {
   let nextId = 1;
   const folders = new Map();
   const log = { mails: [], locks: 0, events: [] };
@@ -74,6 +74,11 @@ function makeEnv({ sheetRows = null, props = {}, existingFolders = [] } = {}) {
     console,
     JSON,
     SpreadsheetApp: {
+      openById: (id) => {
+        if (openThrows) throw new Error('No access');
+        assert.equal(id, props.KLIENTI_SHEET_ID);
+        return { getSheetByName: (n) => ({ getDataRange: () => ({ getValues: () => klienti[n] }) }) };
+      },
       getActiveSpreadsheet: () => ({
         getSheetByName: (name) => (name === 'Schválenia' ? (reviewRows ? reviewSheet : null) : rows ? sheet : null),
         insertSheet: (name) => {
@@ -376,4 +381,78 @@ test('(p) review fields are cleaned against formula injection', () => {
   const row = env.getReviewRows()[1];
   assert.equal(row[2], "'=EVIL()");
   assert.equal(row[5], "'+cmd");
+});
+
+// --- package warning (Klienti / Balíky / Videá in a separate spreadsheet) ---
+const KLIENTI = [['ID', 'Meno', 'Firma', 'Telefón', 'E-mail'], ['K1', 'Jana Nováková', '', '', ' Jana@Example.sk ']];
+const PACK_HEAD = ['Balík ID', 'Klient', 'Začiatok', 'Koniec', 'Cena', 'Videí', 'Čerpané', 'Zostáva', 'Splatnosť', 'Zaplatené', 'Stav', 'Poznámka'];
+const VIDEO_HEAD = ['Dátum', 'Klient', 'Balík ID', 'Video ID'];
+const videos = (id, n) => Array.from({ length: n }, (_, i) => ['', 'Jana Nováková', id, 'v' + i]);
+const pack = (id, start, end, count, paid) => [id, 'Jana Nováková', start, end, 100, count, '', '', '', paid, '', ''];
+const klientiEnv = (packs, vids, extra = {}) => makeEnv({
+  props: { KLIENTI_SHEET_ID: 'sheet-1' },
+  klienti: { Klienti: KLIENTI, 'Balíky': [PACK_HEAD, ...packs], 'Videá': [VIDEO_HEAD, ...vids] },
+  ...extra
+});
+const WARN = /mesačný balík videí je už vyčerpaný/;
+
+test('(q) exhausted paid package → warning in response and both e-mails, photos saved', () => {
+  const env = klientiEnv([pack('B1', '1. 10. 2026', '31. 12. 2099', 3, '5. 10. 2026')], videos('B1', 3));
+  const out = env.ctx.doPost(jsonPost({ ...base, files: [{ name: 'a.jpg', type: 'image/jpeg', data: jpeg(1) }] }));
+  assert.match(reply(out).warning, WARN);
+  assert.equal(reply(out).ok, true);
+  assert.equal(env.roots[0].children[0].files.length, 1);
+  const [notify, confirm] = env.log.mails;
+  assert.match(confirm.body, WARN);
+  assert.match(notify.body, /klient Jana Nováková, balík B1/);
+});
+
+test('(r) latest package expired with no newer one → warning; Date objects work', () => {
+  const env = klientiEnv([pack('B1', new Date(2026, 8, 1), new Date(2026, 8, 30), 5, '')], []);
+  assert.match(reply(env.ctx.doPost(jsonPost(base))).warning, WARN);
+});
+
+test('(s) newer package is the one checked: old exhausted one is ignored', () => {
+  const env = klientiEnv([
+    pack('B1', '1. 9. 2026', '30. 9. 2026', 2, '5. 9. 2026'),
+    pack('B2', '1. 10. 2026', '31. 12. 2099', 2, '5. 10. 2026')
+  ], videos('B1', 2));
+  assert.equal('warning' in reply(env.ctx.doPost(jsonPost(base))), false);
+});
+
+test('(t) no warning: room left, unknown e-mail, no property, openById throws; lead still saved', () => {
+  const room = klientiEnv([pack('B1', '1. 10. 2026', '31. 12. 2099', 3, '5. 10. 2026')], videos('B1', 2));
+  const unknown = klientiEnv([pack('B1', '1. 10. 2026', '31. 12. 2099', 1, '5. 10. 2026')], videos('B1', 1));
+  const noProp = makeEnv();
+  const throws = klientiEnv([], [], { openThrows: true });
+  const cases = [[room, base], [unknown, { ...base, email: 'other@example.sk' }], [noProp, base], [throws, base]];
+  for (const [env, payload] of cases) {
+    const out = reply(env.ctx.doPost(jsonPost(payload)));
+    assert.deepEqual(out, { ok: true });
+    assert.equal(env.getRows().length, 2);
+    for (const m of env.log.mails) assert.doesNotMatch(m.body, WARN);
+  }
+});
+
+test('(u) renew → row "predĺženie balíka …" and subject with package id', () => {
+  const env = makeEnv();
+  assert.deepEqual(reply(env.ctx.doPost(jsonPost({ ...review, action: 'renew', package_id: 'HALO-2026-11' }))), { ok: true });
+  assert.equal(env.getReviewRows()[1][4], 'predĺženie balíka HALO-2026-11');
+  assert.equal(env.log.mails[0].subject, 'Domovid: Jana Nováková predlžuje balík HALO-2026-11');
+});
+
+test('(v) decline → row "nepredlžuje" and subject', () => {
+  const env = makeEnv();
+  assert.deepEqual(reply(env.ctx.doPost(jsonPost({ ...review, action: 'decline' }))), { ok: true });
+  assert.equal(env.getReviewRows()[1][4], 'nepredlžuje');
+  assert.equal(env.log.mails[0].subject, 'Domovid: Jana Nováková nepredlžuje balík');
+});
+
+test('(w) renew with bad package_id and unknown action → rejected, no row, no mail', () => {
+  for (const patch of [{ action: 'renew', package_id: 'x y' }, { action: 'renew' }, { action: 'renew', package_id: 'A'.repeat(41) }, { action: 'extend', package_id: 'B1' }]) {
+    const env = makeEnv();
+    assert.deepEqual(reply(env.ctx.doPost(jsonPost({ ...review, ...patch }))), { ok: false });
+    assert.equal(env.getReviewRows(), null);
+    assert.equal(env.log.mails.length, 0);
+  }
 });

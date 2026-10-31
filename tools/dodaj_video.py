@@ -14,8 +14,11 @@ import subprocess
 import sys
 import tempfile
 import unicodedata
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import balik
 
 os.environ["PATH"] = "/opt/homebrew/bin:" + os.environ.get("PATH", "")
 
@@ -131,8 +134,12 @@ def price_from_args(a):
         die("--price-net musi byt vacsie ako 0")
     if not a.price_label or not a.reference:
         die("k --price-net zadaj aj --price-label a --reference")
-    price = {"label": a.price_label, "net": a.price_net, "vat_rate": a.vat_rate, "reference": a.reference}
-    iban = read_iban(a.iban_file)
+    return build_price(a.price_label, a.price_net, a.vat_rate, a.reference, a.iban_file)
+
+
+def build_price(label, net, vat_rate, reference, iban_file):
+    price = {"label": label, "net": net, "vat_rate": vat_rate, "reference": reference}
+    iban = read_iban(iban_file)
     if iban:
         price["iban"] = iban
     return price
@@ -197,6 +204,81 @@ def summary(id_, stage, m):
     print("Odkaz pre klienta: %s?id=%s" % (BASE_URL, id_))
 
 
+def mark_paid(id_, t, staging_root, a):
+    stage = staging_root / id_
+    mf = stage / "manifest.json"
+    if not mf.exists():
+        die("nenasiel som %s - bolo video pripravene s tymto staging adresarom?" % mf)
+    m = json.loads(mf.read_text(encoding="utf-8"))
+    for d, (flag, source, (w, h)) in zip(m["downloads"], (("--source", a.source, PORTRAIT), ("--source-16x9", a.source_16x9, LANDSCAPE))):
+        master = stage / d["file"]
+        if not master.exists():
+            if not source:
+                die("master %s chyba v %s, zadaj %s VIDEO" % (d["file"], stage, flag))
+            print("Master chyba, kodujem znova zo %s ..." % flag)
+            encode_master(source, master, w, h)
+            d["bytes"] = master.stat().st_size
+    m["paid"] = True
+    publish_master(t, id_, m, stage)
+    write_manifest(mf, m)
+    t.put(id_, "manifest.json", mf)
+    return m
+
+
+def package_paid(a, t, staging_root):
+    """--package-paid PKG: zapise platbu do Sheetu a odomkne vsetky videa balika (opakovanie = nic)."""
+    pkg = a.package_paid
+    try:
+        paid_date = date.fromisoformat(a.paid_date) if a.paid_date else date.today()
+    except ValueError:
+        die("--paid-date ocakava YYYY-MM-DD")
+    backend = balik.get_backend()
+    renewals = []  # odlozene manifesty, ktore ponukli tento balik ako obnovu
+    for mf in sorted(staging_root.glob("*/manifest.json")):
+        try:
+            m = json.loads(mf.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        if (m.get("renewal") or {}).get("package_id") == pkg:
+            renewals.append((mf.parent.name, m))
+    changed = False
+    if renewals and balik.find_package(backend, pkg)[1] is None:
+        balik.add_package_from_renewal(backend, renewals[0][1]["renewal"], renewals[0][1]["client"], paid_date)
+        changed = True
+    for vid, m in renewals:
+        balik.reassign_video_package(backend, vid, pkg)
+        del m["renewal"]
+        write_manifest(staging_root / vid / "manifest.json", m)
+        mark_paid(vid, t, staging_root, a)  # publikuje aj manifest bez bloku renewal
+        print("Odomknute (obnova): %s" % vid)
+        changed = True
+    try:
+        _, c = balik.mark_package_paid(backend, pkg, paid_date)
+        changed = changed or c
+    except KeyError as e:
+        die(str(e))
+    failed = 0
+    for row_no, vid, stav in balik.package_videos(backend, pkg):
+        mf = staging_root / vid / "manifest.json"
+        if mf.exists() and json.loads(mf.read_text(encoding="utf-8")).get("paid"):
+            print("Uz odomknute: %s" % vid)
+        else:
+            try:
+                mark_paid(vid, t, staging_root, a)
+                changed = True
+                print("Odomknute: %s" % vid)
+            except SystemExit as e:
+                failed += 1
+                print("%s" % e)
+                continue
+        if stav != balik.VIDEO_PAID_STAV:
+            backend.update(balik.T_VID, row_no, balik.V_STAV, balik.VIDEO_PAID_STAV)
+            changed = True
+    print("Balik %s: %s" % (pkg, "zaplateny a videa odomknute" if changed else "uz bol zaplateny, nic na zmenu"))
+    if failed:
+        die("%d video(a) sa nepodarilo odomknut" % failed)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Odovzdanie videa klientovi (nahlad + master po zaplateni).")
     ap.add_argument("video", nargs="?", help="zdrojove video (nikdy sa nemeni)")
@@ -211,6 +293,9 @@ def main():
     ap.add_argument("--price-net", type=float, help="cena bez DPH (volitelne pole price v manifeste)")
     ap.add_argument("--price-label", help="popis ceny, napr. nazov balika")
     ap.add_argument("--reference", help="referencia platby, napr. HALO-2026-10")
+    ap.add_argument("--package-paid", metavar="PKG", help="balik zaplateny: zapise Sheet a odomkne vsetky jeho videa")
+    ap.add_argument("--paid-date", help="pri --package-paid: datum platby YYYY-MM-DD (default dnes)")
+    ap.add_argument("--kling-credits", type=int, help="spotrebovane Kling kredity (zapise sa do Sheetu)")
     ap.add_argument("--vat-rate", type=float, default=0.23, help="sadzba DPH (default 0.23)")
     ap.add_argument("--iban-file", default="~/.config/domovid/iban.txt", help="subor s IBAN (default ~/.config/domovid/iban.txt); cita sa len pri zadanej cene")
     ap.add_argument("--set-price", metavar="ID", help="dodatocne nastavit cenu v manifeste (bez prekodovania)")
@@ -226,7 +311,8 @@ def main():
     t = Target(a.out_dir, a.r2_bucket)
     staging_root = Path(a.staging_dir or (Path(a.out_dir) / ".master" if a.out_dir else Path.home() / ".domovid-delivery"))
 
-    price = price_from_args(a)
+    pkg_mode = bool(a.reference) and a.price_net is None and not a.set_price
+    price = None if pkg_mode else price_from_args(a)
 
     if a.set_price:
         id_ = a.set_price
@@ -253,27 +339,13 @@ def main():
         return
 
     if a.mark_paid:
-        id_ = a.mark_paid
-        if not ID_RE.match(id_):
+        if not ID_RE.match(a.mark_paid):
             die("neplatne ID (povolene [a-z0-9]{8,32})")
-        stage = staging_root / id_
-        mf = stage / "manifest.json"
-        if not mf.exists():
-            die("nenasiel som %s - bolo video pripravene s tymto staging adresarom?" % mf)
-        m = json.loads(mf.read_text(encoding="utf-8"))
-        for d, (flag, source, (w, h)) in zip(m["downloads"], (("--source", a.source, PORTRAIT), ("--source-16x9", a.source_16x9, LANDSCAPE))):
-            master = stage / d["file"]
-            if not master.exists():
-                if not source:
-                    die("master %s chyba v %s, zadaj %s VIDEO" % (d["file"], stage, flag))
-                print("Master chyba, kodujem znova zo %s ..." % flag)
-                encode_master(source, master, w, h)
-                d["bytes"] = master.stat().st_size
-        m["paid"] = True
-        publish_master(t, id_, m, stage)
-        write_manifest(mf, m)
-        t.put(id_, "manifest.json", mf)
-        summary(id_, stage, m)
+        summary(a.mark_paid, staging_root / a.mark_paid, mark_paid(a.mark_paid, t, staging_root, a))
+        return
+
+    if a.package_paid:
+        package_paid(a, t, staging_root)
         return
 
     if not a.video or not a.client or not a.title:
@@ -299,6 +371,22 @@ def main():
         "poster": "poster.jpg",
         "downloads": [],
     }
+    stav, warning = None, None
+    if a.reference and not a.set_price:
+        ev = balik.evaluate(a.reference, id_)
+        warning = ev["warning"]
+        if ev["state"] == "ok":
+            a.paid = True
+        elif ev["state"] == "renewal" and not a.paid:
+            r = dict(ev["renewal"], vat_rate=a.vat_rate, reference=ev["renewal"]["package_id"])
+            iban = read_iban(a.iban_file)
+            if iban:
+                r["iban"] = iban
+            m["renewal"] = r
+            price = build_price(r["label"], r["net"], a.vat_rate, r["package_id"], a.iban_file)
+        if price is None and ev["price"] and "renewal" not in m:
+            price = build_price(ev["price"]["label"], ev["price"]["net"], a.vat_rate, a.reference, a.iban_file)
+        stav = "odomknuté" if a.paid else "balík vyčerpaný" if "renewal" in m else "čaká na platbu"
     if price:
         m["price"] = price
     public = ["preview.mp4", "poster.jpg"]
@@ -326,6 +414,14 @@ def main():
         write_manifest(mf, m)
     t.put(id_, "manifest.json", mf)
     summary(id_, stage, m)
+    if stav:
+        try:
+            balik.record_video(id_, a.client, a.reference, a.title, "9:16 + 16:9" if src16 else "9:16",
+                               "%s?id=%s" % (BASE_URL, id_), stav, a.kling_credits)
+        except Exception as e:
+            warning = (warning + "; " if warning else "") + "zapis do Sheetu zlyhal (%s)" % e
+    if warning:
+        print("POZOR: %s" % warning)
 
 
 if __name__ == "__main__":

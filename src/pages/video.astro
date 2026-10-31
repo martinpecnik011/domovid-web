@@ -51,13 +51,25 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
         <p id="review-status" class="form-status" role="status" hidden></p>
       </div>
 
+      <div id="renewal-review" hidden>
+        <div id="renewal-actions" class="actions">
+          <button id="btn-renew" class="btn btn-brass" type="button"></button>
+          <button id="btn-decline" class="btn btn-ghost" type="button"></button>
+        </div>
+        <p id="renewal-status" class="form-status ok" role="status" hidden></p>
+      </div>
+
       <div id="downloads-locked" class="locked" hidden>
+        <div id="renewal-box" class="renewal" hidden>
+          <h2 id="renewal-heading"></h2>
+          <p id="renewal-text" class="note"></p>
+        </div>
         <div id="price-box" class="price" hidden>
           <p id="price-label"></p>
           <p class="price-row">Cena bez DPH <span id="price-net"></span></p>
           <p class="price-row"><span id="price-vat-label"></span> <span id="price-vat"></span></p>
           <p class="price-total">Spolu na úhradu <span id="price-total"></span></p>
-          <p class="price-ref">Do správy pre prijímateľa: <strong id="price-ref"></strong></p>
+          <p class="price-ref"><span id="price-ref-label">Do správy pre prijímateľa:</span> <strong id="price-ref"></strong></p>
           <p id="price-iban-row" class="price-iban" hidden>
             IBAN: <strong id="price-iban"></strong>
             <button id="iban-copy" class="btn btn-ghost" type="button">Kopírovať</button>
@@ -103,7 +115,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
   .preview figcaption { text-align: center; }
   .actions { display: grid; gap: 10px; }
   #changes-box { margin-top: 12px; }
-  #review-status { margin-top: 12px; }
+  #review-status, #renewal-status { margin-top: 12px; }
   .locked {
     padding: 14px 16px;
     border: 1px dashed var(--brass);
@@ -111,6 +123,8 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
     background: var(--brass-soft);
     font-weight: 600;
   }
+  .renewal { display: grid; gap: 4px; margin-bottom: 12px; }
+  .renewal p { margin: 0; font-weight: 500; }
   .price { display: grid; gap: 4px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--brass); }
   .price p { margin: 0; }
   .price-row { font-weight: 500; }
