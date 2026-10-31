@@ -87,7 +87,8 @@ class LiveBackend:
         cmd = ["composio", "proxy", url, "--toolkit", "googledrive", "--account", "domovid-upload"]
         if method != "GET":
             cmd += ["-X", method, "-H", "content-type: application/json", "-d", json.dumps(body, ensure_ascii=False)]
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        # stdin=DEVNULL: composio proxy inak cita telo poziadavky zo zdedeneho stdin (pipe/heredoc) -> 400
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=60, stdin=subprocess.DEVNULL)
         if r.returncode != 0:
             raise RuntimeError("composio proxy zlyhal: %s" % r.stderr[-300:])
         out = json.loads(r.stdout)
@@ -99,8 +100,15 @@ class LiveBackend:
         return self._call(self.BASE + urllib.parse.quote(tab, safe="")).get("values", [])
 
     def append(self, tab, row):
-        url = self.BASE + urllib.parse.quote(tab + "!A:N", safe="") + ":append?valueInputOption=USER_ENTERED"
-        self._call(url, "POST", {"values": [row]})
+        # Nie values:append - ten by "" prepisal predvyplnene vzorce (G/H/K, I/K/L) a riadok by zaradil
+        # za poznamky v stlpci N. Zapise len vyplnene bunky do prveho riadku s prazdnym stlpcom A.
+        filled = [i for i, r in enumerate(self.rows(tab)) if cell(r, 0)]
+        row_no = (filled[-1] + 2) if filled else 1
+        data = [{"range": "%s!%s%d" % (tab, col_letter(c), row_no), "values": [[v]]}
+                for c, v in enumerate(row) if v != "" and v is not None]
+        sheet_id = self.BASE.split("/spreadsheets/")[1].split("/")[0]
+        url = "https://sheets.googleapis.com/v4/spreadsheets/%s/values:batchUpdate" % sheet_id
+        self._call(url, "POST", {"valueInputOption": "USER_ENTERED", "data": data})
 
     def update(self, tab, row_no, col, value):
         url = self.BASE + urllib.parse.quote("%s!%s%d" % (tab, col_letter(col), row_no), safe="") + "?valueInputOption=USER_ENTERED"
