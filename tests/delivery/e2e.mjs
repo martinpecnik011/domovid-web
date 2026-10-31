@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const require = createRequire(process.env.PW_PATH + '/');
 const { chromium } = require('playwright');
-const { IDA, IDB, IDC, IDD, IDE, IDF, IDG, SCR } = process.env;
+const { IDA, IDB, IDC, IDD, IDE, IDF, IDG, IDR, SCR } = process.env;
 const FAKE = process.env.FAKE_R2 || path.join(path.dirname(fileURLToPath(import.meta.url)), 'fake-r2');
 const BASE = 'http://localhost:4321/domovid-web/video/?id=';
 const fails = [];
@@ -193,6 +193,39 @@ if (IDG) {
   check('G clipboard == iban without spaces', clip === iban);
   await shot('11_unpaid_iban.png');
 } else console.log('SKIP IDG (unpaid with price + iban)');
+if (IDR) {
+  // IDR = unpaid renewal offer (manifest `renewal`); expected values come from the fixture manifest.
+  const r = JSON.parse(fs.readFileSync(path.join(FAKE, IDR, 'manifest.json'), 'utf8')).renewal;
+  await open(IDR);
+  const t = await bodyText();
+  check('R renewal heading', (await page.locator('#renewal-heading').textContent()) === 'Mesačný balík je vyčerpaný' && (await page.locator('#renewal-heading').isVisible()));
+  check('R offer "Obnoviť balík <id> – 4 videá"', t.includes(`Obnoviť balík ${r.package_id} – 4 videá`));
+  check('R Spolu 172,20 €', t.includes('Spolu na úhradu 172,20 €') && t.includes('140,00 €') && t.includes('DPH 23 %'));
+  check('R reference label + package id', t.includes(`Variabilný symbol / referencia platby: ${r.package_id}`));
+  check('R price block shown once', (await page.locator('#price-box:visible').count()) === 1 && (await page.locator('#price-total').count()) === 1);
+  check('R IBAN shown + no "faktúr"', t.includes('IBAN: ' + r.iban.replace(/(.{4})(?=.)/g, '$1 ')) && !/faktúr/i.test(t));
+  await page.getByRole('button', { name: 'Kopírovať' }).click();
+  await page.waitForFunction(() => document.getElementById('iban-copied').textContent === 'Skopírované', null, { timeout: 3000 }).catch(() => {});
+  check('R clipboard == iban without spaces', (await page.evaluate(() => navigator.clipboard.readText())) === r.iban);
+  check('R mobile no horizontal overflow', !(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)));
+  await shot('12_renewal.png');
+  check('R buttons visible, review buttons hidden', (await page.locator('#btn-renew').isVisible()) && (await page.locator('#btn-decline').isVisible()) && !(await page.locator('#btn-approve').isVisible()));
+  for (const [btn, action, done, shotName] of [
+    ['#btn-renew', 'renew', `Ďakujeme! Balík ${r.package_id} sme pre vás pripravili – po prijatí platby na IBAN nižšie vám odomkneme video a pokračujeme ďalšími videami.`, '13_renew_sent.png'],
+    ['#btn-decline', 'decline', 'Rozumieme, ďakujeme za spoluprácu. Ak si to rozmyslíte, stačí nám napísať.', '14_decline_sent.png'],
+  ]) {
+    await open(IDR);
+    const n = posts.length;
+    await page.click(btn);
+    await page.waitForSelector('#renewal-status:not([hidden])');
+    const p = JSON.parse(posts[posts.length - 1].body);
+    check(`R ${action}: one POST`, posts.length === n + 1, `posts=${posts.length - n}`);
+    check(`R ${action}: payload`, p.type === 'review' && p.id === IDR && p.action === action && p.company === '' && (action === 'renew' ? p.package_id === r.package_id : !('package_id' in p)), JSON.stringify(p));
+    check(`R ${action}: confirmation text`, (await page.textContent('#renewal-status')) === done, await page.textContent('#renewal-status'));
+    check(`R ${action}: both buttons disabled`, (await page.locator('#btn-renew').isDisabled()) && (await page.locator('#btn-decline').isDisabled()));
+    await shot(shotName);
+  }
+} else console.log('SKIP IDR (renewal offer)');
 check('no GTM/FB/GA requests across whole run', thirdParty.length === 0, JSON.stringify(thirdParty));
 console.log('console/page errors:', JSON.stringify(errs));
 await browser.close();

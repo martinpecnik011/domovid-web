@@ -23,6 +23,8 @@ var UPLOAD_FOLDER_NAME = 'Domovid leady – fotky';
 var UPLOAD_FOLDER_PROP = 'UPLOAD_FOLDER_ID';
 var MAX_FILES = 10;
 var MAX_FILE_BYTES = 8 * 1024 * 1024;
+var KLIENTI_SHEET_PROP = 'KLIENTI_SHEET_ID';
+var PACKAGE_WARNING = 'Váš mesačný balík videí je už vyčerpaný – fotky sme prijali, video spracujeme po obnovení balíka. Podrobnosti k obnoveniu balíka vám pošleme.';
 var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
 function doPost(e) {
@@ -63,6 +65,9 @@ function doPost(e) {
     lock.releaseLock();
   }
 
+  var pkg = packageStatus(clean(p.email, 160));
+  var warning = pkg ? PACKAGE_WARNING : '';
+
   var photoLines = '';
   if (photos.saved > 0) photoLines += 'Fotky: ' + photos.saved + ' – ' + photos.url + '\n';
   if (photos.skipped > 0) photoLines += 'Preskočené súbory: ' + photos.skipped + '\n';
@@ -77,13 +82,14 @@ function doPost(e) {
       'Zľavový kód: ' + (discount || '-') + '\n\n' +
       'Správa:\n' + (clean(p.message, 2000) || '-') + '\n\n' +
       photoLines +
+      (pkg ? 'Balík vyčerpaný/skončený: klient ' + pkg.client + ', balík ' + pkg.packageId + '\n' : '') +
       'WhatsApp: https://wa.me/' + waNumber(p.phone) + '\n' +
       'Tabuľka: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
   });
 
-  sendConfirmation(clean(p.email, 160), name, photos.saved, clean(p.phone, 40), discount);
+  sendConfirmation(clean(p.email, 160), name, photos.saved, clean(p.phone, 40), discount, warning);
 
-  return json({ ok: true });
+  return json(warning ? { ok: true, warning: warning } : { ok: true });
 }
 
 // Client's verdict on a delivered video: logged to the review sheet, owner notified by e-mail.
@@ -91,10 +97,13 @@ function handleReview(p) {
   if (p.company) return json({ ok: true });
   var id = String(p.id || '');
   if (!/^[a-z0-9]{8,32}$/.test(id)) return json({ ok: false });
-  if (p.action !== 'approve' && p.action !== 'changes') return json({ ok: false });
+  var renewal = p.action === 'renew' || p.action === 'decline';
+  if (p.action !== 'approve' && p.action !== 'changes' && !renewal) return json({ ok: false });
+  var packageId = String(p.package_id || '');
+  if (p.action === 'renew' && !/^[A-Za-z0-9-]{1,40}$/.test(packageId)) return json({ ok: false });
   var approve = p.action === 'approve';
   var message = clean(p.message, 2000);
-  if (!approve && !message) return json({ ok: false });
+  if (p.action === 'changes' && !message) return json({ ok: false });
 
   var client = clean(p.client, 120);
   var title = clean(p.title, 200);
@@ -104,7 +113,7 @@ function handleReview(p) {
   lock.waitLock(10000);
   try {
     getSheet(REVIEW_SHEET_NAME, REVIEW_HEADERS).appendRow([
-      new Date(), id, client, title, approve ? 'Schválené' : 'Úprava', message, page, clean(p.sentAt, 40)
+      new Date(), id, client, title, reviewAction(p.action, packageId), message, page, clean(p.sentAt, 40)
     ]);
   } finally {
     lock.releaseLock();
@@ -112,7 +121,9 @@ function handleReview(p) {
 
   MailApp.sendEmail({
     to: NOTIFY_EMAIL,
-    subject: (approve ? 'Domovid: klient schválil video – ' : 'Domovid: klient chce úpravu – ') + client,
+    subject: p.action === 'renew' ? 'Domovid: ' + client + ' predlžuje balík ' + packageId
+      : p.action === 'decline' ? 'Domovid: ' + client + ' nepredlžuje balík'
+      : (approve ? 'Domovid: klient schválil video – ' : 'Domovid: klient chce úpravu – ') + client,
     body:
       'ID videa: ' + id + '\n' +
       'Klient: ' + (client || '-') + '\n' +
@@ -123,6 +134,13 @@ function handleReview(p) {
   });
 
   return json({ ok: true });
+}
+
+// Text of the Akcia column in Schválenia.
+function reviewAction(action, packageId) {
+  if (action === 'renew') return 'predĺženie balíka ' + packageId;
+  if (action === 'decline') return 'nepredlžuje';
+  return action === 'approve' ? 'Schválené' : 'Úprava';
 }
 
 // JSON body (new frontend) or URL-encoded fields (legacy). Returns null on a malformed JSON body.
@@ -231,7 +249,7 @@ function getUploadRoot() {
 }
 
 // Confirmation to the customer, only when they left a valid-looking e-mail.
-function sendConfirmation(email, name, photoCount, phone, discount) {
+function sendConfirmation(email, name, photoCount, phone, discount, warning) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
   var first = String(name).replace(/^'/, '').split(/\s+/)[0] || '';
   var next = photoCount > 0
@@ -253,11 +271,68 @@ function sendConfirmation(email, name, photoCount, phone, discount) {
       'Hotové video ti pošleme na WhatsApp' + (phone ? ' na číslo ' + phone : '') + '.\n\n' +
       next +
       discountLine +
+      (warning ? warning + '\n\n' : '') +
       'Martin Pecník, Domovid\n' +
       'https://martinpecnik011.github.io/domovid-web/\n\n' +
       'Tento e-mail ti prišiel, lebo si vyplnil formulár na webe Domovid. ' +
       'Ak to nebol ty, stačí odpovedať a údaje vymažeme.'
   });
+}
+
+// Existing client whose latest monthly package is paid and used up, or past its end date.
+// Returns {client, packageId} or null. Any failure (no property, no access, odd data) means no warning.
+function packageStatus(email) {
+  try {
+    var id = PropertiesService.getScriptProperties().getProperty(KLIENTI_SHEET_PROP);
+    email = String(email || '').trim().toLowerCase();
+    if (!id || !email) return null;
+    var ss = SpreadsheetApp.openById(id);
+    var clients = ss.getSheetByName('Klienti').getDataRange().getValues();
+    var client = '';
+    for (var i = 1; i < clients.length && !client; i++) {
+      if (String(clients[i][4]).trim().toLowerCase() === email) client = String(clients[i][1]).trim();
+    }
+    if (!client) return null;
+
+    var packs = ss.getSheetByName('Balíky').getDataRange().getValues();
+    var latest = null;
+    var latestStart = -Infinity;
+    for (var j = 1; j < packs.length; j++) {
+      if (String(packs[j][1]).trim() !== client) continue;
+      var start = toTime(packs[j][2]);
+      if (!latest || (isNaN(start) ? 0 : start) >= latestStart) {
+        latest = packs[j];
+        latestStart = isNaN(start) ? 0 : start;
+      }
+    }
+    if (!latest) return null;
+
+    var packageId = String(latest[0]).trim();
+    var end = toTime(latest[3]);
+    var expired = !isNaN(end) && Date.now() >= end + 24 * 3600 * 1000;
+    var exhausted = false;
+    if (String(latest[9]).trim() !== '') {
+      var total = Number(latest[5]);
+      var videos = ss.getSheetByName('Videá').getDataRange().getValues();
+      var used = 0;
+      for (var k = 1; k < videos.length; k++) {
+        if (String(videos[k][2]).trim() === packageId) used++;
+      }
+      exhausted = total > 0 && used >= total;
+    }
+    return exhausted || expired ? { client: client, packageId: packageId } : null;
+  } catch (err) {
+    console.error('Kontrola balíka zlyhala: ' + err);
+    return null;
+  }
+}
+
+// Sheet cell date (Date object or "29. 10. 2026" / ISO text) → ms timestamp, NaN when empty or unreadable.
+function toTime(v) {
+  if (v === '' || v === null || v === undefined) return NaN;
+  if (Object.prototype.toString.call(v) === '[object Date]') return v.getTime();
+  var m = /^\s*(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})\s*$/.exec(String(v));
+  return m ? new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])).getTime() : new Date(String(v)).getTime();
 }
 
 // Slovak plural: 1 fotku, 2–4 fotky, 5+ fotiek.

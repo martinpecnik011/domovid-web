@@ -13,6 +13,17 @@ export const LOCKED_TEXT = 'Stiahnutie v plnej kvalite sa odomkne po prijatí pl
 /** Locked text when the price block shows the IBAN (manifest `price.iban`). */
 export const LOCKED_TEXT_WITH_IBAN = 'Stiahnutie v plnej kvalite sa odomkne po prijatí platby.';
 
+/** Renewal offer copy (manifest `renewal`): heading per reason, short explanation, reference label. */
+export const RENEWAL_HEADING = { exhausted: 'Mesačný balík je vyčerpaný', expired: 'Mesačný balík vypršal' } as const;
+export const RENEWAL_TEXT = 'Ak chcete pokračovať v tvorbe videí, obnovte si balík. Po prijatí platby vám balík aktivujeme.';
+export const RENEWAL_REF_LABEL = 'Variabilný symbol / referencia platby:';
+
+/** Renewal buttons and their confirmations ({ID} = package id). */
+export const RENEW_YES = 'Áno, schvaľujem video a predlžujem balík';
+export const RENEW_NO = 'Nie, ďakujem';
+export const RENEW_YES_DONE = 'Ďakujeme! Balík {ID} sme pre vás pripravili – po prijatí platby na IBAN nižšie vám odomkneme video a pokračujeme ďalšími videami.';
+export const RENEW_NO_DONE = 'Rozumieme, ďakujeme za spoluprácu. Ak si to rozmyslíte, stačí nám napísať.';
+
 /** `${DELIVERY_BASE}/${id}/manifest.json`. All files below are relative to `${DELIVERY_BASE}/${id}/`. */
 export interface DeliveryManifest {
   version: 1;
@@ -34,4 +45,16 @@ export interface DeliveryManifest {
   message?: string;
   /** Optional price shown next to the payment text while unpaid. `net` in EUR, `vat_rate` as a fraction (0.23). */
   price?: { label: string; net: number; vat_rate: number; reference: string; iban?: string };
+  /** Renewal offer for a used-up / expired monthly package. `paid` is false and `price` mirrors the renewal. */
+  renewal?: {
+    package_id: string;
+    previous_package_id: string;
+    label: string;
+    videos: number;
+    net: number;
+    vat_rate: number;
+    reference: string;
+    iban?: string;
+    reason: 'exhausted' | 'expired';
+  };
 }
