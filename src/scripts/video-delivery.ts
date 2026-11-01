@@ -2,7 +2,7 @@
 // posts the client's review to the lead form endpoint and (once paid) lists the downloads.
 // Manifest data is only ever written with textContent / properties, never as HTML.
 import { FORM_ENDPOINT, CONTACT_EMAIL } from '../config/site';
-import { DELIVERY_BASE, DELIVERY_ID_RE, LOCKED_TEXT, LOCKED_TEXT_WITH_IBAN, RENEWAL_HEADING, RENEWAL_TEXT, RENEWAL_REF_LABEL, DOWNLOAD_LABEL, DOWNLOAD_BUSY, RENEW_YES, RENEW_NO, RENEW_YES_DONE, RENEW_NO_DONE, type DeliveryManifest } from '../config/delivery';
+import { DELIVERY_BASE, DELIVERY_ID_RE, LOCKED_TEXT, LOCKED_TEXT_WITH_IBAN, RENEWAL_HEADING, RENEWAL_TEXT, RENEWAL_REF_LABEL, DOWNLOAD_LABEL, SINGLE_VIDEO_NET, SINGLE_BUY, SINGLE_INTRO, SINGLE_REF_LABEL, SINGLE_DONE, RENEWAL_VALIDITY, DOWNLOAD_BUSY, RENEW_YES, RENEW_NO, RENEW_YES_DONE, RENEW_NO_DONE, type DeliveryManifest } from '../config/delivery';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -74,6 +74,17 @@ const postReview = (m: DeliveryManifest, action: string, message: string, extra:
 /** Slovak plural: 1 video, 2–4 videá, 5+ videí. */
 const videosText = (n: number) => `${n} ${n === 1 ? 'video' : n >= 2 && n <= 4 ? 'videá' : 'videí'}`;
 
+/** Slovak date "D. M. RRRR" without leading zeros. */
+const skDate = (d: Date) => `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
+
+/** Package validity from `from`: one calendar month (day clamped to month length) minus one day, like balik.package_end. */
+function packageEnd(from: Date): Date {
+  const y = from.getFullYear();
+  const mo = from.getMonth() + 1;
+  const last = new Date(y, mo + 1, 0).getDate();
+  return new Date(y, mo, Math.min(from.getDate(), last) - 1);
+}
+
 /** Renewal heading + explanation above the (reused) price block; the price block gets the renewal offer as its label. */
 function showRenewal(m: DeliveryManifest, r: NonNullable<DeliveryManifest['renewal']>) {
   $('renewal-heading').textContent = RENEWAL_HEADING[r.reason] ?? RENEWAL_HEADING.exhausted;
@@ -82,6 +93,32 @@ function showRenewal(m: DeliveryManifest, r: NonNullable<DeliveryManifest['renew
   $('review').hidden = true;
   setupRenewalButtons(m, r);
   $('price-ref-label').textContent = RENEWAL_REF_LABEL;
+  const today = new Date();
+  $('price-validity').textContent = RENEWAL_VALIDITY.replace('{FROM}', skDate(today)).replace('{TO}', skDate(packageEnd(today)));
+  $('price-validity').hidden = false;
+  showSingle(m, r);
+}
+
+/** Single-video price from the renewal (or the default constant); null when invalid. */
+function singleOffer(m: DeliveryManifest, r: NonNullable<DeliveryManifest['renewal']>) {
+  const net = r.single?.net ?? SINGLE_VIDEO_NET;
+  const rate = r.single?.vat_rate ?? r.vat_rate;
+  if (!Number.isFinite(net) || net <= 0 || !Number.isFinite(rate) || rate < 0) return null;
+  const netC = Math.round(net * 100);
+  const vatC = Math.round(netC * rate);
+  return { netC, vatC, rate, reference: r.single?.reference || m.id, totalC: netC + vatC };
+}
+
+function showSingle(m: DeliveryManifest, r: NonNullable<DeliveryManifest['renewal']>) {
+  const o = singleOffer(m, r);
+  if (!o) return;
+  $('single-intro').textContent = SINGLE_INTRO;
+  $('single-price').textContent = `${formatEur(o.netC)} + DPH ${Math.round(o.rate * 100)} % ${formatEur(o.vatC)} = ${formatEur(o.totalC)}`;
+  $('single-ref-label').textContent = SINGLE_REF_LABEL;
+  $('single-ref').textContent = o.reference;
+  $('single-box').hidden = false;
+  $('btn-single').textContent = SINGLE_BUY;
+  $('btn-single').hidden = false;
 }
 
 /** Price block for an unpaid video; skipped when the manifest has no (valid) price. */
@@ -123,9 +160,16 @@ function render(m: DeliveryManifest, dir: string) {
     $('video-message').hidden = false;
   }
   const player = $<HTMLVideoElement>('video-player');
+  const player169 = $<HTMLVideoElement>('video-player-16x9');
+  for (const v of [player, player169]) {
+    v.setAttribute('controlsList', 'nodownload noremoteplayback noplaybackrate');
+    v.disablePictureInPicture = true;
+    v.disableRemotePlayback = true;
+    v.addEventListener('contextmenu', (e) => e.preventDefault());
+    v.parentElement?.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
   if (m.poster) player.poster = dir + m.poster;
   player.src = dir + m.preview.file;
-  const player169 = $<HTMLVideoElement>('video-player-16x9');
   if (m.preview_16x9?.file) {
     if (m.poster_16x9) player169.poster = dir + m.poster_16x9;
     player169.src = dir + m.preview_16x9.file;
@@ -187,23 +231,33 @@ function render(m: DeliveryManifest, dir: string) {
 function setupRenewalButtons(m: DeliveryManifest, r: NonNullable<DeliveryManifest['renewal']>) {
   const yes = $<HTMLButtonElement>('btn-renew');
   const no = $<HTMLButtonElement>('btn-decline');
+  const single = $<HTMLButtonElement>('btn-single');
   const status = $('renewal-status');
   yes.textContent = RENEW_YES;
   no.textContent = RENEW_NO;
-  const send = async (action: 'renew' | 'decline') => {
-    yes.disabled = no.disabled = true;
+  const send = async (action: 'renew' | 'single' | 'decline') => {
+    yes.disabled = no.disabled = single.disabled = true;
     try {
-      await postReview(m, action, '', action === 'renew' ? { package_id: r.package_id } : {});
+      const o = singleOffer(m, r);
+      const extra = action === 'renew' ? { package_id: r.package_id } : action === 'single' && o ? { package_id: r.package_id, price_net: o.netC / 100, reference: o.reference } : {};
+      await postReview(m, action, '', extra);
       status.className = 'form-status ok';
-      status.textContent = action === 'renew' ? RENEW_YES_DONE.replace('{ID}', r.package_id) : RENEW_NO_DONE;
+      status.textContent =
+        action === 'renew'
+          ? RENEW_YES_DONE.replace('{ID}', r.package_id)
+          : action === 'single' && o
+            ? SINGLE_DONE.replace('{TOTAL}', formatEur(o.totalC)).replace('{ID}', o.reference)
+            : RENEW_NO_DONE;
+      status.scrollIntoView?.({ block: 'nearest' });
     } catch {
       status.className = 'form-status error';
       status.textContent = 'Odoslanie sa nepodarilo.';
-      yes.disabled = no.disabled = false;
+      yes.disabled = no.disabled = single.disabled = false;
     }
     status.hidden = false;
   };
   yes.addEventListener('click', () => send('renew'));
+  single.addEventListener('click', () => send('single'));
   no.addEventListener('click', () => send('decline'));
   $('renewal-review').hidden = false;
 }

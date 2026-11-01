@@ -227,6 +227,30 @@ if (IDR) {
   check('R clipboard == iban without spaces', (await page.evaluate(() => navigator.clipboard.readText())) === r.iban);
   check('R mobile no horizontal overflow', !(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)));
   await shot('12_renewal.png');
+  {
+    const sk = (d) => `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
+    const now = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 2, 0).getDate();
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, Math.min(now.getDate(), lastDay) - 1);
+    check('R validity text', (await page.locator('#price-validity').innerText()).replace(/\s+/g, ' ') === `Platí 1 mesiac odo dňa prijatia platby – pri platbe dnes: ${sk(now)} – ${sk(end)}`, await page.locator('#price-validity').innerText());
+    const st = (await page.locator('#single-box').innerText()).replace(/[\s\u00a0]+/g, ' ');
+    check('R single option text', st.includes('Alebo len toto video bez balíka') && st.includes('50,00 € + DPH 23 % 11,50 € = 61,50 €') && st.includes(IDR), st);
+    check('R single button visible', await page.locator('#btn-single').isVisible());
+    const attrs = await page.evaluate(() => { const v = document.getElementById('video-player'); return { cl: v.getAttribute('controlsList'), pip: v.disablePictureInPicture, rp: v.disableRemotePlayback }; });
+    check('R preview attrs (nodownload, no PiP, no remote)', /nodownload/.test(attrs.cl) && attrs.pip === true && attrs.rp === true, JSON.stringify(attrs));
+    check('R contextmenu prevented on #video-player', await page.evaluate(() => { const e = new MouseEvent('contextmenu', { bubbles: true, cancelable: true }); document.getElementById('video-player').dispatchEvent(e); return e.defaultPrevented; }));
+    await shot('16_renewal_offer.png');
+    await open(IDR);
+    const n0 = posts.length;
+    await page.click('#btn-single');
+    await page.waitForSelector('#renewal-status:not([hidden])');
+    const sp = JSON.parse(posts[posts.length - 1].body);
+    check('R single: one POST + payload', posts.length === n0 + 1 && sp.type === 'review' && sp.id === IDR && sp.action === 'single' && sp.price_net === 50 && sp.package_id === r.package_id, JSON.stringify(sp));
+    check('R single: confirmation text', (await page.textContent('#renewal-status')).replace(/\u00a0/g, ' ') === `Ďakujeme! Po prijatí platby 61,50 € na IBAN nižšie (referencia ${IDR}) vám video odomkneme.`, await page.textContent('#renewal-status'));
+    check('R single: all 3 buttons disabled', (await page.locator('#btn-renew').isDisabled()) && (await page.locator('#btn-single').isDisabled()) && (await page.locator('#btn-decline').isDisabled()));
+    await shot('17_single_sent.png');
+    await open(IDR);
+  }
   check('R buttons visible, review buttons hidden', (await page.locator('#btn-renew').isVisible()) && (await page.locator('#btn-decline').isVisible()) && !(await page.locator('#btn-approve').isVisible()));
   for (const [btn, action, done, shotName] of [
     ['#btn-renew', 'renew', `Ďakujeme! Balík ${r.package_id} sme pre vás pripravili – po prijatí platby na IBAN nižšie vám odomkneme video a pokračujeme ďalšími videami.`, '13_renew_sent.png'],
@@ -240,7 +264,7 @@ if (IDR) {
     check(`R ${action}: one POST`, posts.length === n + 1, `posts=${posts.length - n}`);
     check(`R ${action}: payload`, p.type === 'review' && p.id === IDR && p.action === action && p.company === '' && (action === 'renew' ? p.package_id === r.package_id : !('package_id' in p)), JSON.stringify(p));
     check(`R ${action}: confirmation text`, (await page.textContent('#renewal-status')) === done, await page.textContent('#renewal-status'));
-    check(`R ${action}: both buttons disabled`, (await page.locator('#btn-renew').isDisabled()) && (await page.locator('#btn-decline').isDisabled()));
+    check(`R ${action}: all buttons disabled`, (await page.locator('#btn-renew').isDisabled()) && (await page.locator('#btn-single').isDisabled()) && (await page.locator('#btn-decline').isDisabled()));
     await shot(shotName);
   }
 } else console.log('SKIP IDR (renewal offer)');

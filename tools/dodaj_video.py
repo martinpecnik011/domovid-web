@@ -32,6 +32,7 @@ FONTS = [
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
 ]
 ID_RE = re.compile(r"^[a-z0-9]{8,32}$")
+SINGLE_VIDEO_NET = 50  # cena jedneho videa bez DPH (alternativa k obnove balika)
 PORTRAIT, LANDSCAPE = (1080, 1920), (1920, 1080)
 
 
@@ -298,6 +299,7 @@ def main():
     ap.add_argument("--package-paid", metavar="PKG", help="balik zaplateny: zapise Sheet a odomkne vsetky jeho videa")
     ap.add_argument("--paid-date", help="pri --package-paid: datum platby YYYY-MM-DD (default dnes)")
     ap.add_argument("--kling-credits", type=int, help="spotrebovane Kling kredity (zapise sa do Sheetu)")
+    ap.add_argument("--single-price", type=float, default=SINGLE_VIDEO_NET, help="cena jedneho videa bez DPH v bloku renewal (default 50)")
     ap.add_argument("--vat-rate", type=float, default=0.23, help="sadzba DPH (default 0.23)")
     ap.add_argument("--iban-file", default="~/.config/domovid/iban.txt", help="subor s IBAN (default ~/.config/domovid/iban.txt); cita sa len pri zadanej cene")
     ap.add_argument("--set-price", metavar="ID", help="dodatocne nastavit cenu v manifeste (bez prekodovania)")
@@ -381,6 +383,7 @@ def main():
             a.paid = True
         elif ev["state"] == "renewal" and not a.paid:
             r = dict(ev["renewal"], vat_rate=a.vat_rate, reference=ev["renewal"]["package_id"])
+            r["single"] = {"net": a.single_price, "vat_rate": a.vat_rate, "reference": id_}
             iban = read_iban(a.iban_file)
             if iban:
                 r["iban"] = iban
