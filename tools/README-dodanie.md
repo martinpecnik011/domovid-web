@@ -168,7 +168,7 @@ nikto nemôže stiahnuť podľa uhádnutej URL.
   "preview": { "file": "preview.mp4", "width": 1080, "height": 1920 },
   "poster": "poster.jpg",
   "downloads": [
-    { "label": "Originál – plná kvalita (1080×1920)", "file": "RodinnyDomZahorska_Domovid_1080x1920.mp4", "bytes": 33364557 }
+    { "label": "Stiahnuť v plnej kvalite (1080×1920)", "file": "RodinnyDomZahorska_Domovid_1080x1920.mp4", "bytes": 33364557 }
   ]
 }
 ```

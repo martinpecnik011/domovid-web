@@ -117,7 +117,7 @@ def master_name(title, w, h):
 
 
 def download_entry(title, w, h, master_bytes):
-    return {"label": "Originál – plná kvalita (%d×%d)" % (w, h), "file": master_name(title, w, h), "bytes": master_bytes}
+    return {"label": "Stiahnuť v plnej kvalite (%d×%d)" % (w, h), "file": master_name(title, w, h), "bytes": master_bytes}
 
 
 def write_manifest(path, m):
@@ -175,7 +175,7 @@ class Target:
     def __init__(self, out_dir, bucket):
         self.out_dir, self.bucket = out_dir, bucket
 
-    def put(self, id_, name, path):
+    def put(self, id_, name, path, attachment=False):
         if self.out_dir:
             dest = Path(self.out_dir) / id_
             dest.mkdir(parents=True, exist_ok=True)
@@ -185,13 +185,15 @@ class Target:
                "--file", str(path), "--remote", "--content-type", CTYPES[Path(name).suffix]]
         if name == "manifest.json":
             cmd += ["--cache-control", "no-store"]
+        if attachment:
+            cmd += ["--content-disposition", 'attachment; filename="%s"' % name]
         run(cmd)
         print("  nahrane: %s/%s" % (id_, name))
 
 
 def publish_master(t, id_, m, stage):
     for d in m["downloads"]:
-        t.put(id_, d["file"], stage / d["file"])
+        t.put(id_, d["file"], stage / d["file"], attachment=True)
 
 
 def summary(id_, stage, m):

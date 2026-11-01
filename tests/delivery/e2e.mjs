@@ -92,7 +92,7 @@ check('approve payload fields', approve.type === 'review' && approve.action === 
 await open(IDB);
 await media();
 const anchors = page.locator('#downloads a[download]');
-check('B exactly 1 download anchor, labelled master', (await anchors.count()) === 1 && /Originál – plná kvalita \(1080×1920\)/.test((await anchors.first().textContent()).replace(/\s+/g, ' ')), (await anchors.first().textContent()).replace(/\s+/g, ' ').trim());
+check('B exactly 1 download anchor, labelled master', (await anchors.count()) === 1 && /Stiahnuť v plnej kvalite \(1080×1920\)/.test((await anchors.first().textContent()).replace(/\s+/g, ' ')), (await anchors.first().textContent()).replace(/\s+/g, ' ').trim());
 check('B downloads visible', (await anchors.count()) === 1 && (await page.locator('#downloads-wrap').isVisible()) && !(await page.locator('#downloads-locked').isVisible()), `n=${await anchors.count()}`);
 check('B 16:9 player hidden', !(await page.locator('#video-player-16x9').isVisible()));
 check('B #price-box not visible', !(await page.locator('#price-box').isVisible()));
@@ -107,6 +107,15 @@ await shot('05_paid_downloads.png');
   await shot('05b_paid_approved.png');
 }
 const href = await anchors.first().getAttribute('href');
+{
+  const file = decodeURIComponent(href.split('/').pop());
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), anchors.first().click()]);
+  const saved = await dl.path();
+  check('B click fires download event: filename + size == master', dl.suggestedFilename() === file && fs.statSync(saved).size === fs.statSync(path.join(FAKE, IDB, file)).size, `${dl.suggestedFilename()} ${fs.statSync(saved).size}`);
+  await page.waitForFunction(() => !document.querySelector('#downloads a[data-busy]'));
+  await anchors.first().scrollIntoViewIfNeeded();
+  await page.locator('#downloads-wrap').screenshot({ path: path.join(SCR, '15_download_button.png') });
+}
 const size = fs.statSync(path.join(FAKE, IDB, decodeURIComponent(href.split('/').pop()))).size;
 const head = await ctx.request.fetch(href, { method: 'HEAD' });
 const get = await ctx.request.get(href);
