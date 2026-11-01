@@ -244,12 +244,12 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .lead-form .full { grid-column: 1 / -1; }
 .field { display: grid; gap: 5px; align-content: start; }
 .field label { font-size: 0.82rem; font-weight: 600; }
-.field input, .field textarea {
+.field input, .field textarea, .field select {
   width: 100%; font: inherit; font-size: 0.95rem; color: var(--ink);
   background: var(--glass-strong); border: 1px solid var(--line); border-radius: 12px; padding: 10px 13px;
 }
 .field textarea { min-height: 74px; resize: vertical; }
-.field input:focus, .field textarea:focus { outline: 2px solid var(--brass); outline-offset: 0; border-color: transparent; }
+.field input:focus, .field textarea:focus, .field select:focus { outline: 2px solid var(--brass); outline-offset: 0; border-color: transparent; }
 .field [aria-invalid="true"] { border-color: var(--danger); }
 .field-err { font-size: 0.8rem; color: var(--danger); font-weight: 500; }
 .consent { display: flex; gap: 10px; align-items: flex-start; font-size: 0.8rem; color: var(--ink-muted); cursor: pointer; }

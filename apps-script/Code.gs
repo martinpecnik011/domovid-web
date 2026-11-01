@@ -6,14 +6,15 @@
  *
  * Wire formats accepted by doPost:
  *  - JSON body (Content-Type text/plain, fetch mode 'no-cors'):
- *    {"name","phone","email","message","page","sentAt","company","utm","discount",
- *     "files":[{"name","type","data":"<base64>"}]}
+ *    {"name","phone","email","propertyType","location","price","area","look","referenceUrl",
+ *     "page","sentAt","company","utm","discount","files":[{"name","type","data":"<base64>"}]}
  *  - legacy URL-encoded form fields (e.parameter), text only.
  */
 
 var NOTIFY_EMAIL = 'martinpecnik011@gmail.com';
 var SHEET_NAME = 'Leady';
-var HEADERS = ['Prijaté', 'Meno', 'Telefón', 'E-mail', 'Správa', 'Stránka', 'Odoslané (prehliadač)', 'Fotky', 'UTM', 'Zľavový kód'];
+var HEADERS = ['Prijaté', 'Meno', 'Telefón', 'E-mail', 'Správa', 'Stránka', 'Odoslané (prehliadač)', 'Fotky', 'UTM', 'Zľavový kód',
+  'Typ', 'Lokalita', 'Cena', 'Plocha m²', 'Ako má video vyzerať', 'Referenčné video'];
 
 var REVIEW_SHEET_NAME = 'Schválenia';
 var REVIEW_HEADERS = ['Prijaté', 'ID videa', 'Klient', 'Video', 'Akcia', 'Pripomienky', 'Stránka', 'Odoslané (prehliadač)'];
@@ -49,18 +50,7 @@ function doPost(e) {
   lock.waitLock(10000);
   try {
     var sheet = getSheet();
-    sheet.appendRow([
-      new Date(),
-      name,
-      clean(p.phone, 40),
-      clean(p.email, 160),
-      clean(p.message, 2000),
-      clean(p.page, 300),
-      clean(p.sentAt, 40),
-      photos.url,
-      clean(p.utm && typeof p.utm === 'object' ? JSON.stringify(p.utm) : p.utm, 300),
-      discount
-    ]);
+    sheet.appendRow(buildLeadRow(p, name, photos.url, discount));
   } finally {
     lock.releaseLock();
   }
@@ -80,7 +70,12 @@ function doPost(e) {
       'Telefón: ' + clean(p.phone, 40) + '\n' +
       'E-mail: ' + (clean(p.email, 160) || '-') + '\n' +
       'Zľavový kód: ' + (discount || '-') + '\n\n' +
-      'Správa:\n' + (clean(p.message, 2000) || '-') + '\n\n' +
+      'Typ nehnuteľnosti: ' + (clean(p.propertyType, 40) || '-') + '\n' +
+      'Lokalita: ' + (clean(p.location, 160) || '-') + '\n' +
+      'Cena: ' + (clean(p.price, 40) || '-') + '\n' +
+      'Plocha m²: ' + (clean(p.area, 40) || '-') + '\n' +
+      'Referenčné video: ' + (clean(p.referenceUrl, 500) || '-') + '\n\n' +
+      'Ako má video vyzerať:\n' + (clean(p.look, 2000) || '-') + '\n\n' +
       photoLines +
       (pkg ? 'Balík vyčerpaný/skončený: klient ' + pkg.client + ', balík ' + pkg.packageId + '\n' : '') +
       'WhatsApp: https://wa.me/' + waNumber(p.phone) + '\n' +
@@ -90,6 +85,28 @@ function doPost(e) {
   sendConfirmation(clean(p.email, 160), name, photos.saved, clean(p.phone, 40), discount, warning);
 
   return json(warning ? { ok: true, warning: warning } : { ok: true });
+}
+
+// One Leady row, in HEADERS order. New columns are appended on the right; the old Správa column stays and is written empty.
+function buildLeadRow(p, name, photosUrl, discount) {
+  return [
+    new Date(),
+    name,
+    clean(p.phone, 40),
+    clean(p.email, 160),
+    '',
+    clean(p.page, 300),
+    clean(p.sentAt, 40),
+    photosUrl,
+    clean(p.utm && typeof p.utm === 'object' ? JSON.stringify(p.utm) : p.utm, 300),
+    discount,
+    clean(p.propertyType, 40),
+    clean(p.location, 160),
+    clean(p.price, 40),
+    clean(p.area, 40),
+    clean(p.look, 2000),
+    clean(p.referenceUrl, 500)
+  ];
 }
 
 // Client's verdict on a delivered video: logged to the review sheet, owner notified by e-mail.

@@ -7,6 +7,7 @@ import vm from 'node:vm';
 
 const SOURCE = readFileSync(fileURLToPath(new URL('../Code.gs', import.meta.url)), 'utf8');
 const OLD_HEADERS = ['Prijaté', 'Meno', 'Telefón', 'E-mail', 'Správa', 'Stránka', 'Odoslané (prehliadač)'];
+const NEW_HEADERS = ['Typ', 'Lokalita', 'Cena', 'Plocha m²', 'Ako má video vyzerať', 'Referenčné video'];
 
 function makeEnv({ sheetRows = null, props = {}, existingFolders = [], klienti = null, openThrows = false } = {}) {
   let nextId = 1;
@@ -147,15 +148,15 @@ const reply = (out) => JSON.parse(out.text);
 const jsonPost = (obj) => ({ parameter: {}, postData: { type: 'text/plain;charset=utf-8', contents: JSON.stringify(obj) } });
 const base = { name: 'Jana Nováková', phone: '0900 123 456', email: 'jana@example.sk', message: 'Byt', page: '/', sentAt: '2026-10-13T12:00:00Z', utm: 'utm_source=ig' };
 
-test('(a) legacy e.parameter submit appends a 10-column row with empty Fotky and code', () => {
+test('(a) legacy e.parameter submit appends a 16-column row with empty Fotky and code', () => {
   const env = makeEnv();
   const out = env.ctx.doPost({ parameter: { name: 'Peter', phone: '0911 222 333', email: '', message: 'Ahoj', page: '/', sentAt: 'x' } });
   assert.deepEqual(reply(out), { ok: true });
   const rows = env.getRows();
   assert.equal(rows.length, 2);
-  assert.equal(rows[0].length, 10);
-  assert.deepEqual(rows[0].slice(7), ['Fotky', 'UTM', 'Zľavový kód']);
-  assert.equal(rows[1].length, 10);
+  assert.equal(rows[0].length, 16);
+  assert.deepEqual(rows[0].slice(7, 10), ['Fotky', 'UTM', 'Zľavový kód']);
+  assert.equal(rows[1].length, 16);
   assert.equal(rows[1][1], 'Peter');
   assert.equal(rows[1][7], '');
   assert.equal(rows[1][8], '');
@@ -242,11 +243,11 @@ test('(f) existing 7-column header gets Fotky, UTM and Zľavový kód appended, 
   const env = makeEnv({ sheetRows: [OLD_HEADERS, oldRow] });
   env.ctx.setup();
   const rows = env.getRows();
-  assert.deepEqual(rows[0], [...OLD_HEADERS, 'Fotky', 'UTM', 'Zľavový kód']);
+  assert.deepEqual(rows[0], [...OLD_HEADERS, 'Fotky', 'UTM', 'Zľavový kód', ...NEW_HEADERS]);
   assert.deepEqual(rows[1], oldRow);
   assert.equal(env.roots.length, 1, 'setup also creates the Drive root folder');
   env.ctx.doPost({ parameter: { name: 'Nový', phone: '0900' } });
-  assert.equal(env.getRows()[2].length, 10);
+  assert.equal(env.getRows()[2].length, 16);
 });
 
 test('(g) stale UPLOAD_FOLDER_ID → a new root folder is created and cached', () => {
