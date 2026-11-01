@@ -23,7 +23,7 @@ import balik
 os.environ["PATH"] = "/opt/homebrew/bin:" + os.environ.get("PATH", "")
 
 BASE_URL = "https://martinpecnik011.github.io/domovid-web/video/"
-WATERMARK = "NÁHĽAD · DOMOVID"
+BADGE = "DEMO · DOMOVID"
 FONTS = [
     "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
     "/System/Library/Fonts/Supplemental/Arial.ttf",
@@ -77,21 +77,18 @@ def scale(w, h):
     return "scale=%d:%d:force_original_aspect_ratio=decrease,pad=%d:%d:(ow-iw)/2:(oh-ih)/2:black,setsar=1" % (w, h, w, h)
 
 
-def watermark_filter(w, h):
+def badge_filter(w, h):
+    """Maly rohovy odznak (vpravo hore, mimo Reels spodneho UI) namiesto velkeho vodoznaku."""
     font = dt_escape(find_font())
-    text = dt_escape(WATERMARK)
-    big = 84 if h > w else 64
-    parts = [scale(w, h)]
-    for y in ("h*0.22", "h*0.50", "h*0.78"):
-        parts.append("drawtext=fontfile='%s':text='%s':fontsize=%d:fontcolor=white@0.35:"
-                     "shadowcolor=black@0.25:shadowx=2:shadowy=2:x=(w-text_w)/2:y=%s-text_h/2" % (font, text, big, y))
-    parts.append("drawtext=fontfile='%s':text='%s':fontsize=36:fontcolor=white@0.8:"
-                 "box=1:boxcolor=black@0.35:boxborderw=12:x=40:y=60" % (font, text))
-    return ",".join(parts)
+    text = dt_escape(BADGE)
+    size = max(20, min(w, h) // 45)
+    return ",".join([scale(w, h),
+                     "drawtext=fontfile='%s':text='%s':fontsize=%d:fontcolor=white@0.7:"
+                     "box=1:boxcolor=black@0.3:boxborderw=8:x=w-text_w-48:y=140" % (font, text, size)])
 
 
 def encode_preview(src, dst, w, h):
-    cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(src), "-vf", watermark_filter(w, h),
+    cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(src), "-vf", badge_filter(w, h),
            "-c:v", "libx264", "-crf", "23", "-preset", "medium", "-pix_fmt", "yuv420p"]
     cmd += ["-c:a", "aac", "-b:a", "128k"] if has_audio(src) else ["-an"]
     run(cmd + ["-movflags", "+faststart", str(dst)])
@@ -401,7 +398,7 @@ def main():
     for vsrc, (w, h), pname, postername in variants:
         print("Kodujem nahlad %dx%d ..." % (w, h))
         encode_preview(vsrc, stage / pname, w, h)
-        encode_poster(stage / pname, stage / postername, w, h)  # z náhľadu, aby aj obálka mala vodoznak
+        encode_poster(stage / pname, stage / postername, w, h)  # z náhľadu, aby aj obálka mala odznak
         print("Kodujem master %dx%d (pomale, preset slow) ..." % (w, h))
         mname = master_name(a.title, w, h)
         encode_master(vsrc, stage / mname, w, h)

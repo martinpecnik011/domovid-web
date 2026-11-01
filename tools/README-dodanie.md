@@ -2,8 +2,8 @@
 
 Skript `tools/dodaj_video.py` pripraví zo zdrojového videa:
 
-- `preview.mp4` – náhľad 1080×1920 s vodoznakom „NÁHĽAD · DOMOVID" (H.264 CRF 23, AAC 128k, faststart),
-- `poster.jpg` – snímka v 1. sekunde,
+- `preview.mp4` – náhľad 1080×1920 v bežnej kvalite (H.264 CRF 23, AAC 128k, faststart) len s malým odznakom „DEMO · DOMOVID" v pravom hornom rohu (mimo spodného Reels UI),
+- `poster.jpg` – snímka v 1. sekunde z náhľadu (má ten istý odznak),
 - master `<Nazov>_Domovid_1080x1920.mp4` – plná kvalita (CRF 12, preset slow, ~18–20 Mb/s, max 30 Mb/s, AAC 320k),
 - `manifest.json` – popis, ktorý číta stránka `/video/?id=ID`.
 
@@ -39,7 +39,7 @@ veľkosť a bitrate mastera.
 ### Voliteľná 16:9 verzia
 
 Pre to isté ID môžeš doručiť aj horizontálnu verziu: `--video-16x9 ~/Desktop/video_16x9.mp4`. Skript vyrobí navyše
-`preview_16x9.mp4` (1920×1080, vodoznak), `poster_16x9.jpg` a master `<Nazov>_Domovid_1920x1080.mp4` (rovnaké
+`preview_16x9.mp4` (1920×1080, odznak), `poster_16x9.jpg` a master `<Nazov>_Domovid_1920x1080.mp4` (rovnaké
 nastavenie ako 9:16) a do `manifest.json` pridá `preview_16x9`, `poster_16x9` a druhú položku v `downloads`.
 Bez `--video-16x9` je výstup rovnaký ako doteraz. Pri `--mark-paid` sa publikujú všetky mastre; ak 16:9 master
 v staging chýba, pridaj `--source-16x9 VIDEO` (9:16 master doplní `--source`).
@@ -151,6 +151,16 @@ Poznámka: r2.dev adresa je určená na vývoj a má limity; pre ostrú prevádz
 3. Klient náhľad schváli (formulár na stránke).
 4. Pošli klientovi IBAN, sumu a ako variabilný symbol ID videa.
 5. Po zaplatení: `dodaj_video.py --mark-paid ID …` → na stránke sa odomknú sťahovania.
+
+Ochrana pred zaplatením: namiesto veľkého vodoznaku je v náhľade len malý odznak „DEMO · DOMOVID" (písmo ~24 px,
+šírka ~225 px, t. j. ~21 % šírky pri 1080 px a ~12 % pri 1920 px – čitateľné písmo sa do 8 % nezmestí). Stránka
+`/video/?id=` pred zaplatením nemá žiadne tlačidlo ani odkaz na stiahnutie; prehrávač má `controlslist="nodownload
+noremoteplayback"`, `disablepictureinpicture`, `draggable="false"` a zakázané kontextové menu. Po zaplatení sa
+sťahovanie zobrazí ako doteraz.
+
+Čestný limit: stránka je statická a R2 bucket je verejný, takže odhodlaný používateľ si môže náhľad (nie master)
+vytiahnuť cez devtools alebo priamu URL. Chráni ho odznak v obraze; master v plnej kvalite sa pred zaplatením do
+bucketu vôbec nenahrá.
 
 Upozornenie: `paid: false` zamyká len stránku. Master sa pred zaplatením do bucketu vôbec nenahrá, takže ho
 nikto nemôže stiahnuť podľa uhádnutej URL.

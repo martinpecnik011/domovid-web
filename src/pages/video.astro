@@ -30,11 +30,11 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
       </header>
       <p id="video-message" class="note" hidden></p>
       <figure class="preview">
-        <video id="video-player" controls playsinline preload="metadata"></video>
+        <video id="video-player" controls controlslist="nodownload noremoteplayback" disablepictureinpicture draggable="false" playsinline preload="metadata"></video>
         <figcaption id="caption-916" class="muted" hidden>Na výšku (9:16)</figcaption>
       </figure>
       <figure id="preview-169" class="preview" hidden>
-        <video id="video-player-16x9" controls playsinline preload="metadata"></video>
+        <video id="video-player-16x9" controls controlslist="nodownload noremoteplayback" disablepictureinpicture draggable="false" playsinline preload="metadata"></video>
         <figcaption class="muted">Na šírku (16:9)</figcaption>
       </figure>
 

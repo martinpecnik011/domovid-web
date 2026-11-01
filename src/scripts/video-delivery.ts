@@ -123,6 +123,9 @@ function render(m: DeliveryManifest, dir: string) {
     $('video-message').hidden = false;
   }
   const player = $<HTMLVideoElement>('video-player');
+  for (const f of document.querySelectorAll<HTMLElement>('figure.preview')) {
+    f.addEventListener('contextmenu', (e) => e.preventDefault()); // bez „Uložiť video ako“
+  }
   if (m.poster) player.poster = dir + m.poster;
   player.src = dir + m.preview.file;
   const player169 = $<HTMLVideoElement>('video-player-16x9');
