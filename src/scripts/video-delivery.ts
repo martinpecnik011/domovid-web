@@ -206,9 +206,11 @@ function setupReview(m: DeliveryManifest) {
       $('review-actions').hidden = true;
       box.hidden = true;
       say(
-        action === 'approve'
-          ? 'Ďakujeme, že ste video schválili! Pošleme vám číslo účtu (IBAN) na úhradu a po prijatí platby sa tu odomkne video v plnej kvalite.'
-          : 'Ďakujeme za spätnú väzbu. Ozveme sa vám s upravenou verziou.',
+        action !== 'approve'
+          ? 'Ďakujeme za spätnú väzbu. Ozveme sa vám s upravenou verziou.'
+          : m.paid // zaplatené (aj cez predplatený balík): žiadna zmienka o platbe
+            ? 'Ďakujeme, že ste video schválili! Video v plnej kvalite si môžete stiahnuť nižšie.'
+            : 'Ďakujeme, že ste video schválili! Pošleme vám číslo účtu (IBAN) na úhradu a po prijatí platby sa tu odomkne video v plnej kvalite.',
         'ok',
       );
     } catch {

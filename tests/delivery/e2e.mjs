@@ -96,7 +96,16 @@ check('B exactly 1 download anchor, labelled master', (await anchors.count()) ==
 check('B downloads visible', (await anchors.count()) === 1 && (await page.locator('#downloads-wrap').isVisible()) && !(await page.locator('#downloads-locked').isVisible()), `n=${await anchors.count()}`);
 check('B 16:9 player hidden', !(await page.locator('#video-player-16x9').isVisible()));
 check('B #price-box not visible', !(await page.locator('#price-box').isVisible()));
+check('B review buttons visible', await page.locator('#btn-approve').isVisible() && await page.locator('#btn-changes').isVisible());
 await shot('05_paid_downloads.png');
+{
+  const before = posts.length;
+  await page.click('#btn-approve');
+  await page.waitForSelector('#review-status:not([hidden])');
+  const st = await page.textContent('#review-status');
+  check('B paid approve: no payment wording', posts.length === before + 1 && /schválili/.test(st) && /stiahnuť/.test(st) && !/IBAN|platb|úhrad/i.test(st), st);
+  await shot('05b_paid_approved.png');
+}
 const href = await anchors.first().getAttribute('href');
 const size = fs.statSync(path.join(FAKE, IDB, decodeURIComponent(href.split('/').pop()))).size;
 const head = await ctx.request.fetch(href, { method: 'HEAD' });
