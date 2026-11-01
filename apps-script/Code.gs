@@ -97,7 +97,7 @@ function handleReview(p) {
   if (p.company) return json({ ok: true });
   var id = String(p.id || '');
   if (!/^[a-z0-9]{8,32}$/.test(id)) return json({ ok: false });
-  var renewal = p.action === 'renew' || p.action === 'decline';
+  var renewal = p.action === 'renew' || p.action === 'decline' || p.action === 'single';
   if (p.action !== 'approve' && p.action !== 'changes' && !renewal) return json({ ok: false });
   var packageId = String(p.package_id || '');
   if (p.action === 'renew' && !/^[A-Za-z0-9-]{1,40}$/.test(packageId)) return json({ ok: false });
@@ -122,6 +122,7 @@ function handleReview(p) {
   MailApp.sendEmail({
     to: NOTIFY_EMAIL,
     subject: p.action === 'renew' ? 'Domovid: ' + client + ' predlžuje balík ' + packageId
+      : p.action === 'single' ? 'Domovid: ' + client + ' kupuje len toto video – ' + title
       : p.action === 'decline' ? 'Domovid: ' + client + ' nepredlžuje balík'
       : (approve ? 'Domovid: klient schválil video – ' : 'Domovid: klient chce úpravu – ') + client,
     body:
@@ -140,6 +141,7 @@ function handleReview(p) {
 function reviewAction(action, packageId) {
   if (action === 'renew') return 'predĺženie balíka ' + packageId;
   if (action === 'decline') return 'nepredlžuje';
+  if (action === 'single') return 'kupuje len toto video (50 € + DPH)';
   return action === 'approve' ? 'Schválené' : 'Úprava';
 }
 

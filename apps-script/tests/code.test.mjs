@@ -456,3 +456,10 @@ test('(w) renew with bad package_id and unknown action → rejected, no row, no 
     assert.equal(env.log.mails.length, 0);
   }
 });
+
+test('(x) single → row text and subject with title; price_net ignored', () => {
+  const env = makeEnv();
+  assert.deepEqual(reply(env.ctx.doPost(jsonPost({ ...review, action: 'single', price_net: 'abc' }))), { ok: true });
+  assert.equal(env.getReviewRows()[1][4], 'kupuje len toto video (50 € + DPH)');
+  assert.equal(env.log.mails[0].subject, 'Domovid: Jana Nováková kupuje len toto video – Byt Ružinov');
+});

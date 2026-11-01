@@ -178,6 +178,6 @@ nikto nemôže stiahnuť podľa uhádnutej URL.
 - `downloads` sa zapisuje vždy (aj pri `paid: false`), súbory z neho sú v bucketi len po zaplatení.
 - Voliteľné pole `price`: `{"label": "...", "net": 140.0, "vat_rate": 0.23, "reference": "HALO-2026-10"}` (net bez DPH),
   voliteľne aj `"iban"` (pozri vyššie).
-- Voliteľné pole `renewal` (výzva na obnovu balíka, pozri „Balíky“): `{"package_id", "previous_package_id", "label", "videos", "net", "vat_rate", "reference", "iban", "reason"}`.
+- Voliteľné pole `renewal` (výzva na obnovu balíka, pozri „Balíky“): `{"package_id", "previous_package_id", "label", "videos", "net", "vat_rate", "reference", "iban", "reason", "single": {"net", "vat_rate", "reference"}}`; `single` je ponuka jedného videa (`--single-price`, predvolene 50 € bez DPH, `reference` = ID videa) namiesto obnovy balíka.
 - Voliteľné pole `message` (text pre klienta) skript nezapisuje; môžeš ho doplniť do `manifest.json` ručne.
 - Súbory sú v bucketi pod `<id>/<file>`; manifest sa nahráva ako posledný s `cache-control: no-store`.

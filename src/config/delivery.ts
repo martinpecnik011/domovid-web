@@ -18,6 +18,14 @@ export const RENEWAL_HEADING = { exhausted: 'Mesačný balík je vyčerpaný', e
 export const RENEWAL_TEXT = 'Ak chcete pokračovať v tvorbe videí, obnovte si balík. Po prijatí platby vám balík aktivujeme.';
 export const RENEWAL_REF_LABEL = 'Variabilný symbol / referencia platby:';
 
+/** Single-video alternative to the renewal (net EUR when the manifest has no renewal.single). */
+export const SINGLE_VIDEO_NET = 50;
+export const SINGLE_BUY = 'Kúpim len toto video';
+export const SINGLE_INTRO = 'Alebo len toto video bez balíka:';
+export const SINGLE_REF_LABEL = 'Do správy pre prijímateľa (referencia videa):';
+export const SINGLE_DONE = 'Ďakujeme! Po prijatí platby {TOTAL} na IBAN nižšie (referencia {ID}) vám video odomkneme.';
+export const RENEWAL_VALIDITY = 'Platí 1 mesiac odo dňa prijatia platby – pri platbe dnes: {FROM} – {TO}';
+
 /** Download button text; the resolution is appended from the manifest. */
 export const DOWNLOAD_LABEL = 'Stiahnuť v plnej kvalite';
 export const DOWNLOAD_BUSY = 'Sťahujem…';
@@ -60,5 +68,7 @@ export interface DeliveryManifest {
     reference: string;
     iban?: string;
     reason: 'exhausted' | 'expired';
+    /** Optional one-off price of just this video; defaults to SINGLE_VIDEO_NET + renewal.vat_rate, reference = manifest id. */
+    single?: { net: number; vat_rate: number; reference: string };
   };
 }
