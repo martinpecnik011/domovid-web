@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Domovid - odovzdanie hotoveho videa klientovi (nahlad s vodoznakom + master po zaplateni).
+"""Domovid - odovzdanie hotoveho videa klientovi (nahlad s odznakom DEMO · DOMOVID + master po zaplateni).
 
 Pouzitie: pozri tools/README-dodanie.md. Len standardna kniznica Pythonu + ffmpeg.
 """

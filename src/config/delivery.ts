@@ -38,7 +38,7 @@ export interface DeliveryManifest {
   created: string;
   /** false = downloads stay locked until the invoice is paid. */
   paid: boolean;
-  /** Watermarked / lower quality preview shown in the player. */
+  /** Badged (DEMO · DOMOVID) preview shown in the player. */
   preview: { file: string; width: number; height: number };
   poster?: string;
   /** Optional landscape preview, shown under the portrait one. */

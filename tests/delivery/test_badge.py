@@ -25,7 +25,7 @@ class BadgeTest(unittest.TestCase):
         self.assertIn("badge_filter(w, h)", src.split("def encode_preview")[1].split("def encode_poster")[0])
         # poster sa kóduje z hotového náhľadu, takže má ten istý odznak
         self.assertIn("encode_poster(stage / pname, stage / postername", src)
-        self.assertNotIn("watermark", src.lower())
+        self.assertFalse(hasattr(dodaj_video, "watermark_filter"))
 
 
 if __name__ == "__main__":

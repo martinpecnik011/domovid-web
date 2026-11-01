@@ -40,16 +40,16 @@ const shot = (n, full = true) => page.screenshot({ path: path.join(SCR, n), full
 
 
 // Ochrana pred stiahnutím: atribúty prehrávača, zakázané kontextové menu
-async function noDownloadChecks(tag) {
-  const v = await page.evaluate(() => {
-    const el = document.getElementById('video-player');
+async function noDownloadChecks(tag, playerId = 'video-player') {
+  const v = await page.evaluate((playerId) => {
+    const el = document.getElementById(playerId);
     const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
     el.dispatchEvent(ev);
     return { cl: el.controlsList.contains('nodownload'), nr: el.controlsList.contains('noremoteplayback'), pip: el.disablePictureInPicture, drag: el.getAttribute('draggable'), prevented: ev.defaultPrevented };
-  });
-  check(`${tag} video: controlsList nodownload + noremoteplayback`, v.cl && v.nr, JSON.stringify(v));
-  check(`${tag} video: disablePictureInPicture, draggable=false`, v.pip === true && v.drag === 'false', JSON.stringify(v));
-  check(`${tag} video: contextmenu default prevented`, v.prevented === true);
+  }, playerId);
+  check(`${tag} ${playerId}: controlsList nodownload + noremoteplayback`, v.cl && v.nr, JSON.stringify(v));
+  check(`${tag} ${playerId}: disablePictureInPicture, draggable=false`, v.pip === true && v.drag === 'false', JSON.stringify(v));
+  check(`${tag} ${playerId}: contextmenu default prevented`, v.prevented === true);
 }
 
 // 01 unpaid
@@ -179,6 +179,8 @@ const both = async (tag) => {
 if (IDC) {
   await ready169(IDC);
   await both('C');
+  await noDownloadChecks('C', 'video-player');
+  await noDownloadChecks('C', 'video-player-16x9');
   check('C 0 anchors + locked visible', (await page.locator('#downloads a').count()) === 0 && (await page.locator('#downloads-locked').isVisible()));
   check('C #price-box not visible', !(await page.locator('#price-box').isVisible()));
   await shot('08_unpaid_16x9.png');
