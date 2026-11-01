@@ -2,7 +2,7 @@
 // posts the client's review to the lead form endpoint and (once paid) lists the downloads.
 // Manifest data is only ever written with textContent / properties, never as HTML.
 import { FORM_ENDPOINT, CONTACT_EMAIL } from '../config/site';
-import { DELIVERY_BASE, DELIVERY_ID_RE, LOCKED_TEXT, LOCKED_TEXT_WITH_IBAN, RENEWAL_HEADING, RENEWAL_TEXT, RENEWAL_REF_LABEL, RENEW_YES, RENEW_NO, RENEW_YES_DONE, RENEW_NO_DONE, type DeliveryManifest } from '../config/delivery';
+import { DELIVERY_BASE, DELIVERY_ID_RE, LOCKED_TEXT, LOCKED_TEXT_WITH_IBAN, RENEWAL_HEADING, RENEWAL_TEXT, RENEWAL_REF_LABEL, DOWNLOAD_LABEL, DOWNLOAD_BUSY, RENEW_YES, RENEW_NO, RENEW_YES_DONE, RENEW_NO_DONE, type DeliveryManifest } from '../config/delivery';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -147,7 +147,34 @@ function render(m: DeliveryManifest, dir: string) {
     a.className = 'btn btn-brass';
     a.href = dir + d.file;
     a.setAttribute('download', '');
-    a.append(d.label);
+    const resolution = /\((\d{3,4}×\d{3,4})\)/.exec(d.label)?.[1] ?? /_(\d{3,4})x(\d{3,4})\./.exec(d.file)?.slice(1, 3).join('×');
+    const text = document.createElement('span');
+    const idleText = resolution ? `${DOWNLOAD_LABEL} (${resolution})` : DOWNLOAD_LABEL;
+    text.textContent = idleText;
+    a.append(text);
+    a.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (a.dataset.busy) return;
+      a.dataset.busy = '1';
+      text.textContent = DOWNLOAD_BUSY;
+      try {
+        // Masters are cross-origin, so the download attribute is ignored: fetch the blob and save it from an object URL.
+        const res = await fetch(a.href);
+        if (!res.ok) throw new Error(String(res.status));
+        const url = URL.createObjectURL(await res.blob());
+        const tmp = document.createElement('a');
+        tmp.href = url;
+        tmp.download = d.file;
+        document.body.append(tmp);
+        tmp.click();
+        tmp.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      } catch {
+        window.location.href = a.href;
+      }
+      text.textContent = idleText;
+      delete a.dataset.busy;
+    });
     const small = document.createElement('small');
     small.textContent = formatSize(d.bytes);
     a.append(small);

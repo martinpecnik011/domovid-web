@@ -18,6 +18,10 @@ export const RENEWAL_HEADING = { exhausted: 'Mesačný balík je vyčerpaný', e
 export const RENEWAL_TEXT = 'Ak chcete pokračovať v tvorbe videí, obnovte si balík. Po prijatí platby vám balík aktivujeme.';
 export const RENEWAL_REF_LABEL = 'Variabilný symbol / referencia platby:';
 
+/** Download button text; the resolution is appended from the manifest. */
+export const DOWNLOAD_LABEL = 'Stiahnuť v plnej kvalite';
+export const DOWNLOAD_BUSY = 'Sťahujem…';
+
 /** Renewal buttons and their confirmations ({ID} = package id). */
 export const RENEW_YES = 'Áno, schvaľujem video a predlžujem balík';
 export const RENEW_NO = 'Nie, ďakujem';
