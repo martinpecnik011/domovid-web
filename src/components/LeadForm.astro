@@ -22,7 +22,7 @@ const hasCodes = Object.keys(DISCOUNT_CODES).length > 0;
         </div>
         <div class="field full">
           <label for="look">Ako má video vyzerať?</label>
-          <textarea id="look" name="look" rows="3" placeholder="štýl, tempo, hudba, čo zdôrazniť, dĺžka, formát 9:16 / 16:9"></textarea>
+          <textarea id="look" name="look" rows="3" placeholder="štýl, tempo, hudba, čo zdôrazniť, dĺžka" maxlength="1900"></textarea>
         </div>
         <div class="field">
           <label for="propertyType">Typ nehnuteľnosti</label>
@@ -40,11 +40,13 @@ const hasCodes = Object.keys(DISCOUNT_CODES).length > 0;
         </div>
         <div class="field">
           <label for="price">Cena €</label>
-          <input type="number" id="price" name="price" inputmode="numeric" min="0" step="any" placeholder="napr. 139000" aria-describedby="property-hint">
+          <input type="text" id="price" name="price" inputmode="numeric" placeholder="napr. 139000" autocomplete="off" maxlength="40" aria-describedby="property-hint price-err">
+          <span class="field-err" id="price-err" hidden>Zadaj cenu číslom, napr. 139000.</span>
         </div>
         <div class="field">
           <label for="area">Plocha m²</label>
-          <input type="number" id="area" name="area" inputmode="decimal" min="0" step="any" placeholder="napr. 62" aria-describedby="property-hint">
+          <input type="text" id="area" name="area" inputmode="decimal" placeholder="napr. 62" autocomplete="off" maxlength="40" aria-describedby="property-hint area-err">
+          <span class="field-err" id="area-err" hidden>Zadaj plochu číslom, napr. 62.</span>
         </div>
         <span class="full field-hint" id="property-hint">Pomôže nám to rýchlejšie pripraviť video.</span>
         <div class="field full">

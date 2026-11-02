@@ -4,3 +4,4 @@ dist/
 .DS_Store
 tests/delivery/fake-r2/
 tools/__pycache__/
+__pycache__/

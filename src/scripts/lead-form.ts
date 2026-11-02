@@ -56,6 +56,14 @@ if (form) {
     return bad;
   };
 
+  // "139 000", "139.000", "62,5" -> "139000", "139000", "62.5"; '' or null when not a number
+  const toNumber = (raw: string) => {
+    let s = raw.replace(/[\s\u00a0]/g, '');
+    if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+    return s === '' || /^\d+(\.\d+)?$/.test(s) ? s : null;
+  };
+
   const say = (text: string, kind?: 'ok' | 'error') => {
     statusEl.textContent = '';
     statusEl.className = 'form-status ' + (kind || '');
@@ -248,10 +256,14 @@ if (form) {
     const phone = el('phone').value.trim();
     const email = el('email').value.trim();
     const referenceUrl = el('referenceUrl').value.trim();
+    const price = toNumber(el('price').value);
+    const area = toNumber(el('area').value);
     const bad = [
       setErr('name', name.length < 2),
       setErr('phone', phone.replace(/\D/g, '').length < 9),
       setErr('email', !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
+      setErr('price', price === null),
+      setErr('area', area === null),
       setErr('referenceUrl', referenceUrl !== '' && !isHttpUrl(referenceUrl)),
       !checkDiscount(true),
       setErr('consent', !el('consent').checked),
@@ -287,8 +299,8 @@ if (form) {
         email,
         propertyType: el<HTMLSelectElement>('propertyType').value,
         location: el('location').value.trim(),
-        price: el('price').value.trim(),
-        area: el('area').value.trim(),
+        price,
+        area,
         look,
         referenceUrl,
         page: location.href,

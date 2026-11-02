@@ -274,9 +274,9 @@ function sendConfirmation(email, name, photoCount, phone, discount, warning) {
   var first = String(name).replace(/^'/, '').split(/\s+/)[0] || '';
   var next = photoCount > 0
     ? 'Prijali sme aj ' + photoCount + ' ' + fotiek(photoCount) + ' nehnuteľnosti, takže ich už ' +
-      'nemusíš posielať. Prvú verziu videa dostaneš ako náhľad na schválenie, stiahnutie v plnej kvalite je po platbe.\n\n'
+      'nemusíš posielať. Prvú verziu videa dostaneš ako náhľad na schválenie, stiahnutie v plnej kvalite je možné až po platbe.\n\n'
     : 'Ak chceš začať hneď, pošli 4–6 fotiek nehnuteľnosti odpoveďou na tento e-mail. ' +
-      'Prvú verziu videa dostaneš ako náhľad na schválenie, stiahnutie v plnej kvalite je po platbe.\n\n';
+      'Prvú verziu videa dostaneš ako náhľad na schválenie, stiahnutie v plnej kvalite je možné až po platbe.\n\n';
   var discountLine = discount
     ? 'Tvoj zľavový kód ' + discount + ' sme zaznamenali, zľavu 10 % odpočítame z ceny. Číslo účtu (IBAN) na úhradu ti pošleme.\n\n'
     : '';
