@@ -290,7 +290,7 @@ if (form) {
       const { files, left } = await preparePhotos();
       btn.textContent = 'Odosielam…';
       const discount = discountInput ? canonicalCode(discountInput.value) : '';
-      const msg = el<HTMLTextAreaElement>('look').value.trim();
+      const msg = el<HTMLTextAreaElement>('look').value.trim() || 'Nechám na vás'; // prázdne pole = rozhodne Domovid
       const format = form.querySelector<HTMLInputElement>('input[name="format"]:checked')?.value;
       const look = format ? (msg ? `${msg}\n\nFormát videa: ${format}` : `Formát videa: ${format}`) : msg;
       const body = JSON.stringify({
