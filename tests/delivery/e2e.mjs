@@ -7,11 +7,11 @@ const require = createRequire(process.env.PW_PATH + '/');
 const { chromium } = require('playwright');
 const { IDA, IDB, IDC, IDD, IDE, IDF, IDG, IDR, SCR } = process.env;
 const FAKE = process.env.FAKE_R2 || path.join(path.dirname(fileURLToPath(import.meta.url)), 'fake-r2');
-const BASE = 'http://localhost:4321/domovid-web/video/?id=';
+const BASE = (process.env.SITE || 'http://localhost:4321') + '/domovid-web/video/?id=';
 const fails = [];
 const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name} ${info}`); if (!ok) fails.push(name); };
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {});
 const ctx = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'], viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 const posts = [];
 await ctx.route('https://script.google.com/**', async (route) => {
@@ -38,6 +38,20 @@ async function media() {
 }
 const shot = (n, full = true) => page.screenshot({ path: path.join(SCR, n), fullPage: full });
 
+
+// Ochrana pred stiahnutím: atribúty prehrávača, zakázané kontextové menu
+async function noDownloadChecks(tag, playerId = 'video-player') {
+  const v = await page.evaluate((playerId) => {
+    const el = document.getElementById(playerId);
+    const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    el.dispatchEvent(ev);
+    return { cl: el.controlsList.contains('nodownload'), nr: el.controlsList.contains('noremoteplayback'), pip: el.disablePictureInPicture, drag: el.getAttribute('draggable'), prevented: ev.defaultPrevented };
+  }, playerId);
+  check(`${tag} ${playerId}: controlsList nodownload + noremoteplayback`, v.cl && v.nr, JSON.stringify(v));
+  check(`${tag} ${playerId}: disablePictureInPicture, draggable=false`, v.pip === true && v.drag === 'false', JSON.stringify(v));
+  check(`${tag} ${playerId}: contextmenu default prevented`, v.prevented === true);
+}
+
 // 01 unpaid
 await open(IDA);
 await media();
@@ -50,6 +64,8 @@ check('robots meta == "noindex, nofollow"', (await page.locator('meta[name="robo
 check('no cookie banner element (#cc)', (await page.locator('#cc').count()) === 0 && (await page.locator('.cc').count()) === 0);
 check('no GTM/FB/GA requests on /video/', thirdParty.length === 0, JSON.stringify(thirdParty));
 check('A no anchors', (await page.locator('#downloads a').count()) === 0 && !(await page.locator('#downloads-wrap').isVisible()));
+await noDownloadChecks('A');
+check('A unpaid: zero a[download] and zero anchors to .mp4', (await page.locator('a[download]').count()) === 0 && (await page.locator('a[href*=".mp4"]').count()) === 0);
 check('A 16:9 player hidden', !(await page.locator('#video-player-16x9').isVisible()));
 check('A video readyState', (await page.evaluate(() => document.getElementById('video-player').readyState)) >= 1);
 check('A #price-box not visible', !(await page.locator('#price-box').isVisible()));
@@ -94,6 +110,8 @@ await media();
 const anchors = page.locator('#downloads a[download]');
 check('B exactly 1 download anchor, labelled master', (await anchors.count()) === 1 && /Stiahnuť v plnej kvalite \(1080×1920\)/.test((await anchors.first().textContent()).replace(/\s+/g, ' ')), (await anchors.first().textContent()).replace(/\s+/g, ' ').trim());
 check('B downloads visible', (await anchors.count()) === 1 && (await page.locator('#downloads-wrap').isVisible()) && !(await page.locator('#downloads-locked').isVisible()), `n=${await anchors.count()}`);
+await noDownloadChecks('B');
+check('B paid: download anchors present', (await page.locator('a[download]').count()) >= 1);
 check('B 16:9 player hidden', !(await page.locator('#video-player-16x9').isVisible()));
 check('B #price-box not visible', !(await page.locator('#price-box').isVisible()));
 check('B review buttons visible', await page.locator('#btn-approve').isVisible() && await page.locator('#btn-changes').isVisible());
@@ -161,6 +179,8 @@ const both = async (tag) => {
 if (IDC) {
   await ready169(IDC);
   await both('C');
+  await noDownloadChecks('C', 'video-player');
+  await noDownloadChecks('C', 'video-player-16x9');
   check('C 0 anchors + locked visible', (await page.locator('#downloads a').count()) === 0 && (await page.locator('#downloads-locked').isVisible()));
   check('C #price-box not visible', !(await page.locator('#price-box').isVisible()));
   await shot('08_unpaid_16x9.png');

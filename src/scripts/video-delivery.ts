@@ -165,6 +165,7 @@ function render(m: DeliveryManifest, dir: string) {
     v.setAttribute('controlsList', 'nodownload noremoteplayback noplaybackrate');
     v.disablePictureInPicture = true;
     v.disableRemotePlayback = true;
+    v.draggable = false;
     v.addEventListener('contextmenu', (e) => e.preventDefault());
     v.parentElement?.addEventListener('contextmenu', (e) => e.preventDefault());
   }
