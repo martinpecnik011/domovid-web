@@ -60,6 +60,14 @@ for (const s of ['Typ nehnuteľnosti: byt', 'Lokalita: Banská Bystrica', 'Cena:
 const empty = Array.from(ctx.buildLeadRow({ name: 'A', phone: '1' }, 'A', '', ''));
 assert.deepEqual(empty.slice(10), ['', '', '', '', '', '']);
 
+// old cached form still sends `message`: it lands in Správa (index 4) and in the e-mail
+const old = Array.from(ctx.buildLeadRow({ name: 'A', phone: '1', message: 'Starý formulár: chcem video' }, 'A', '', ''));
+assert.equal(old[4], 'Starý formulár: chcem video');
+assert.equal(old.length, headers.length);
+mails.length = 0;
+ctx.doPost({ parameter: {}, postData: { type: 'text/plain', contents: JSON.stringify({ name: 'B', phone: '2', message: 'Starý formulár: chcem video' }) } });
+assert.ok(mails.find((m) => m.to === 'martinpecnik011@gmail.com').body.includes('Starý formulár: chcem video'));
+
 console.log('row:', JSON.stringify(row.slice(1)));
 console.log('headers:', JSON.stringify(Array.from(headers)));
 console.log('new headers:', JSON.stringify(NEW_HEADERS));

@@ -76,6 +76,7 @@ function doPost(e) {
       'Plocha m²: ' + (clean(p.area, 40) || '-') + '\n' +
       'Referenčné video: ' + (clean(p.referenceUrl, 500) || '-') + '\n\n' +
       'Ako má video vyzerať:\n' + (clean(p.look, 2000) || '-') + '\n\n' +
+      (clean(p.message, 2000) ? 'Správa:\n' + clean(p.message, 2000) + '\n\n' : '') +
       photoLines +
       (pkg ? 'Balík vyčerpaný/skončený: klient ' + pkg.client + ', balík ' + pkg.packageId + '\n' : '') +
       'WhatsApp: https://wa.me/' + waNumber(p.phone) + '\n' +
@@ -87,14 +88,14 @@ function doPost(e) {
   return json(warning ? { ok: true, warning: warning } : { ok: true });
 }
 
-// One Leady row, in HEADERS order. New columns are appended on the right; the old Správa column stays and is written empty.
+// One Leady row, in HEADERS order. New columns are appended on the right; the old Správa column is only filled from an old cached form that still sends `message`.
 function buildLeadRow(p, name, photosUrl, discount) {
   return [
     new Date(),
     name,
     clean(p.phone, 40),
     clean(p.email, 160),
-    '',
+    clean(p.message, 2000),
     clean(p.page, 300),
     clean(p.sentAt, 40),
     photosUrl,
@@ -273,9 +274,9 @@ function sendConfirmation(email, name, photoCount, phone, discount, warning) {
   var first = String(name).replace(/^'/, '').split(/\s+/)[0] || '';
   var next = photoCount > 0
     ? 'Prijali sme aj ' + photoCount + ' ' + fotiek(photoCount) + ' nehnuteľnosti, takže ich už ' +
-      'nemusíš posielať. Prvú verziu videa dostaneš s vodoznakom na posúdenie.\n\n'
+      'nemusíš posielať. Prvú verziu videa dostaneš ako náhľad na schválenie, stiahnutie v plnej kvalite je po platbe.\n\n'
     : 'Ak chceš začať hneď, pošli 4–6 fotiek nehnuteľnosti odpoveďou na tento e-mail. ' +
-      'Prvú verziu videa dostaneš s vodoznakom na posúdenie.\n\n';
+      'Prvú verziu videa dostaneš ako náhľad na schválenie, stiahnutie v plnej kvalite je po platbe.\n\n';
   var discountLine = discount
     ? 'Tvoj zľavový kód ' + discount + ' sme zaznamenali, zľavu 10 % odpočítame z ceny. Číslo účtu (IBAN) na úhradu ti pošleme.\n\n'
     : '';

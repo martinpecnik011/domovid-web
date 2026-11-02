@@ -89,7 +89,7 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: 'Čo ak sa mi výsledok nepáči?',
-    a: 'Prvá verzia príde s vodoznakom na posúdenie. Ak niečo nesedí, upravíme to. Čistú verziu dostaneš až po tvojom potvrdení.',
+    a: 'Prvá verzia príde ako náhľad na schválenie. Ak niečo nesedí, upravíme to. Stiahnutie v plnej kvalite je možné po platbe.',
   },
   {
     q: 'Ako začať?',

@@ -15,6 +15,8 @@ Jednorazovo, asi 3 minúty. Robí sa v tvojom Google účte (martinpecnik011@gma
 
 Každý dopyt potom pribudne ako nový riadok v hárku **Leady** a príde ti e-mail s odkazom na WhatsApp daného makléra.
 
+Stĺpce hárku **Leady** (16): Prijaté, Meno, Telefón, E-mail, Správa, Stránka, Odoslané (prehliadač), Fotky, UTM, Zľavový kód, Typ, Lokalita, Cena, Plocha m², Ako má video vyzerať, Referenčné video. Stĺpec Správa sa plní len zo starého formulára v cache prehliadača, nový formulár ho nepošle.
+
 **Keď upravíš Code.gs:** Nasadiť → Spravovať nasadenia → ceruzka → Verzia: *Nová verzia* → Nasadiť. URL ostáva rovnaká.
 
 ## Aktualizácia na verziu s fotkami
