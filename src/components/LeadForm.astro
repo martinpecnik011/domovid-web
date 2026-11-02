@@ -20,9 +20,38 @@ const hasCodes = Object.keys(DISCOUNT_CODES).length > 0;
           <input type="email" id="email" name="email" placeholder="vas@email.sk" autocomplete="email" required aria-describedby="email-err">
           <span class="field-err" id="email-err" hidden>Zadaj platný e-mail, pošleme naň potvrdenie.</span>
         </div>
+        <div class="field full">
+          <label for="look">Ako má video vyzerať?</label>
+          <textarea id="look" name="look" rows="3" placeholder="štýl, tempo, hudba, čo zdôrazniť, dĺžka, formát 9:16 / 16:9"></textarea>
+        </div>
         <div class="field">
-          <label for="message">Správa</label>
-          <textarea id="message" name="message" rows="2" placeholder="napr. 3–5 nových ponúk mesačne, Bratislava a okolie"></textarea>
+          <label for="propertyType">Typ nehnuteľnosti</label>
+          <select id="propertyType" name="propertyType" aria-describedby="property-hint">
+            <option value="">Vyber (voliteľné)</option>
+            <option value="byt">byt</option>
+            <option value="dom">dom</option>
+            <option value="pozemok">pozemok</option>
+            <option value="iné">iné</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="location">Lokalita</label>
+          <input type="text" id="location" name="location" placeholder="napr. Banská Bystrica, Radvaň" autocomplete="off" maxlength="160" aria-describedby="property-hint">
+        </div>
+        <div class="field">
+          <label for="price">Cena €</label>
+          <input type="number" id="price" name="price" inputmode="numeric" min="0" step="any" placeholder="napr. 139000" aria-describedby="property-hint">
+        </div>
+        <div class="field">
+          <label for="area">Plocha m²</label>
+          <input type="number" id="area" name="area" inputmode="decimal" min="0" step="any" placeholder="napr. 62" aria-describedby="property-hint">
+        </div>
+        <span class="full field-hint" id="property-hint">Pomôže nám to rýchlejšie pripraviť video.</span>
+        <div class="field full">
+          <label for="referenceUrl">Odkaz na referenčné video (voliteľné)</label>
+          <input type="url" id="referenceUrl" name="referenceUrl" placeholder="https://…" inputmode="url" autocomplete="off" maxlength="500" aria-describedby="referenceUrl-hint referenceUrl-err">
+          <span class="field-hint" id="referenceUrl-hint">Video, ktoré sa ti páči (Instagram, TikTok, YouTube…).</span>
+          <span class="field-err" id="referenceUrl-err" hidden>Zadaj platný odkaz začínajúci http:// alebo https://.</span>
         </div>
         <fieldset class="full format">
           <legend>Formát videa</legend>
@@ -82,6 +111,7 @@ const hasCodes = Object.keys(DISCOUNT_CODES).length > 0;
 </script>
 
 <style>
+  .field-hint { font-size: 0.8rem; color: var(--ink-muted); }
   .photos { gap: 7px; }
   .format { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 5px; }
   .format legend { padding: 0; font-size: 0.82rem; font-weight: 600; }

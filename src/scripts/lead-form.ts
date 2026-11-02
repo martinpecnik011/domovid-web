@@ -31,6 +31,16 @@ function readUtm(): string {
   }
 }
 
+/** True for an http(s) URL on any host (IG, TikTok, YouTube, other). */
+const isHttpUrl = (value: string) => {
+  try {
+    const u = new URL(value);
+    return (u.protocol === 'http:' || u.protocol === 'https:') && u.hostname.includes('.');
+  } catch {
+    return false;
+  }
+};
+
 const form = document.getElementById('lead-form') as HTMLFormElement | null;
 
 if (form) {
@@ -237,10 +247,12 @@ if (form) {
     const name = el('name').value.trim();
     const phone = el('phone').value.trim();
     const email = el('email').value.trim();
+    const referenceUrl = el('referenceUrl').value.trim();
     const bad = [
       setErr('name', name.length < 2),
       setErr('phone', phone.replace(/\D/g, '').length < 9),
       setErr('email', !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
+      setErr('referenceUrl', referenceUrl !== '' && !isHttpUrl(referenceUrl)),
       !checkDiscount(true),
       setErr('consent', !el('consent').checked),
     ];
@@ -266,14 +278,19 @@ if (form) {
       const { files, left } = await preparePhotos();
       btn.textContent = 'Odosielam…';
       const discount = discountInput ? canonicalCode(discountInput.value) : '';
-      const msg = el<HTMLTextAreaElement>('message').value.trim();
+      const msg = el<HTMLTextAreaElement>('look').value.trim();
       const format = form.querySelector<HTMLInputElement>('input[name="format"]:checked')?.value;
-      const message = format ? (msg ? `${msg}\n\nFormát videa: ${format}` : `Formát videa: ${format}`) : msg;
+      const look = format ? (msg ? `${msg}\n\nFormát videa: ${format}` : `Formát videa: ${format}`) : msg;
       const body = JSON.stringify({
         name,
         phone,
         email,
-        message,
+        propertyType: el<HTMLSelectElement>('propertyType').value,
+        location: el('location').value.trim(),
+        price: el('price').value.trim(),
+        area: el('area').value.trim(),
+        look,
+        referenceUrl,
         page: location.href,
         sentAt: new Date().toISOString(),
         company: '',
