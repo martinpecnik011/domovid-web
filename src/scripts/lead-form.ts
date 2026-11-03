@@ -31,6 +31,16 @@ function readUtm(): string {
   }
 }
 
+/** True for an http(s) URL on any host (IG, TikTok, YouTube, other). */
+const isHttpUrl = (value: string) => {
+  try {
+    const u = new URL(value);
+    return (u.protocol === 'http:' || u.protocol === 'https:') && u.hostname.includes('.');
+  } catch {
+    return false;
+  }
+};
+
 const form = document.getElementById('lead-form') as HTMLFormElement | null;
 
 if (form) {
@@ -44,6 +54,14 @@ if (form) {
     el(id + '-err').hidden = !bad;
     input.setAttribute('aria-invalid', bad ? 'true' : 'false');
     return bad;
+  };
+
+  // "139 000", "139.000", "62,5" -> "139000", "139000", "62.5"; '' or null when not a number
+  const toNumber = (raw: string) => {
+    let s = raw.replace(/[\s\u00a0]/g, '');
+    if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+    return s === '' || /^\d+(\.\d+)?$/.test(s) ? s : null;
   };
 
   const say = (text: string, kind?: 'ok' | 'error') => {
@@ -237,10 +255,16 @@ if (form) {
     const name = el('name').value.trim();
     const phone = el('phone').value.trim();
     const email = el('email').value.trim();
+    const referenceUrl = el('referenceUrl').value.trim();
+    const price = toNumber(el('price').value);
+    const area = toNumber(el('area').value);
     const bad = [
       setErr('name', name.length < 2),
       setErr('phone', phone.replace(/\D/g, '').length < 9),
       setErr('email', !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
+      setErr('price', price === null),
+      setErr('area', area === null),
+      setErr('referenceUrl', referenceUrl !== '' && !isHttpUrl(referenceUrl)),
       !checkDiscount(true),
       setErr('consent', !el('consent').checked),
     ];
@@ -266,14 +290,19 @@ if (form) {
       const { files, left } = await preparePhotos();
       btn.textContent = 'Odosielam…';
       const discount = discountInput ? canonicalCode(discountInput.value) : '';
-      const msg = el<HTMLTextAreaElement>('message').value.trim();
+      const msg = el<HTMLTextAreaElement>('look').value.trim() || 'Nechám na vás'; // prázdne pole = rozhodne Domovid
       const format = form.querySelector<HTMLInputElement>('input[name="format"]:checked')?.value;
-      const message = format ? (msg ? `${msg}\n\nFormát videa: ${format}` : `Formát videa: ${format}`) : msg;
+      const look = format ? (msg ? `${msg}\n\nFormát videa: ${format}` : `Formát videa: ${format}`) : msg;
       const body = JSON.stringify({
         name,
         phone,
         email,
-        message,
+        propertyType: el<HTMLSelectElement>('propertyType').value,
+        location: el('location').value.trim(),
+        price,
+        area,
+        look,
+        referenceUrl,
         page: location.href,
         sentAt: new Date().toISOString(),
         company: '',

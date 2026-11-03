@@ -17,8 +17,9 @@ SHEET_ID = "1Zrc_k0x3GuTlQxI9XwfX3K8IT1M_3lyli8OFaCPo1Mo"
 T_PKG, T_VID = "Balíky", "Videá"
 # Balíky: A id, B klient, C zaciatok, D koniec, E cena bez DPH, F videi, I splatnost, J zaplatene dna
 P_ID, P_CLIENT, P_START, P_END, P_NET, P_COUNT, P_DUE, P_PAID = 0, 1, 2, 3, 4, 5, 8, 9
-# Videá: A datum, B klient, C balik, D video id, M stav, N odkaz
+# Videá: A datum, B klient, C balik, D video id, M stav, N odkaz; O token, P subory (JSON), Q odomknute ("áno"), R schvalene (ISO)
 V_CLIENT, V_PKG, V_ID, V_STAV = 1, 2, 3, 12
+V_TOKEN, V_FILES, V_UNLOCKED, V_APPROVED = 14, 15, 16, 17
 VIDEO_PAID_STAV = "zaplatené – odomknuté"
 
 
@@ -203,19 +204,59 @@ def evaluate(pkg, video_id, today=None, backend=None):
     return res
 
 
-def record_video(video_id, client, pkg, title, formats, link, stav, kling_credits=None, today=None, backend=None):
-    """Prida riadok do Videá (len A-H, J, M, N), alebo pri existujucom Video ID aktualizuje iba Stav (M)."""
+def record_video(video_id, client, pkg, title, formats, link, stav, kling_credits=None, today=None, backend=None,
+                 token="", files=None, unlocked=False):
+    """Prida riadok do Videá (A-H, J, M, N + O token, P subory, Q odomknute), alebo pri existujucom Video ID
+    aktualizuje Stav (M) a O-Q. Stlpec R (Schvalene) pise len Apps Script."""
     backend = backend or get_backend()
     today = today or date.today()
+    files_json = json.dumps(files, ensure_ascii=False) if files else ""
     for i, row in enumerate(backend.rows(T_VID)):
         if i and cell(row, V_ID) == video_id:
             if cell(row, V_STAV) != stav:
                 backend.update(T_VID, i + 1, V_STAV, stav)
+            _write_master_cols(backend, i + 1, row, token, files_json, unlocked)
             return "updated"
     row = ["%d. %d. %d" % (today.day, today.month, today.year), client, pkg, video_id, title, formats,
-           "" if kling_credits is None else kling_credits, "0,0097", "", 0, "", "", stav, link]
+           "" if kling_credits is None else kling_credits, "0,0097", "", 0, "", "", stav, link,
+           token, files_json, UNLOCKED if unlocked else ""]
     backend.append(T_VID, row)
     return "added"
+
+
+UNLOCKED = "áno"
+
+
+def _write_master_cols(backend, row_no, row, token, files_json, unlocked):
+    for col, value in ((V_TOKEN, token), (V_FILES, files_json), (V_UNLOCKED, UNLOCKED if unlocked else "")):
+        if value and cell(row, col) != value:
+            backend.update(T_VID, row_no, col, value)
+
+
+def video_row(backend, video_id):
+    """(riadok v Sheete, riadok dat) pre Video ID, alebo (None, None)."""
+    for i, row in enumerate(backend.rows(T_VID)):
+        if i and cell(row, V_ID) == video_id:
+            return i + 1, row
+    return None, None
+
+
+def set_unlocked(video_id, token="", files=None, backend=None):
+    """Videá!Q = "áno" (klient ma nárok na stiahnutie); volitelne dopise O token a P subory. False, ak video nie je v Sheete."""
+    backend = backend or get_backend()
+    row_no, row = video_row(backend, video_id)
+    if row is None:
+        return False
+    _write_master_cols(backend, row_no, row, token, json.dumps(files, ensure_ascii=False) if files else "", True)
+    return True
+
+
+def is_approved(video_id, backend=None):
+    """True, ak Videá!R (Schvalene) nie je prazdne. Pri chybe False (nikdy nevyhodi vynimku)."""
+    try:
+        return bool(cell(video_row(backend or get_backend(), video_id)[1] or [], V_APPROVED))
+    except Exception:
+        return False
 
 
 def package_videos(backend, pkg):

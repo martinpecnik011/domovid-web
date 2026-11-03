@@ -1,8 +1,16 @@
+import { FORM_ENDPOINT } from './site';
+
 /**
  * Public base URL of the Cloudflare R2 bucket that holds the client deliveries (the public r2.dev URL,
  * see tools/README-dodanie.md). Set PUBLIC_DELIVERY_BASE at build time; the placeholder is only for local builds.
  */
 export const DELIVERY_BASE = (import.meta.env.PUBLIC_DELIVERY_BASE || 'https://pub-bc98670f5e3646368728e7feaba801a7.r2.dev').replace(/\/$/, '');
+
+/**
+ * Apps Script endpoint of the review/status API (GET ?type=status&id=, POST review events). Defaults to the lead form
+ * endpoint; PUBLIC_REVIEW_ENDPOINT overrides it at build time (used by the local e2e with a fake Apps Script).
+ */
+export const REVIEW_ENDPOINT: string = import.meta.env.PUBLIC_REVIEW_ENDPOINT || FORM_ENDPOINT;
 
 /** A delivery id is an unguessable lowercase alphanumeric token (the folder name in the bucket). */
 export const DELIVERY_ID_RE = /^[a-z0-9]{8,32}$/;
@@ -30,6 +38,9 @@ export const RENEWAL_VALIDITY = 'Platí 1 mesiac odo dňa prijatia platby – pr
 export const DOWNLOAD_LABEL = 'Stiahnuť v plnej kvalite';
 export const DOWNLOAD_BUSY = 'Sťahujem…';
 
+/** Shown when the approval/unlock status could not be loaded: the page stays locked (no download). */
+export const STATUS_ERROR_TEXT = 'Stav schválenia sa nám nepodarilo načítať, preto sťahovanie zatiaľ nezobrazujeme. Obnovte stránku alebo nám napíšte.';
+
 /** Renewal buttons and their confirmations ({ID} = package id). */
 export const RENEW_YES = 'Áno, schvaľujem video a predlžujem balík';
 export const RENEW_NO = 'Nie, ďakujem';
@@ -44,16 +55,16 @@ export interface DeliveryManifest {
   title: string;
   /** ISO date-time. */
   created: string;
-  /** false = downloads stay locked until the invoice is paid. */
-  paid: boolean;
-  /** Watermarked / lower quality preview shown in the player. */
+  /** Display hint only (never unlocks anything; the page unlocks from the Apps Script status). */
+  paid?: boolean;
+  /** Display hint: the client has an active package, so no payment notice. The status response is authoritative. */
+  has_package?: boolean;
+  /** Badged (DEMO · DOMOVID) preview shown in the player. */
   preview: { file: string; width: number; height: number };
   poster?: string;
   /** Optional landscape preview, shown under the portrait one. */
   preview_16x9?: { file: string; width: number; height: number };
   poster_16x9?: string;
-  /** One or two entries: the 9:16 master ("Originál – plná kvalita (1080×1920)"), plus the 16:9 one when preview_16x9 is set. */
-  downloads: { label: string; file: string; bytes: number }[];
   message?: string;
   /** Optional price shown next to the payment text while unpaid. `net` in EUR, `vat_rate` as a fraction (0.23). */
   price?: { label: string; net: number; vat_rate: number; reference: string; iban?: string };
@@ -71,4 +82,14 @@ export interface DeliveryManifest {
     /** Optional one-off price of just this video; defaults to SINGLE_VIDEO_NET + renewal.vat_rate, reference = manifest id. */
     single?: { net: number; vat_rate: number; reference: string };
   };
+}
+
+/** Apps Script `GET ?type=status&id=` (and the `approve` POST) response. `downloads` only when unlocked; urls are absolute. */
+export interface DeliveryStatus {
+  ok: boolean;
+  error?: string;
+  approved: boolean;
+  unlocked: boolean;
+  has_package: boolean;
+  downloads?: { label: string; url: string; bytes: number }[];
 }
