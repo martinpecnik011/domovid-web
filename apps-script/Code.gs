@@ -26,6 +26,8 @@ var MAX_FILES = 10;
 var MAX_FILE_BYTES = 8 * 1024 * 1024;
 var KLIENTI_SHEET_PROP = 'KLIENTI_SHEET_ID';
 var PACKAGE_WARNING = 'Váš mesačný balík videí je už vyčerpaný – fotky sme prijali, video spracujeme po obnovení balíka. Podrobnosti k obnoveniu balíka vám pošleme.';
+var R2_BASE_PROP = 'R2_PUBLIC_BASE';
+var R2_BASE_DEFAULT = 'https://pub-bc98670f5e3646368728e7feaba801a7.r2.dev';
 var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
 function doPost(e) {
@@ -120,6 +122,10 @@ function handleReview(p) {
   var packageId = String(p.package_id || '');
   if (p.action === 'renew' && !/^[A-Za-z0-9-]{1,40}$/.test(packageId)) return json({ ok: false });
   var approve = p.action === 'approve';
+  if (p.action === 'changes') {
+    var current = videoState(id);
+    if (current.approved) return json({ ok: false, error: 'approved' });
+  }
   var message = clean(p.message, 2000);
   if (p.action === 'changes' && !message) return json({ ok: false });
 
@@ -127,9 +133,11 @@ function handleReview(p) {
   var title = clean(p.title, 200);
   var page = clean(p.page, 300);
 
+  var status = null;
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
+    if (approve) status = approveVideo(id);
     getSheet(REVIEW_SHEET_NAME, REVIEW_HEADERS).appendRow([
       new Date(), id, client, title, reviewAction(p.action, packageId), message, page, clean(p.sentAt, 40)
     ]);
@@ -137,22 +145,26 @@ function handleReview(p) {
     lock.releaseLock();
   }
 
-  MailApp.sendEmail({
-    to: NOTIFY_EMAIL,
-    subject: p.action === 'renew' ? 'Domovid: ' + client + ' predlžuje balík ' + packageId
-      : p.action === 'single' ? 'Domovid: ' + client + ' kupuje len toto video – ' + title
-      : p.action === 'decline' ? 'Domovid: ' + client + ' nepredlžuje balík'
-      : (approve ? 'Domovid: klient schválil video – ' : 'Domovid: klient chce úpravu – ') + client,
-    body:
-      'ID videa: ' + id + '\n' +
-      'Klient: ' + (client || '-') + '\n' +
-      'Video: ' + (title || '-') + '\n\n' +
-      'Pripomienky:\n' + (message || '-') + '\n\n' +
-      'Stránka: ' + (page || '-') + '\n' +
-      'Tabuľka: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
-  });
+  try {
+    MailApp.sendEmail({
+      to: NOTIFY_EMAIL,
+      subject: p.action === 'renew' ? 'Domovid: ' + client + ' predlžuje balík ' + packageId
+        : p.action === 'single' ? 'Domovid: ' + client + ' kupuje len toto video – ' + title
+        : p.action === 'decline' ? 'Domovid: ' + client + ' nepredlžuje balík'
+        : (approve ? 'Domovid: klient schválil video – ' : 'Domovid: klient chce úpravu – ') + client,
+      body:
+        'ID videa: ' + id + '\n' +
+        'Klient: ' + (client || '-') + '\n' +
+        'Video: ' + (title || '-') + '\n\n' +
+        'Pripomienky:\n' + (message || '-') + '\n\n' +
+        'Stránka: ' + (page || '-') + '\n' +
+        'Tabuľka: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
+    });
+  } catch (err) {
+    console.error('E-mail o odpovedi klienta zlyhal: ' + err);
+  }
 
-  return json({ ok: true });
+  return json(approve ? status : { ok: true });
 }
 
 // Text of the Akcia column in Schválenia.
@@ -370,8 +382,118 @@ function waNumber(phone) {
   return d;
 }
 
-function doGet() {
+function doGet(e) {
+  var q = (e && e.parameter) || {};
+  if (q.type === 'status') {
+    var id = String(q.id || '');
+    var state = /^[a-z0-9]{8,32}$/.test(id) ? videoState(id) : null;
+    return json(state && !state.error ? statusBody(state) : { ok: false });
+  }
   return json({ ok: true, service: 'domovid-leads' });
+}
+
+// Columns of the Videá sheet (1-based) added for the delivery unlock model.
+var COL_TOKEN = 15, COL_FILES = 16, COL_UNLOCKED = 17, COL_APPROVED = 18;
+
+// State of one delivered video from Videá (row found by Video ID in column D), or {error:'not_found'|'state'} when unknown / unavailable.
+function videoState(id) {
+  try {
+    var propId = PropertiesService.getScriptProperties().getProperty(KLIENTI_SHEET_PROP);
+    if (!propId) return { error: 'state' };
+    var ss = SpreadsheetApp.openById(propId);
+    var sheet = ss.getSheetByName('Videá');
+    var videos = sheet.getDataRange().getValues();
+    for (var i = 1; i < videos.length; i++) {
+      if (String(videos[i][3]) !== id) continue;
+      var row = videos[i];
+      var packageId = String(row[2]).trim();
+      return {
+        id: id,
+        sheet: sheet,
+        rowNumber: i + 1,
+        approved: String(row[COL_APPROVED - 1] || '').trim() !== '',
+        paid: String(row[COL_UNLOCKED - 1] || '').trim() === 'áno', // Odomknuté set; counts only once approved
+        hasPackage: hasActivePackage(ss, packageId, videos),
+        token: String(row[COL_TOKEN - 1] || '').trim(),
+        files: String(row[COL_FILES - 1] || '')
+      };
+    }
+  } catch (err) {
+    console.error('Čítanie stavu videa zlyhalo: ' + err);
+    return { error: 'state' };
+  }
+  return { error: 'not_found' };
+}
+
+// Never throws: a missing Balíky sheet only means "no package", the video itself stays readable.
+function hasActivePackage(ss, packageId, videos) {
+  try {
+    return packageId !== '' && packageActive(ss, packageId, videos);
+  } catch (err) {
+    console.error('Kontrola balíka zlyhala: ' + err);
+    return false;
+  }
+}
+
+// Package is paid, not past its end date and still within its video count (the video asking already counts).
+function packageActive(ss, packageId, videos) {
+  var packs = ss.getSheetByName('Balíky').getDataRange().getValues();
+  for (var j = 1; j < packs.length; j++) {
+    if (String(packs[j][0]).trim() !== packageId) continue;
+    if (String(packs[j][9]).trim() === '') return false;
+    var end = toTime(packs[j][3]);
+    if (!isNaN(end) && Date.now() >= end + 24 * 3600 * 1000) return false;
+    var used = 0;
+    for (var k = 1; k < videos.length; k++) {
+      if (String(videos[k][2]).trim() === packageId) used++;
+    }
+    return used <= Number(packs[j][5]);
+  }
+  return false;
+}
+
+// Sets Schválené (once). Odomknuté is written only by dodaj_video.py when the master is uploaded.
+// Returns the status body, or {ok:false,error} when the video state is unavailable; never throws.
+function approveVideo(id) {
+  var state = videoState(id);
+  if (state.error) return { ok: false, error: state.error };
+  try {
+    if (!state.approved) {
+      state.sheet.getRange(state.rowNumber, COL_APPROVED).setValue(new Date().toISOString());
+      state.approved = true;
+    }
+  } catch (err) {
+    console.error('Zápis schválenia zlyhal: ' + err);
+    return { ok: false, error: 'state' };
+  }
+  return statusBody(state);
+}
+
+// Public status of a video; master download links only when it is unlocked.
+function statusBody(state) {
+  state.unlocked = state.approved && state.paid;
+  return {
+    ok: true,
+    approved: state.approved,
+    unlocked: state.unlocked,
+    has_package: state.hasPackage,
+    downloads: state.unlocked ? downloadLinks(state) : []
+  };
+}
+
+// R2 master URLs: base/id/m-token/file for each entry of the Súbory JSON.
+function downloadLinks(state) {
+  var base = String(PropertiesService.getScriptProperties().getProperty(R2_BASE_PROP) || R2_BASE_DEFAULT).replace(/\/+$/, '');
+  var files;
+  try {
+    files = JSON.parse(state.files);
+  } catch (err) {
+    return [];
+  }
+  if (!state.token || !Array.isArray(files)) return [];
+  return files.map(function (f) {
+    return { label: String(f.label || ''), url: base + '/' + state.id + '/m-' + state.token + '/' + String(f.file || ''), bytes: Number(f.bytes) || 0 };
+  });
 }
 
 // Creates the sheet (default: Leady) with its headers, or appends header cells missing from an older sheet.

@@ -63,3 +63,27 @@ Hárky Klienti / Balíky / Videá sú v inej tabuľke než Leady, preto jednoraz
 3. Vlož nový `Code.gs` a **Nasadiť → Spravovať nasadenia → ceruzka → Verzia: *Nová verzia* → Nasadiť.**
 
 Formulár na webe už neposiela požiadavku v režime `no-cors`, aby si vedel prečítať odpoveď; Apps Script na takú požiadavku odpovedá aj pre iný pôvod.
+
+## Odomykanie stiahnutia (stav videa, schválenie)
+
+Server strana modelu odomykania. Zdieľaný záznam je hárok **Videá** v tabuľke Klienti (`KLIENTI_SHEET_ID`); riadok sa hľadá podľa stĺpca D (ID videa). K existujúcim stĺpcom pribudli vpravo (hlavička v riadku 1):
+
+- **O Token** – tajná časť verejnej adresy masteru,
+- **P Súbory** – JSON pole `[{"label":"Stiahnuť v plnej kvalite (1080×1920)","file":"Nazov_Domovid_1080x1920.mp4","bytes":123}]`,
+- **Q Odomknuté** – `áno` alebo prázdne (píše `dodaj_video.py` pri `--mark-paid` / `--package-paid`, pri balíku aj schválenie),
+- **R Schválené** – ISO čas schválenia klientom alebo prázdne.
+
+Vzorce v I, K, L skript nikdy nepíše.
+
+Nová vlastnosť skriptu (voliteľná): `R2_PUBLIC_BASE` = verejná adresa R2 bucketu bez lomky na konci (predvolene `https://pub-bc98670f5e3646368728e7feaba801a7.r2.dev`). Odkaz na master je `R2_PUBLIC_BASE/ID/m-TOKEN/SÚBOR`.
+
+Endpointy (rovnaká `/exec` URL):
+
+- `GET ?type=status&id=ID` vráti `{"ok":true,"approved":bool,"unlocked":bool,"has_package":bool,"downloads":[{"label","url","bytes"}]}`. `downloads` je neprázdne len keď je video odomknuté. Neznáme alebo neplatné ID vráti `{"ok":false}`. Bez `type=status` ostáva zdravotná odpoveď ako predtým.
+- `POST` s `type: "review"`, `action: "approve"` zapíše riadok do Schválenia a pošle e-mail ako doteraz (zlyhanie e-mailu odpoveď nezmení), naviac nastaví **Schválené** (len ak je prázdne, opakované schválenie nič nemení). Skript **nikdy nezapisuje Odomknuté**. Odpoveď má tvar statusu (`approved: true`); ak stav videa nie je dostupný, vráti `{"ok":false,"error":"not_found"}` (neznáme ID) alebo `{"ok":false,"error":"state"}` (chýba `KLIENTI_SHEET_ID` alebo hárok Videá), riadok a e-mail sa zapíšu aj tak.
+- **Stiahnutie sa zobrazí len keď je video schválené (R) A zároveň Q = `áno`.** Q zapisuje `dodaj_video.py` v momente nahratia masteru: pri doručení klientovi s aktívnym balíkom, inak pri `--mark-paid` / `--package-paid`. `has_package` (balík zaplatený, dnes ≤ koniec, počet videí ≤ počet v balíku) je len informácia; ak hárok Balíky chýba, je `false`.
+- `action: "changes"` po schválení vráti `{"ok":false,"error":"approved"}`. `renew`, `decline`, `single` sa nezmenili.
+
+Stránka posiela POST s `Content-Type: text/plain` (bez `no-cors`) a číta odpoveď. Apps Script odpovedá na POST presmerovaním 302 na googleusercontent; `fetch` ho nasleduje ako GET a dostane telo z ContentService s povoleným CORS.
+
+Nasadenie: **je potrebná NOVÁ verzia nasadenia Apps Scriptu** (vlož nový `Code.gs`, potom **Nasadiť → Spravovať nasadenia → ceruzka → Verzia: *Nová verzia* → Nasadiť**). URL ostáva rovnaká.

@@ -112,6 +112,30 @@ class Writes(Base):
         self.assertEqual(len(d), n + 1)
         self.assertEqual(d[-1][12], "odomknuté")
 
+    def test_master_columns_o_to_r(self):
+        files = [{"label": "Stiahnuť v plnej kvalite (1080×1920)", "file": "T_Domovid_1080x1920.mp4", "bytes": 5}]
+        self.record("čaká na platbu")
+        self.assertEqual(self.data()["Videá"][-1][14:], ["", "", ""])  # bez tokenu su O-Q prazdne
+        self.assertEqual(self.record_with("čaká na platbu", "tok123", files, False), "updated")
+        row = self.data()["Videá"][-1]
+        self.assertEqual((row[14], json.loads(row[15]), row[16]), ("tok123", files, ""))
+        self.assertTrue(balik.set_unlocked("newvideo0001", backend=self.b))
+        self.assertEqual(self.data()["Videá"][-1][16], "áno")
+        self.assertFalse(balik.set_unlocked("neexistuje", backend=self.b))
+
+    def record_with(self, stav, token, files, unlocked, vid="newvideo0001"):
+        return balik.record_video(vid, "Halo Klient", "HALO-2026-10", "Titul", "9:16", "x", stav, None, date(2026, 10, 31), self.b,
+                                  token=token, files=files, unlocked=unlocked)
+
+    def test_new_row_has_o_p_q_and_is_approved_reads_r(self):
+        self.record_with("odomknuté", "tok999", [{"label": "l", "file": "f.mp4", "bytes": 1}], True)
+        row = self.data()["Videá"][-1]
+        self.assertEqual((row[14], row[16], len(row)), ("tok999", "áno", 17))
+        self.assertFalse(balik.is_approved("newvideo0001", self.b))
+        self.b.update(balik.T_VID, len(self.data()["Videá"]), balik.V_APPROVED, "2026-11-02T10:00:00Z")
+        self.assertTrue(balik.is_approved("newvideo0001", self.b))
+        self.assertFalse(balik.is_approved("neexistuje", self.b))
+
     def test_formula_columns_untouched(self):
         before = self.data()
         self.record("čaká na platbu")

@@ -78,7 +78,18 @@ function makeEnv({ sheetRows = null, props = {}, existingFolders = [], klienti =
       openById: (id) => {
         if (openThrows) throw new Error('No access');
         assert.equal(id, props.KLIENTI_SHEET_ID);
-        return { getSheetByName: (n) => ({ getDataRange: () => ({ getValues: () => klienti[n] }) }) };
+        return {
+          getSheetByName: (n) => ({
+            getDataRange: () => ({ getValues: () => klienti[n].map((r) => r.slice()) }),
+            getRange: (row, col) => ({
+              setValue(v) {
+                const r = klienti[n][row - 1];
+                while (r.length < col) r.push('');
+                r[col - 1] = v;
+              }
+            })
+          })
+        };
       },
       getActiveSpreadsheet: () => ({
         getSheetByName: (name) => (name === 'Schválenia' ? (reviewRows ? reviewSheet : null) : rows ? sheet : null),
@@ -140,7 +151,7 @@ function makeEnv({ sheetRows = null, props = {}, existingFolders = [], klienti =
   };
   vm.createContext(ctx);
   vm.runInContext(SOURCE, ctx);
-  return { ctx, log, store, folders, roots, getRows: () => rows, getReviewRows: () => reviewRows };
+  return { ctx, log, store, folders, roots, getRows: () => rows, getReviewRows: () => reviewRows, getKlienti: (n) => klienti[n] };
 }
 
 const jpeg = (kb = 1) => Buffer.alloc(kb * 1024, 0xff).toString('base64');
@@ -324,7 +335,7 @@ const review = { type: 'review', id: 'abc12345xyz', client: 'Jana Nováková', t
 test('(k) review approve → one row in Schválenia, approve mail, no lead row, no confirmation', () => {
   const env = makeEnv();
   const out = env.ctx.doPost(jsonPost(review));
-  assert.deepEqual(reply(out), { ok: true });
+  assert.deepEqual(reply(out), { ok: false, error: 'state' }); // no Klienti sheet configured
   const rows = env.getReviewRows();
   assert.equal(rows.length, 2);
   assert.deepEqual(rows[0], ['Prijaté', 'ID videa', 'Klient', 'Video', 'Akcia', 'Pripomienky', 'Stránka', 'Odoslané (prehliadač)']);
@@ -463,4 +474,152 @@ test('(x) single → row text and subject with title; price_net ignored', () => 
   assert.deepEqual(reply(env.ctx.doPost(jsonPost({ ...review, action: 'single', price_net: 'abc' }))), { ok: true });
   assert.equal(env.getReviewRows()[1][4], 'kupuje len toto video (50 € + DPH)');
   assert.equal(env.log.mails[0].subject, 'Domovid: Jana Nováková kupuje len toto video – Byt Ružinov');
+});
+
+// --- delivery unlock model (Videá columns O–R) ---
+const FILES = JSON.stringify([{ label: 'Stiahnuť v plnej kvalite (1080×1920)', file: 'Byt_1080x1920.mp4', bytes: 123 }]);
+const R2 = 'https://pub-bc98670f5e3646368728e7feaba801a7.r2.dev';
+const UVID_HEAD = [...VIDEO_HEAD, '', '', '', '', '', '', '', '', '', 'Stav', 'Odkaz', 'Token', 'Súbory', 'Odomknuté', 'Schválené'];
+// Videá row: A..N, then O Token, P Súbory, Q Odomknuté, R Schválené
+const uvid = (pkg, id, { unlocked = '', approved = '' } = {}) =>
+  ['', 'Jana Nováková', pkg, id, '', '', '', '', '', '', '', '', '', '', 'tok123', FILES, unlocked, approved];
+const unlockEnv = (packs, vids) => makeEnv({
+  props: { KLIENTI_SHEET_ID: 'sheet-1' },
+  klienti: { Klienti: KLIENTI, 'Balíky': [PACK_HEAD, ...packs], 'Videá': [UVID_HEAD, ...vids] }
+});
+const VID = 'abc12345xyz';
+const status = (env, id = VID) => reply(env.ctx.doGet({ parameter: { type: 'status', id } }));
+const future = '2099-01-01';
+
+test('status: unknown id and bad id → ok:false', () => {
+  const env = unlockEnv([], [uvid('', VID)]);
+  assert.deepEqual(status(env, 'zzzzzzzz9'), { ok: false });
+  assert.deepEqual(status(env, 'x'), { ok: false });
+});
+
+test('status: locked video has no downloads', () => {
+  const env = unlockEnv([], [uvid('', VID)]);
+  assert.deepEqual(status(env), { ok: true, approved: false, unlocked: false, has_package: false, downloads: [] });
+});
+
+test('status: unlocked video lists master URLs built from token and file', () => {
+  const env = unlockEnv([], [uvid('', VID, { unlocked: 'áno', approved: '2026-10-30T10:00:00.000Z' })]);
+  assert.deepEqual(status(env).downloads, [
+    { label: 'Stiahnuť v plnej kvalite (1080×1920)', url: R2 + '/' + VID + '/m-tok123/Byt_1080x1920.mp4', bytes: 123 }
+  ]);
+  env.store.R2_PUBLIC_BASE = 'https://cdn.example/';
+  assert.equal(status(env).downloads[0].url, 'https://cdn.example/' + VID + '/m-tok123/Byt_1080x1920.mp4');
+});
+
+test('approve without package → approved, still locked, R set, Q empty', () => {
+  const env = unlockEnv([], [uvid('', VID)]);
+  const out = reply(env.ctx.doPost(jsonPost({ ...review, id: VID })));
+  assert.deepEqual(out, { ok: true, approved: true, unlocked: false, has_package: false, downloads: [] });
+  const row = env.getKlienti('Videá')[1];
+  assert.ok(row[17]);
+  assert.equal(row[16], '');
+  assert.equal(env.getReviewRows().length, 2); // header + row
+  assert.equal(env.log.mails.length, 1);
+});
+
+test('approve with active package and Q set at delivery → unlocked with downloads', () => {
+  const env = unlockEnv([pack('P1', '2026-10-01', future, 3, '2026-10-02')], [uvid('P1', VID, { unlocked: 'áno' })]);
+  const out = reply(env.ctx.doPost(jsonPost({ ...review, id: VID })));
+  assert.equal(out.unlocked, true);
+  assert.equal(out.has_package, true);
+  assert.equal(out.downloads[0].url, R2 + '/' + VID + '/m-tok123/Byt_1080x1920.mp4');
+  assert.equal(status(env).unlocked, true);
+});
+
+test('approve with active package but Q empty (master not uploaded) → locked, Q not written', () => {
+  const env = unlockEnv([pack('P1', '2026-10-01', future, 3, '2026-10-02')], [uvid('P1', VID)]);
+  const out = reply(env.ctx.doPost(jsonPost({ ...review, id: VID })));
+  assert.equal(out.approved, true);
+  assert.equal(out.has_package, true);
+  assert.equal(out.unlocked, false);
+  assert.deepEqual(out.downloads, []);
+  assert.equal(env.getKlienti('Videá')[1][16], '');
+});
+
+test('approve with exhausted, expired or unpaid package → stays locked', () => {
+  const cases = [
+    [pack('P1', '2026-10-01', future, 1, '2026-10-02'), [uvid('P1', VID), uvid('P1', 'other1234')]],
+    [pack('P1', '2026-01-01', '2026-02-01', 3, '2026-01-02'), [uvid('P1', VID)]],
+    [pack('P1', '2026-10-01', future, 3, ''), [uvid('P1', VID)]]
+  ];
+  for (const [p, vids] of cases) {
+    const env = unlockEnv([p], vids);
+    const out = reply(env.ctx.doPost(jsonPost({ ...review, id: VID })));
+    assert.equal(out.approved, true);
+    assert.equal(out.unlocked, false);
+    assert.deepEqual(out.downloads, []);
+    assert.equal(env.getKlienti('Videá')[1][16], '');
+  }
+});
+
+test('approve is idempotent: Schválené keeps its first value', () => {
+  const env = unlockEnv([pack('P1', '2026-10-01', future, 3, '2026-10-02')], [uvid('P1', VID)]);
+  env.ctx.doPost(jsonPost({ ...review, id: VID }));
+  const first = env.getKlienti('Videá')[1][17];
+  env.ctx.doPost(jsonPost({ ...review, id: VID }));
+  assert.equal(env.getKlienti('Videá')[1][17], first);
+  assert.equal(env.getKlienti('Videá')[1][16], '');
+});
+
+test('changes after approval → ok:false error approved, nothing written', () => {
+  const env = unlockEnv([], [uvid('', VID, { approved: '2026-10-30T10:00:00.000Z' })]);
+  const out = reply(env.ctx.doPost(jsonPost({ ...review, id: VID, action: 'changes', message: 'Zmeň hudbu' })));
+  assert.deepEqual(out, { ok: false, error: 'approved' });
+  assert.equal(env.log.mails.length, 0);
+  assert.equal(env.getReviewRows(), null);
+});
+
+test('changes before approval still works', () => {
+  const env = unlockEnv([], [uvid('', VID)]);
+  assert.deepEqual(reply(env.ctx.doPost(jsonPost({ ...review, id: VID, action: 'changes', message: 'Zmeň hudbu' }))), { ok: true });
+});
+
+test('Q="áno" without approval stays locked; approve then unlocks even if the package is expired', () => {
+  const env = unlockEnv([pack('P1', '2026-01-01', '2026-02-01', 3, '2026-01-02')], [uvid('P1', VID, { unlocked: 'áno' })]);
+  const before = status(env);
+  assert.equal(before.unlocked, false);
+  assert.deepEqual(before.downloads, []);
+  const out = reply(env.ctx.doPost(jsonPost({ ...review, id: VID })));
+  assert.equal(out.unlocked, true);
+  assert.equal(out.downloads[0].url, R2 + '/' + VID + '/m-tok123/Byt_1080x1920.mp4');
+});
+
+test('non-package video paid via --mark-paid: locked until approve, then unlocked', () => {
+  const env = unlockEnv([], [uvid('', VID, { unlocked: 'áno' })]);
+  assert.deepEqual(status(env), { ok: true, approved: false, unlocked: false, has_package: false, downloads: [] });
+  const out = reply(env.ctx.doPost(jsonPost({ ...review, id: VID })));
+  assert.equal(out.unlocked, true);
+  assert.equal(out.downloads.length, 1);
+});
+
+test('approve with unknown id or unconfigured state → ok:false error, review row and mail kept', () => {
+  const env = unlockEnv([], [uvid('', VID)]);
+  assert.deepEqual(reply(env.ctx.doPost(jsonPost({ ...review, id: 'zzzzzzzz9' }))), { ok: false, error: 'not_found' });
+  assert.equal(env.log.mails.length, 1);
+  assert.equal(env.getReviewRows().length, 2);
+  const bare = makeEnv();
+  assert.deepEqual(reply(bare.ctx.doPost(jsonPost(review))), { ok: false, error: 'state' });
+  assert.equal(bare.log.mails.length, 1);
+});
+
+test('missing Balíky sheet → has_package false, approved paid video still unlocks', () => {
+  const env = makeEnv({
+    props: { KLIENTI_SHEET_ID: 'sheet-1' },
+    klienti: { Klienti: KLIENTI, 'Videá': [UVID_HEAD, uvid('P1', VID, { unlocked: 'áno' })] }
+  });
+  const out = reply(env.ctx.doPost(jsonPost({ ...review, id: VID })));
+  assert.equal(out.ok, true);
+  assert.equal(out.has_package, false);
+  assert.equal(out.unlocked, true);
+});
+
+test('owner mail failure does not break approve response', () => {
+  const env = unlockEnv([], [uvid('', VID)]);
+  env.ctx.MailApp.sendEmail = () => { throw new Error('quota'); };
+  assert.equal(reply(env.ctx.doPost(jsonPost({ ...review, id: VID }))).approved, true);
 });

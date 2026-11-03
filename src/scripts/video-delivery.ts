@@ -1,8 +1,8 @@
 // Private client delivery page: loads manifest.json from the R2 bucket, shows the preview,
-// posts the client's review to the lead form endpoint and (once paid) lists the downloads.
+// posts the client's review to the Apps Script endpoint and lists the downloads only when its status says unlocked.
 // Manifest data is only ever written with textContent / properties, never as HTML.
-import { FORM_ENDPOINT, CONTACT_EMAIL } from '../config/site';
-import { DELIVERY_BASE, DELIVERY_ID_RE, LOCKED_TEXT, LOCKED_TEXT_WITH_IBAN, RENEWAL_HEADING, RENEWAL_TEXT, RENEWAL_REF_LABEL, DOWNLOAD_LABEL, SINGLE_VIDEO_NET, SINGLE_BUY, SINGLE_INTRO, SINGLE_REF_LABEL, SINGLE_DONE, RENEWAL_VALIDITY, DOWNLOAD_BUSY, RENEW_YES, RENEW_NO, RENEW_YES_DONE, RENEW_NO_DONE, type DeliveryManifest } from '../config/delivery';
+import { CONTACT_EMAIL } from '../config/site';
+import { REVIEW_ENDPOINT, STATUS_ERROR_TEXT, DELIVERY_BASE, DELIVERY_ID_RE, LOCKED_TEXT, LOCKED_TEXT_WITH_IBAN, RENEWAL_HEADING, RENEWAL_TEXT, RENEWAL_REF_LABEL, DOWNLOAD_LABEL, SINGLE_VIDEO_NET, SINGLE_BUY, SINGLE_INTRO, SINGLE_REF_LABEL, SINGLE_DONE, RENEWAL_VALIDITY, DOWNLOAD_BUSY, RENEW_YES, RENEW_NO, RENEW_YES_DONE, RENEW_NO_DONE, type DeliveryManifest, type DeliveryStatus } from '../config/delivery';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -39,23 +39,34 @@ async function load() {
     const res = await fetch(`${dir}manifest.json?t=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) throw new Error(String(res.status));
     m = await res.json();
-    if (!m || !m.preview?.file || !Array.isArray(m.downloads)) throw new Error('manifest');
+    if (!m || !m.preview?.file) throw new Error('manifest');
   } catch {
     showError('Video sa nám nepodarilo načítať. Skúste to prosím o chvíľu znova.');
     return;
   }
-  render(m, dir);
+  render(m, dir, await fetchStatus());
   show('ready');
+}
+
+/** Approval/unlock status from the Apps Script; null when it cannot be loaded (the page then stays locked). */
+async function fetchStatus(): Promise<DeliveryStatus | null> {
+  try {
+    const res = await fetch(`${REVIEW_ENDPOINT}${REVIEW_ENDPOINT.includes('?') ? '&' : '?'}type=status&id=${id}`, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+    const st = await res.json();
+    return res.ok && st?.ok === true ? st : null;
+  } catch {
+    return null;
+  }
 }
 
 /** 17220 cents -> "172,20 €" (Slovak decimal comma, non-breaking space before the euro sign). */
 const formatEur = (cents: number) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
 
-/** POSTs a review event to the lead form endpoint (fire-and-forget, no-cors) — shared by the review and renewal buttons. */
-const postReview = (m: DeliveryManifest, action: string, message: string, extra: Record<string, string> = {}) =>
-  fetch(FORM_ENDPOINT, {
+/** POSTs a review event to the Apps Script endpoint. Fire-and-forget (no-cors) except `readable` (approve), whose JSON status the page needs. */
+const postReview = (m: DeliveryManifest, action: string, message: string, extra: Record<string, string> = {}, readable = false) =>
+  fetch(REVIEW_ENDPOINT, {
     method: 'POST',
-    mode: 'no-cors',
+    mode: readable ? 'cors' : 'no-cors',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({
       type: 'review',
@@ -151,7 +162,7 @@ function showPrice(p: DeliveryManifest['price'], labelOverride?: string): boolea
   return !!iban;
 }
 
-function render(m: DeliveryManifest, dir: string) {
+function render(m: DeliveryManifest, dir: string, st: DeliveryStatus | null) {
   document.title = `${m.title} – Domovid`;
   $('video-title').textContent = m.title;
   $('video-client').textContent = m.client;
@@ -179,20 +190,54 @@ function render(m: DeliveryManifest, dir: string) {
   }
 
   setupReview(m);
+  applyStatus(m, st);
+}
 
-  if (!m.paid) {
-    if (m.renewal) showRenewal(m, m.renewal);
-    const withIban = showPrice(m.price, m.renewal && `Obnoviť balík ${m.renewal.package_id} – ${videosText(m.renewal.videos)}`);
-    $('locked-text').textContent = withIban ? LOCKED_TEXT_WITH_IBAN : LOCKED_TEXT;
-    $('downloads-locked').hidden = false;
+/** Locked (badge preview, payment notice only without a package) or unlocked (clean master + downloads), from the status. */
+function applyStatus(m: DeliveryManifest, st: DeliveryStatus | null) {
+  if (st?.approved) {
+    $('review-actions').hidden = true;
+    $('changes-box').hidden = true;
+  }
+  if (st?.unlocked && st.downloads?.length) {
+    unlock(st.downloads);
     return;
   }
-  for (const d of m.downloads) {
+  if (!st) {
+    const status = $('review-status');
+    status.className = 'form-status error';
+    status.textContent = STATUS_ERROR_TEXT;
+    status.hidden = false;
+  }
+  if (m.renewal) showRenewal(m, m.renewal);
+  if (st?.has_package ?? m.has_package) return; // active package: nothing to pay, the download follows the approval
+  const withIban = showPrice(m.price, m.renewal && `Obnoviť balík ${m.renewal.package_id} – ${videosText(m.renewal.videos)}`);
+  $('locked-text').textContent = withIban ? LOCKED_TEXT_WITH_IBAN : LOCKED_TEXT;
+  $('downloads-locked').hidden = false;
+}
+
+const resolutionOf = (d: { label: string; url?: string; file?: string }) =>
+  /\((\d{3,4}×\d{3,4})\)/.exec(d.label)?.[1] ?? /_(\d{3,4})x(\d{3,4})\./.exec(d.url ?? d.file ?? '')?.slice(1, 3).join('×');
+
+/** Swaps the badge previews for the clean masters (no poster = no badge) and lists the download buttons. */
+function unlock(downloads: NonNullable<DeliveryStatus['downloads']>) {
+  const swap = (v: HTMLVideoElement, d?: { url: string }) => {
+    if (!d) return;
+    v.removeAttribute('poster');
+    v.src = d.url;
+    v.load();
+  };
+  swap($<HTMLVideoElement>('video-player'), downloads[0]);
+  swap($<HTMLVideoElement>('video-player-16x9'), downloads.find((d) => resolutionOf(d) === '1920×1080'));
+  $('downloads-locked').hidden = true;
+  $('downloads').replaceChildren();
+  for (const d of downloads) {
+    const file = decodeURIComponent(d.url.split('/').pop() || 'video.mp4');
     const a = document.createElement('a');
     a.className = 'btn btn-brass';
-    a.href = dir + d.file;
+    a.href = d.url;
     a.setAttribute('download', '');
-    const resolution = /\((\d{3,4}×\d{3,4})\)/.exec(d.label)?.[1] ?? /_(\d{3,4})x(\d{3,4})\./.exec(d.file)?.slice(1, 3).join('×');
+    const resolution = resolutionOf(d);
     const text = document.createElement('span');
     const idleText = resolution ? `${DOWNLOAD_LABEL} (${resolution})` : DOWNLOAD_LABEL;
     text.textContent = idleText;
@@ -209,7 +254,7 @@ function render(m: DeliveryManifest, dir: string) {
         const url = URL.createObjectURL(await res.blob());
         const tmp = document.createElement('a');
         tmp.href = url;
-        tmp.download = d.file;
+        tmp.download = file;
         document.body.append(tmp);
         tmp.click();
         tmp.remove();
@@ -225,7 +270,6 @@ function render(m: DeliveryManifest, dir: string) {
     a.append(small);
     $('downloads').append(a);
   }
-  if (!m.downloads.length) return;
   $('downloads-wrap').hidden = false;
 }
 
@@ -284,17 +328,25 @@ function setupReview(m: DeliveryManifest) {
   async function submit(action: 'approve' | 'changes', message: string) {
     busy(true);
     try {
-      await postReview(m, action, message);
+      const res = await postReview(m, action, message, {}, action === 'approve');
+      let st: DeliveryStatus | null = null;
+      if (action === 'approve') {
+        st = await res.json().catch(() => null); // not JSON -> treated like ok:false
+        if (!st?.ok) throw new Error(st?.error || 'approve');
+      }
       $('review-actions').hidden = true;
       box.hidden = true;
       say(
         action !== 'approve'
           ? 'Ďakujeme za spätnú väzbu. Ozveme sa vám s upravenou verziou.'
-          : m.paid // zaplatené (aj cez predplatený balík): žiadna zmienka o platbe
+          : st?.unlocked // odomknuté (predplatený balík): žiadna zmienka o platbe
             ? 'Ďakujeme, že ste video schválili! Video v plnej kvalite si môžete stiahnuť nižšie.'
-            : 'Ďakujeme, že ste video schválili! Pošleme vám číslo účtu (IBAN) na úhradu a po prijatí platby sa tu odomkne video v plnej kvalite.',
+            : st?.has_package
+              ? 'Ďakujeme, že ste video schválili!'
+              : 'Ďakujeme, že ste video schválili! Pošleme vám číslo účtu (IBAN) na úhradu a po prijatí platby sa tu odomkne video v plnej kvalite.',
         'ok',
       );
+      if (st?.unlocked) applyStatus(m, st); // switch to the clean master without a reload
     } catch {
       say('Odoslanie sa nepodarilo.', 'error');
       busy(false);

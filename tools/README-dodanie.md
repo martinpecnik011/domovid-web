@@ -24,10 +24,10 @@ Rovnaké do lokálneho priečinka (na skúšku, bez Cloudflare):
 python3 tools/dodaj_video.py ~/Desktop/video.mp4 --client "Meno" --title "Názov" --out-dir /cesta/delivery
 ```
 
-Hneď zaplatené (publikuje aj master): pridaj `--paid`. Vlastné ID: `--id abc12345xyz` (`[a-z0-9]{8,32}`);
+Hneď odomknuté (publikuje aj master hneď): pridaj `--paid`. Vlastné ID: `--id abc12345xyz` (`[a-z0-9]{8,32}`);
 predvolene sa vygeneruje 12 náhodných znakov (`secrets`), ID je zároveň „tajný" odkaz, preto ho nezdieľaj verejne.
 
-Po prijatí platby na účet:
+Po prijatí platby na účet (nastaví aj `Videá!Q`):
 
 ```bash
 python3 tools/dodaj_video.py --mark-paid ID --r2-bucket domovid-videa
@@ -144,26 +144,69 @@ Testy: `python3 -m unittest tests/delivery/test_balik.py -v`.
 
 Poznámka: r2.dev adresa je určená na vývoj a má limity; pre ostrú prevádzku je lepšia vlastná doména na bucket.
 
+## Odomknutie: schválenie + balík / platba
+
+Stiahnutie sa odomkne podľa **stavu v Sheete (cez Apps Script)**, nie podľa manifestu. Stránka pri načítaní volá
+`GET <REVIEW_ENDPOINT>?type=status&id=ID` → `{ok, approved, unlocked, has_package, downloads[{label,url,bytes}]}`;
+`downloads` prídu len keď `unlocked` (= schválené **a** nárok `Videá!Q = "áno"`). Pri chybe stavu zostane stránka zamknutá
+(náhľad s odznakom, bez stiahnutia, s krátkou poznámkou).
+
+| # | Stav | Prehrávač | Stiahnutie | Platobná výzva | Tlačidlá Schvaľujem / Chcem úpravu |
+|---|------|-----------|------------|----------------|------------------------------------|
+| 1 | bez balíka, neschválené | náhľad s odznakom | nie | áno (cena/IBAN) | áno |
+| 2 | bez balíka, schválené, nezaplatené | náhľad s odznakom | nie | áno | nie (ani po reloade) |
+| 3 | aktívny balík, neschválené | náhľad s odznakom | nie | nie | áno |
+| 4 | aktívny balík, po schválení | čistý master (hneď, bez reloadu) | áno | nie | nie |
+| 5 | bez balíka po `--mark-paid` / `--package-paid` (a schválení) | čistý master | áno | nie | nie |
+
+Odznak zmizne presne vtedy, keď sa objaví tlačidlo na stiahnutie. Výzva na obnovu / „len toto video“ pri vyčerpanom balíku funguje ako doteraz.
+
+- Master sa **nikdy nedáva do verejného manifestu**. Leží v `<id>/m-<token>/<subor>` (`token = secrets.token_urlsafe(24)`);
+  token a zoznam súborov sú v staging `private.json` a v Sheete `Videá!O`, `P`.
+- Master sa do bucketu nahrá pri dodaní **len ak balík pokrýva video** (`evaluate` = `ok`, alebo `--paid`); inak až pri
+  `--mark-paid ID` / `--package-paid PKG`, ktoré zároveň nastavia `Q = "áno"`. Pri každom dodaní sa teraz zapisuje riadok do `Videá`
+  aj bez `--reference` (balík prázdny), aby Apps Script poznal token a súbory.
+- Manifest nesie `has_package` (len pomôcka na zobrazenie) a `paid` (pomôcka); stránka z nich nič neodomyká.
+
+### Stĺpce `Videá` O–R (Apps Script)
+
+| Stĺpec | Názov | Obsah |
+|--------|-------|-------|
+| O | Token | náhodný token cesty mastra |
+| P | Súbory | JSON `[{"label","file","bytes"}]` |
+| Q | Odomknuté | `áno` = nárok na stiahnutie (balík alebo platba); prázdne = nie |
+| R | Schválené | ISO čas schválenia (píše Apps Script po `approve`); prázdne = neschválené |
+
+`balik.py`: `record_video(..., token, files, unlocked)` zapisuje O–Q, `set_unlocked(video_id, token, files)` nastaví Q,
+`is_approved(video_id)` číta R. Klient po schválení už nemôže poslať „Chcem úpravu“ (Apps Script vráti `{ok:false,error:"approved"}`).
+
 ## Platobný tok
 
-1. Spusti skript bez `--paid` → klient dostane len odkaz s náhľadom.
-2. Pošli klientovi odkaz `…/video/?id=ID`.
-3. Klient náhľad schváli (formulár na stránke).
-4. Pošli klientovi IBAN, sumu a ako variabilný symbol ID videa.
-5. Po zaplatení: `dodaj_video.py --mark-paid ID …` → na stránke sa odomknú sťahovania.
+1. Spusti skript bez `--paid` (s `--reference BALIK`, ak ho klient má) → klient dostane odkaz s náhľadom.
+2. Pošli klientovi odkaz `…/video/?id=ID`; klient video schváli na stránke.
+3. Bez balíka: pošli IBAN, po zaplatení `dodaj_video.py --mark-paid ID …` (alebo `--package-paid PKG`) → po schválení sa na stránke
+   objaví stiahnutie a čistý master.
 
-Ochrana pred zaplatením: namiesto veľkého vodoznaku je v náhľade len malý odznak „DEMO · DOMOVID" (písmo ~24 px,
-šírka ~225 px, t. j. ~21 % šírky pri 1080 px a ~12 % pri 1920 px – čitateľné písmo sa do 8 % nezmestí). Stránka
-`/video/?id=` pred zaplatením nemá žiadne tlačidlo ani odkaz na stiahnutie; prehrávač má `controlslist="nodownload
-noremoteplayback"`, `disablepictureinpicture`, `draggable="false"` a zakázané kontextové menu. Po zaplatení sa
-sťahovanie zobrazí ako doteraz.
+Ochrana pred zaplatením: v náhľade je len malý odznak „DEMO · DOMOVID"; prehrávač má `controlslist="nodownload noremoteplayback"`,
+`disablepictureinpicture`, `draggable="false"` a zakázané kontextové menu.
 
-Čestný limit: stránka je statická a R2 bucket je verejný, takže odhodlaný používateľ si môže náhľad (nie master)
-vytiahnuť cez devtools alebo priamu URL. Chráni ho odznak v obraze; master v plnej kvalite sa pred zaplatením do
-bucketu vôbec nenahrá.
+Čestný limit: stránka je statická a R2 bucket verejný. Odhodlaný používateľ si môže náhľad (nie master) vytiahnuť cez devtools
+(chráni ho odznak v obraze). Master je pred nárokom (balík/platba) v bucketi vôbec nenahratý. Po nároku je dostupný komukoľvek, kto pozná
+jeho URL s tokenom (nehádateľná, ale verejná – odkaz `?id=` je tajný odkaz, kto ho má, môže schváliť aj stiahnuť po odomknutí).
+Schválenie nie je overené identitou klienta. Skutočné odomknutie vyžaduje nasadený Apps Script (stav + `approve`).
 
-Upozornenie: `paid: false` zamyká len stránku. Master sa pred zaplatením do bucketu vôbec nenahrá, takže ho
-nikto nemôže stiahnuť podľa uhádnutej URL.
+### Prechod starých odovzdaní
+
+1. Do živého Sheetu (`Videá`) pridaj hlavičky O–R: `Token`, `Súbory`, `Odomknuté`, `Schválené`.
+2. Staré odovzdania (napr. Andreino `ch1c36yvcmlt`) treba `--mark-paid` (alebo nové dodanie), aby sa master presunul na cestu s tokenom; do
+   tej doby živý manifest ešte vypisuje starý názov mastra.
+3. Klienti, ktorí schválili v starom toku, majú `R` prázdne a musia schváliť znova.
+
+Pozor: pri `--out-dir` je token v staging `private.json` pod `OUT/.master/`, preto `--out-dir` nikdy nesmie smerovať do obsluhovaného
+priečinka. Bucket r2.dev nesmie byť listovateľný (žiadny listing Worker), inak by sa token dal vyčítať.
+
+Testy: `python3 -B -m unittest discover -s tests/delivery` a e2e `tests/delivery/e2e.mjs` (fake R2 :8860, fake Apps Script :8861;
+build s `PUBLIC_DELIVERY_BASE=http://localhost:8860 PUBLIC_REVIEW_ENDPOINT=http://localhost:8861/exec`, hlavička súboru).
 
 ## Schéma `manifest.json`
 
@@ -177,17 +220,14 @@ nikto nemôže stiahnuť podľa uhádnutej URL.
   "paid": false,
   "preview": { "file": "preview.mp4", "width": 1080, "height": 1920 },
   "poster": "poster.jpg",
-  "downloads": [
-    { "label": "Stiahnuť v plnej kvalite (1080×1920)", "file": "RodinnyDomZahorska_Domovid_1080x1920.mp4", "bytes": 33364557 }
-  ]
+  "has_package": false
 }
 ```
 
-- `downloads` má jedinú položku – 9:16 master; s `--video-16x9` pribudne druhá (1920×1080) a v manifeste aj
-  `"preview_16x9": { "file": "preview_16x9.mp4", "width": 1920, "height": 1080 }` a `"poster_16x9": "poster_16x9.jpg"`.
-- `downloads` sa zapisuje vždy (aj pri `paid: false`), súbory z neho sú v bucketi len po zaplatení.
+- Manifest už **neobsahuje `downloads`** ani mená masterov; s `--video-16x9` pribudne `"preview_16x9"` a `"poster_16x9"`.
+  Mastre (9:16, prípadne 1920×1080) sú v `private.json` a v Sheete (O, P).
 - Voliteľné pole `price`: `{"label": "...", "net": 140.0, "vat_rate": 0.23, "reference": "HALO-2026-10"}` (net bez DPH),
   voliteľne aj `"iban"` (pozri vyššie).
 - Voliteľné pole `renewal` (výzva na obnovu balíka, pozri „Balíky“): `{"package_id", "previous_package_id", "label", "videos", "net", "vat_rate", "reference", "iban", "reason", "single": {"net", "vat_rate", "reference"}}`; `single` je ponuka jedného videa (`--single-price`, predvolene 50 € bez DPH, `reference` = ID videa) namiesto obnovy balíka.
 - Voliteľné pole `message` (text pre klienta) skript nezapisuje; môžeš ho doplniť do `manifest.json` ručne.
-- Súbory sú v bucketi pod `<id>/<file>`; manifest sa nahráva ako posledný s `cache-control: no-store`.
+- Verejné súbory sú v bucketi pod `<id>/<file>`, mastre pod `<id>/m-<token>/<file>`; manifest sa nahráva ako posledný s `cache-control: no-store`.

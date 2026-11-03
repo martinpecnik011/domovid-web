@@ -169,15 +169,33 @@ def set_price_in(mf, price):
 CTYPES = {".mp4": "video/mp4", ".jpg": "image/jpeg", ".json": "application/json"}
 
 
+# ---- master: nikdy vo verejnom manifeste, cesta <id>/m-<token>/<subor>; zoznam a token su v staging/private.json ----
+def master_key(token, file):
+    return "m-%s/%s" % (token, file)
+
+
+def load_private(stage, manifest):
+    """{"token", "downloads"} zo staging/private.json; stare odovzdanie (downloads v manifeste) sa prevedie."""
+    pf = stage / "private.json"
+    if pf.exists():
+        return json.loads(pf.read_text(encoding="utf-8"))
+    old = manifest.pop("downloads", None)
+    if not old:
+        die("chyba %s - video nebolo pripravene touto verziou skriptu" % pf)
+    private = {"token": secrets.token_urlsafe(24), "downloads": old}
+    pf.write_text(json.dumps(private, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return private
+
+
 class Target:
     def __init__(self, out_dir, bucket):
         self.out_dir, self.bucket = out_dir, bucket
 
     def put(self, id_, name, path, attachment=False):
         if self.out_dir:
-            dest = Path(self.out_dir) / id_
-            dest.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(path, dest / name)
+            dest = Path(self.out_dir) / id_ / name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(path, dest)
             return
         cmd = ["npx", "wrangler", "r2", "object", "put", "%s/%s/%s" % (self.bucket, id_, name),
                "--file", str(path), "--remote", "--content-type", CTYPES[Path(name).suffix]]
@@ -189,18 +207,18 @@ class Target:
         print("  nahrane: %s/%s" % (id_, name))
 
 
-def publish_master(t, id_, m, stage):
-    for d in m["downloads"]:
-        t.put(id_, d["file"], stage / d["file"], attachment=True)
+def publish_master(t, id_, private, stage):
+    for d in private["downloads"]:
+        t.put(id_, master_key(private["token"], d["file"]), stage / d["file"], attachment=True)
 
 
-def summary(id_, stage, m):
+def summary(id_, stage, m, private):
     print("\nID: %s" % id_)
-    for d in m["downloads"]:
+    for d in private["downloads"]:
         mb = d["bytes"] / 1e6
         dur = probe_duration(stage / d["file"])
         print("Master: %s  %.1f MB  %.1f Mb/s" % (d["file"], mb, d["bytes"] * 8 / dur / 1e6))
-    print("Stav: %s" % ("ZAPLATENE (master publikovany)" if m["paid"] else "NEZAPLATENE (iba nahlad)"))
+    print("Stav: %s" % ("ODOMKNUTE (master publikovany, klient ho dostane po schvaleni)" if m["paid"] else "NEZAPLATENE (iba nahlad)"))
     print("Odkaz pre klienta: %s?id=%s" % (BASE_URL, id_))
 
 
@@ -210,7 +228,8 @@ def mark_paid(id_, t, staging_root, a):
     if not mf.exists():
         die("nenasiel som %s - bolo video pripravene s tymto staging adresarom?" % mf)
     m = json.loads(mf.read_text(encoding="utf-8"))
-    for d, (flag, source, (w, h)) in zip(m["downloads"], (("--source", a.source, PORTRAIT), ("--source-16x9", a.source_16x9, LANDSCAPE))):
+    private = load_private(stage, m)
+    for d, (flag, source, (w, h)) in zip(private["downloads"], (("--source", a.source, PORTRAIT), ("--source-16x9", a.source_16x9, LANDSCAPE))):
         master = stage / d["file"]
         if not master.exists():
             if not source:
@@ -218,11 +237,16 @@ def mark_paid(id_, t, staging_root, a):
             print("Master chyba, kodujem znova zo %s ..." % flag)
             encode_master(source, master, w, h)
             d["bytes"] = master.stat().st_size
+    (stage / "private.json").write_text(json.dumps(private, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     m["paid"] = True
-    publish_master(t, id_, m, stage)
+    publish_master(t, id_, private, stage)
     write_manifest(mf, m)
     t.put(id_, "manifest.json", mf)
-    return m
+    if not balik.set_unlocked(id_, private["token"], private["downloads"]):
+        print("POZOR: video %s nie je v Sheete (Videá) - stranka ho neodomkne, kym tam nebude riadok" % id_)
+    elif not balik.is_approved(id_):
+        print("Poznamka: klient video este neschvalil - stiahnutie sa mu zobrazi az po schvaleni.")
+    return m, private
 
 
 def package_paid(a, t, staging_root):
@@ -342,7 +366,8 @@ def main():
     if a.mark_paid:
         if not ID_RE.match(a.mark_paid):
             die("neplatne ID (povolene [a-z0-9]{8,32})")
-        summary(a.mark_paid, staging_root / a.mark_paid, mark_paid(a.mark_paid, t, staging_root, a))
+        m, private = mark_paid(a.mark_paid, t, staging_root, a)
+        summary(a.mark_paid, staging_root / a.mark_paid, m, private)
         return
 
     if a.package_paid:
@@ -370,14 +395,16 @@ def main():
         "paid": False,
         "preview": {"file": "preview.mp4", "width": 1080, "height": 1920},
         "poster": "poster.jpg",
-        "downloads": [],
+        "has_package": False,  # len pomocka pre zobrazenie; odomknutie riadi Apps Script (status), nie manifest
     }
+    private = {"token": secrets.token_urlsafe(24), "downloads": []}
     stav, warning = None, None
     if a.reference and not a.set_price:
         ev = balik.evaluate(a.reference, id_)
         warning = ev["warning"]
         if ev["state"] == "ok":
             a.paid = True
+            m["has_package"] = True
         elif ev["state"] == "renewal" and not a.paid:
             r = dict(ev["renewal"], vat_rate=a.vat_rate, reference=ev["renewal"]["package_id"])
             r["single"] = {"net": a.single_price, "vat_rate": a.vat_rate, "reference": id_}
@@ -389,6 +416,7 @@ def main():
         if price is None and ev["price"] and "renewal" not in m:
             price = build_price(ev["price"]["label"], ev["price"]["net"], a.vat_rate, a.reference, a.iban_file)
         stav = "odomknuté" if a.paid else "balík vyčerpaný" if "renewal" in m else "čaká na platbu"
+    stav = stav or ("odomknuté" if a.paid else "čaká na platbu")
     if price:
         m["price"] = price
     public = ["preview.mp4", "poster.jpg"]
@@ -405,23 +433,24 @@ def main():
         print("Kodujem master %dx%d (pomale, preset slow) ..." % (w, h))
         mname = master_name(a.title, w, h)
         encode_master(vsrc, stage / mname, w, h)
-        m["downloads"].append(download_entry(a.title, w, h, (stage / mname).stat().st_size))
+        private["downloads"].append(download_entry(a.title, w, h, (stage / mname).stat().st_size))
+    (stage / "private.json").write_text(json.dumps(private, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     mf = stage / "manifest.json"
     write_manifest(mf, m)
     for name in public:
         t.put(id_, name, stage / name)
     if a.paid:
         m["paid"] = True
-        publish_master(t, id_, m, stage)
+        publish_master(t, id_, private, stage)
         write_manifest(mf, m)
     t.put(id_, "manifest.json", mf)
-    summary(id_, stage, m)
-    if stav:
-        try:
-            balik.record_video(id_, a.client, a.reference, a.title, "9:16 + 16:9" if src16 else "9:16",
-                               "%s?id=%s" % (BASE_URL, id_), stav, a.kling_credits)
-        except Exception as e:
-            warning = (warning + "; " if warning else "") + "zapis do Sheetu zlyhal (%s)" % e
+    summary(id_, stage, m, private)
+    try:
+        balik.record_video(id_, a.client, a.reference or "", a.title, "9:16 + 16:9" if src16 else "9:16",
+                           "%s?id=%s" % (BASE_URL, id_), stav, a.kling_credits,
+                           token=private["token"], files=private["downloads"], unlocked=a.paid)
+    except Exception as e:
+        warning = (warning + "; " if warning else "") + "zapis do Sheetu zlyhal (%s)" % e
     if warning:
         print("POZOR: %s" % warning)
 
