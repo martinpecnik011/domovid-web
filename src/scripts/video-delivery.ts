@@ -239,7 +239,9 @@ function unlock(downloads: NonNullable<DeliveryStatus['downloads']>) {
     a.setAttribute('download', '');
     const resolution = resolutionOf(d);
     const text = document.createElement('span');
-    const idleText = resolution ? `${DOWNLOAD_LABEL} (${resolution})` : DOWNLOAD_LABEL;
+    // A photo in the list carries its own button text in the label ("Stiahnuť vizualizáciu – kuchyňa").
+    const isPhoto = /\.jpe?g$/i.test(file);
+    const idleText = isPhoto ? d.label : resolution ? `${DOWNLOAD_LABEL} (${resolution})` : DOWNLOAD_LABEL;
     text.textContent = idleText;
     a.append(text);
     a.addEventListener('click', async (e) => {
