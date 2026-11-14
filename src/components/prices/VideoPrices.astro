@@ -1,0 +1,18 @@
+---
+import PriceRows from './PriceRows.astro';
+import { PRICES, DELIVERY } from '../../config/site';
+
+export interface Props {
+  variant: 'video' | 'viz';
+}
+const { variant } = Astro.props;
+const p = PRICES[variant];
+const sluzba = `app/?ponuka=1&sluzba=${variant}`;
+const viz = variant === 'viz' ? `, najviac ${PRICES.viz.maxViz} vizualizácií na nehnuteľnosť` : '';
+const rows = [
+  { name: 'Prvé video na ukážku', detail: `Zadarmo a bez záväzku, hotové do ${DELIVERY}`, price: 0, unit: '', href: sluzba },
+  { name: 'Jedno video', detail: `Na jednu ponuku, hotové do ${DELIVERY}${viz}`, price: p.single, unit: 'video', href: sluzba },
+  { name: 'Mesačný balík', detail: `${p.monthlyCount} nehnuteľnosti mesačne, prednostné spracovanie${viz}`, price: p.monthly, unit: 'mesiac', featured: true, badge: 'Výhodné', href: sluzba },
+];
+---
+<PriceRows rows={rows} />

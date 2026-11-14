@@ -1,0 +1,71 @@
+---
+import Base from '../layouts/Base.astro';
+import CutsGrid from '../components/CutsGrid.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { SERVICES } from '../config/site';
+import { UKAZKY, ukazkyFor, type UkazkaCat } from '../config/ukazky';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const count = (cat: string) => ukazkyFor(cat as UkazkaCat).length;
+const chips = [
+  { cat: 'all', label: 'Všetko', n: UKAZKY.length, tone: 'var(--brass)' },
+  { cat: 'video', label: 'Videá', n: count('video'), tone: 'var(--tone-video)' },
+  { cat: 'viz', label: 'Vizualizácie', n: count('viz'), tone: 'var(--tone-viz)' },
+  { cat: 'social', label: 'Obsah na siete', n: count('social'), tone: 'var(--tone-social)' },
+];
+---
+<Base
+  title="Ukážky videí a vizualizácií – Domovid"
+  description="Pozrite si ukážky videí z fotiek, vizualizácií prázdnych bytov a obsahu na siete pre realitných maklérov. Vyberte si, čo by sa hodilo k vašim ponukám."
+  path="ukazky/"
+  black
+>
+  <main>
+    <header class="wrap uk-head">
+      <span class="eyebrow">Ukážky</span>
+      <h1>Pozrite sa, <em>čo pre vás vytvoríme.</em></h1>
+      <p class="lead">Videá z fotiek, vizualizácie prázdnych priestorov aj obsah na siete. Ukážky sú koncepty štýlu Domovid, nie reálne inzeráty.</p>
+    </header>
+
+    <section class="wrap gallery">
+      <div class="filter-chips" role="group" aria-label="Filter ukážok">
+        {chips.map((c) => (
+          <button type="button" class="filter-chip" data-cat={c.cat} aria-pressed={c.cat === 'all' ? 'true' : 'false'}>
+            <span class="dot" style={`background:${c.tone}`} aria-hidden="true"></span>
+            {c.label} <span class="n">{c.n}</span>
+          </button>
+        ))}
+      </div>
+      <p id="filter-status" class="sr-only" aria-live="polite"></p>
+
+      <CutsGrid items={UKAZKY} />
+
+      <nav class="svc-links" aria-label="Naše služby">
+        {SERVICES.map((s) => <a href={base + s.href}>{s.label} →</a>)}
+      </nav>
+    </section>
+
+    <CtaBand />
+  </main>
+</Base>
+<script>import '../scripts/ukazky-filter';</script>
+
+<style>
+  .uk-head { display: grid; gap: 22px; padding-block: clamp(48px, 7vw, 110px) clamp(32px, 4vw, 56px); }
+  .uk-head h1 { max-width: 18ch; font-size: clamp(2.4rem, 5vw, 4.8rem); }
+  .gallery { display: grid; gap: 32px; padding-bottom: clamp(72px, 9vw, 140px); }
+  .filter-chips { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex: none; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    font: 600 0.95rem/1 var(--f-body); padding: 12px 20px; border-radius: 999px; color: var(--cream);
+    background: transparent; border: 1px solid var(--line-strong);
+  }
+  .filter-chip[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: var(--navy); }
+  .filter-chip:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .dot { display: none; }
+  .n { font-size: 0.8rem; opacity: 0.7; }
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .svc-links { display: flex; flex-wrap: wrap; gap: 8px 28px; border-top: 1px solid var(--line); padding-top: 28px; }
+  .svc-links a { font-weight: 600; text-decoration: none; color: var(--gold); }
+</style>

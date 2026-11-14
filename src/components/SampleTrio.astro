@@ -1,0 +1,62 @@
+---
+// Three sample films side by side across the full width; they play muted in view, a tap opens the player with sound.
+import type { Ukazka } from '../config/ukazky';
+
+export interface Props {
+  items: Ukazka[];
+}
+const { items } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<div class="trio">
+  {items.map((c) => (
+    <figure class="t reveal">
+      <button type="button" class="t-media" data-video={base + c.video} aria-label={`Prehrať so zvukom: ${c.title}`}>
+        <video data-src={base + c.video} poster={base + c.poster} muted loop playsinline preload="none"></video>
+        <span class="t-sound" aria-hidden="true">▶ so zvukom</span>
+      </button>
+      <figcaption><strong>{c.title}</strong><span class="muted">{c.desc}</span></figcaption>
+    </figure>
+  ))}
+</div>
+<dialog class="vmodal" aria-label="Ukážka videa">
+  <button type="button" class="vmodal-close">Zavrieť</button>
+  <video controls playsinline></video>
+</dialog>
+
+<script>
+  const dlg = document.querySelector<HTMLDialogElement>('dialog.vmodal');
+  const player = dlg?.querySelector('video');
+  document.querySelectorAll<HTMLButtonElement>('.t-media').forEach((b) =>
+    b.addEventListener('click', () => {
+      if (!dlg || !player) return;
+      player.src = b.dataset.video || '';
+      player.muted = false;
+      dlg.showModal();
+      player.play().catch(() => {});
+    }),
+  );
+  dlg?.querySelector('.vmodal-close')?.addEventListener('click', () => dlg.close());
+  dlg?.addEventListener('close', () => player?.pause());
+  dlg?.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+</script>
+
+<style>
+  .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
+  .t { margin: 0; display: grid; gap: 16px; }
+  .t-media { position: relative; display: block; padding: 0; border: 0; background: #000; border-radius: 16px; overflow: hidden; cursor: pointer; aspect-ratio: 9 / 16; }
+  .t-media video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+  .t-media:hover video { transform: scale(1.03); }
+  .t-sound { position: absolute; left: 14px; bottom: 14px; padding: 8px 14px; border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: #f5f0e8; font: 600 0.85rem/1 var(--f-body); }
+  .t-media:hover .t-sound { background: var(--gold); color: var(--navy); }
+  .t figcaption { display: grid; gap: 4px; }
+  .t figcaption strong { font-size: 1.1rem; }
+  .vmodal { margin: auto; padding: 0; border: 0; background: #000; border-radius: 16px; overflow: hidden; max-width: 92vw; max-height: 92dvh; }
+  .vmodal::backdrop { background: rgba(0, 0, 0, 0.85); }
+  .vmodal video { display: block; height: min(90dvh, 900px); max-width: 92vw; width: auto; aspect-ratio: 9 / 16; }
+  .vmodal-close { position: absolute; top: 10px; right: 10px; z-index: 2; font: 600 0.9rem/1 var(--f-body); padding: 10px 16px; border: 0; border-radius: 999px; background: var(--gold); color: var(--navy); cursor: pointer; }
+  @media (max-width: 760px) {
+    .trio { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: 74vw; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: calc(var(--pad) * -1); padding-inline: var(--pad); }
+    .t { scroll-snap-align: start; }
+  }
+</style>

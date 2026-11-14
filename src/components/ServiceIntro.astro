@@ -1,0 +1,43 @@
+---
+// Opening of a service page on black: what it is, for whom, then the in-page explainer animation.
+import Explainer from './Explainer.astro';
+
+export interface Props {
+  label: string;
+  title: string;
+  lead: string;
+  variant: 'video' | 'viz' | 'social';
+  facts: { k: string; v: string }[];
+}
+const { label, title, lead, variant, facts } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<header class="si">
+  <div class="wrap si-top">
+    <span class="eyebrow">{label}</span>
+    <h1 set:html={title} />
+    <p class="lead">{lead}</p>
+    <div class="ctas">
+      <a class="btn btn-brass" href={`${base}app/?ponuka=1&sluzba=${variant}`}>Chcem ponuku</a>
+      <a class="btn btn-ghost" href="#ukazky">Pozrieť 3 ukážky</a>
+    </div>
+  </div>
+  <div class="wrap si-ex reveal">
+    <Explainer variant={variant} />
+  </div>
+  <div class="wrap">
+    <dl class="cols-line si-facts" style={`--cols:${facts.length}`}>
+      {facts.map((f) => <div><dt>{f.k}</dt><dd>{f.v}</dd></div>)}
+    </dl>
+  </div>
+</header>
+
+<style>
+  .si { padding-top: clamp(32px, 4vw, 64px); }
+  .si-top { display: grid; gap: 22px; justify-items: start; }
+  .si-top h1 { max-width: 20ch; font-size: clamp(2.4rem, 4.8vw, 4.6rem); }
+  .si-ex { padding-block: clamp(40px, 5vw, 72px) clamp(56px, 7vw, 100px); }
+  .si-facts { margin: 0; }
+  .si-facts dt { color: var(--gold); font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; }
+  .si-facts dd { margin: 8px 0 0; font-family: var(--f-display); font-stretch: 112%; font-weight: 700; font-size: clamp(1.15rem, 1.8vw, 1.6rem); }
+</style>

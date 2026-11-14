@@ -1,13 +1,17 @@
 ---
-import '@fontsource-variable/archivo/wdth.css';
+import '@fontsource-variable/cormorant-garamond/wght.css';
+import '@fontsource-variable/cormorant-garamond/wght-italic.css';
 import '@fontsource/figtree/400.css';
 import '@fontsource/figtree/500.css';
 import '@fontsource/figtree/600.css';
-import '@fontsource/jetbrains-mono/400.css';
-import '@fontsource/jetbrains-mono/500.css';
+import '@fontsource/figtree/700.css';
 import '../styles/global.css';
 import Seo from '../components/Seo.astro';
+import SecurityMeta from '../components/SecurityMeta.astro';
 import CookieConsent from '../components/CookieConsent.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import ChatBubble from '../components/ChatBubble.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../config/site';
 
 export interface Props {
@@ -22,19 +26,41 @@ export interface Props {
   type?: 'website' | 'article';
   /** schema.org type of the WebPage node, e.g. 'AboutPage'. */
   pageType?: string;
+  /** FAQ entries for FAQPage structured data (passed to Seo). */
+  faq?: { q: string; a: string }[];
+  /** false = no Nav and Footer (private or app-like pages), default true. */
+  chrome?: boolean;
+  /** false = no chat bubble, default true. */
+  chat?: boolean;
+  /** Pure black page background (service pages). */
+  black?: boolean;
+  /** The page opens with a full-screen hero, so the nav starts transparent over it. */
+  hero?: boolean;
 }
 
-const { title = SITE_TITLE, description = SITE_DESCRIPTION, path = '', noindex, nofollow, tracking = true, type, pageType } = Astro.props;
+const { title = SITE_TITLE, description = SITE_DESCRIPTION, path = '', noindex, nofollow, tracking = true, type, pageType, faq, chrome = true, chat = true, black = false, hero = false } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 ---
 <!doctype html>
 <html lang="sk">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<Seo title={title} description={description} path={path} noindex={noindex} nofollow={nofollow} type={type} pageType={pageType} />
+<SecurityMeta />
+<Seo title={title} description={description} path={path} noindex={noindex} nofollow={nofollow} type={type} pageType={pageType} faq={faq} />
+<link rel="manifest" href={base + 'manifest.webmanifest'}>
+<link rel="apple-touch-icon" href={base + 'icons/apple-touch-icon-180.png'}>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Domovid">
 </head>
-<body>
+<body class:list={[{ 'is-black': black, 'has-hero': hero }]}>
+{chrome && <Nav current={path} />}
 <slot />
+{chrome && <Footer />}
+{chat && <ChatBubble />}
 {tracking && <CookieConsent />}
+<script>import '../scripts/frame-guard'; import '../scripts/reveal'; import '../scripts/sw-register';</script>
 </body>
 </html>

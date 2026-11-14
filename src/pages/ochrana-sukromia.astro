@@ -1,42 +1,44 @@
 ---
 import Legal from '../layouts/Legal.astro';
 import { GA4_ID, META_PIXEL_ID } from '../config/tracking';
+import { CONTACT_EMAIL } from '../config/site';
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const hasGa = GA4_ID !== '';
 const hasMeta = META_PIXEL_ID !== '';
-const EMAIL = 'martinpecnik011@gmail.com';
+const EMAIL = CONTACT_EMAIL;
 ---
 <Legal
   title="Ochrana osobných údajov"
-  description="Ako Domovid spracúva osobné údaje z dopytu a z cookies: účel, právny základ, príjemcovia, doba uchovávania a tvoje práva podľa GDPR."
+  description="Ako Domovid spracúva osobné údaje z dopytu, aplikácie a z cookies: účel, právny základ, príjemcovia, doba uchovávania a vaše práva podľa GDPR."
   path="ochrana-sukromia/"
-  updated="13. 10. 2026"
+  updated="12. 11. 2026"
 >
   <p>
-    Tu nájdeš jednoducho a bez kľučiek, aké osobné údaje o tebe Domovid spracúva, prečo, ako dlho a aké máš práva.
+    Tu nájdete jednoducho a bez kľučiek, aké osobné údaje o vás Domovid spracúva, prečo, ako dlho a aké máte práva.
     Text vychádza z článku 13 nariadenia (EÚ) 2016/679 (GDPR).
   </p>
 
   <h2>1. Kto je prevádzkovateľ</h2>
   <ul>
-    <li>Martin Pecník, Domovid</li>
-    <li><span class="todo">[DOPLNIŤ: adresa / IČO, ak podnikáš ako SZČO alebo s.r.o.]</span></li>
+    <li>Martin Pecník, Domovid (fyzická osoba, bez IČO)</li>
     <li>E-mail: <a href={`mailto:${EMAIL}`}>{EMAIL}</a></li>
   </ul>
-  <p>Zodpovednú osobu (DPO) sme nevymenovali – nie je povinná. So všetkým sa obráť priamo na kontakty vyššie.</p>
+  <p>Zodpovednú osobu (DPO) sme nevymenovali – nie je povinná. So všetkým sa obráťte priamo na kontakty vyššie.</p>
 
   <h2>2. Aké údaje a prečo</h2>
-  <p><strong>Odpoveď na tvoj dopyt.</strong> Keď vyplníš formulár, spracúvame meno, telefón, e-mail, správu, fotky nehnuteľnosti, ktoré pošleš, a údaje o tom, odkiaľ si na web prišiel (UTM parametre z odkazu, napr. názov kampane). Potrebujeme ich, aby sme ti mohli odpovedať, pripraviť ukážkové video a dohodnúť spoluprácu.</p>
-  <p><strong>Právny základ:</strong> opatrenia pred uzavretím zmluvy na tvoju žiadosť – čl. 6 ods. 1 písm. b) GDPR. Bez týchto údajov ti nevieme odpovedať.</p>
+  <p><strong>Odpoveď na váš dopyt.</strong> Keď vyplníte formulár, spracúvame meno, e-mail, telefón, údaje o nehnuteľnosti (typ, lokalita, cena, plocha, odkaz na inzerát), fotky, ktoré pošlete, voliteľný kód zľavy a údaje o tom, odkiaľ ste na web prišli (UTM parametre z odkazu, napr. názov kampane). Potrebujeme ich, aby sme vám mohli odpovedať, pripraviť ukážkové video a dohodnúť spoluprácu.</p>
+  <p><strong>Právny základ:</strong> opatrenia pred uzavretím zmluvy na vašu žiadosť – čl. 6 ods. 1 písm. b) GDPR. Bez týchto údajov vám nevieme odpovedať.</p>
+  <p><strong>Aplikácia (/app/).</strong> Pri prihlásení spracúvame váš e-mail (prihlasovací kód vám posielame e-mailom) alebo údaje z Google účtu (meno a e-mail), ďalej správy v chate, súbory, ktoré nahráte, a údaje o predplatnom a pláne. Slúžia na prihlásenie, na vedenie zákazky a na doručenie videí.</p>
+  <p><strong>Právny základ:</strong> plnenie zmluvy a opatrenia pred jej uzavretím – čl. 6 ods. 1 písm. b) GDPR. Bezpečnosť služby, predchádzanie zneužitiu a evidencia komunikácie k zákazke sú náš oprávnený záujem – čl. 6 ods. 1 písm. f) GDPR; proti nemu môžete namietať (čl. 21). Účtovné doklady uchovávame na základe zákonnej povinnosti – čl. 6 ods. 1 písm. c) GDPR.</p>
   {(hasGa || hasMeta) && (
     <Fragment>
-      <p><strong>Meranie návštevnosti a reklám.</strong> Len ak to povolíš v nastaveniach cookies,
+      <p><strong>Meranie návštevnosti a reklám.</strong> Len ak to povolíte v nastaveniach cookies,
         {hasGa && ' meriame cez Google Analytics 4, ako sa web používa (navštívené stránky, zariadenie, približná poloha podľa IP)'}
         {hasGa && hasMeta && ' a'}
         {hasMeta && ' cez Meta Pixel meriame, či reklamy na Facebooku a Instagrame privádzajú dopyty'}.
       </p>
-      <p><strong>Právny základ:</strong> tvoj súhlas – čl. 6 ods. 1 písm. a) GDPR a § 109 ods. 8 zákona č. 452/2021 Z. z. o elektronických komunikáciách. Súhlas môžeš kedykoľvek odvolať v <a href={base + 'cookies/'}>nastaveniach cookies</a>; odvolanie nemá vplyv na to, čo sa spracovalo predtým.</p>
+      <p><strong>Právny základ:</strong> váš súhlas – čl. 6 ods. 1 písm. a) GDPR a § 109 ods. 8 zákona č. 452/2021 Z. z. o elektronických komunikáciách. Súhlas môžete kedykoľvek odvolať v <a href={base + 'cookies/'}>nastaveniach cookies</a>; odvolanie nemá vplyv na to, čo sa spracovalo predtým.</p>
     </Fragment>
   )}
   <p><strong>Naše účty na sociálnych sieťach.</strong> Na TikToku, YouTube, Instagrame a Facebooku publikujeme vlastné videá Domovidu cez oficiálne rozhrania (API) týchto platforiem. Pri prihlásení do nich získavame len základné údaje o vlastnom účte Domovidu (názov, ID účtu) a oprávnenie nahrávať naše videá. Údaje divákov ani iných používateľov týchto platforiem cez API nezbierame, neukladáme ani nepredávame. Prístup môžeme kedykoľvek zrušiť v nastaveniach danej platformy.</p>
@@ -45,21 +47,30 @@ const EMAIL = 'martinpecnik011@gmail.com';
   <h2>3. Komu údaje odovzdávame</h2>
   <p>Údaje nepredávame. Pracujú s nimi len služby, ktoré pre nás údaje technicky spracúvajú (sprostredkovatelia):</p>
   <ul>
-    <li><strong>Google Ireland Ltd. / Google LLC</strong> – Google Sheets, Drive, Gmail a Apps Script (uloženie dopytu a fotiek, e-mailové upozornenie){hasGa && ', Google Analytics'}.</li>
+    <li><strong>Supabase</strong> (región EÚ, Paríž) – databáza, prihlásenie a úložisko súborov v aplikácii.</li>
+    <li><strong>Google Ireland Ltd. / Google LLC</strong> – prihlásenie cez Google, Apps Script a Sheets (uloženie dopytu z formulára){hasGa && ', Google Analytics (len so súhlasom)'}.</li>
+    <li><strong>Brevo</strong> – odosielanie prihlasovacích kódov e-mailom.</li>
+    <li><strong>Cloudflare, Inc.</strong> – Cloudflare R2, doručovanie hotových videí.</li>
     {hasMeta && <li><strong>Meta Platforms Ireland Ltd. / Meta Platforms, Inc.</strong> – Meta Pixel (meranie reklám), len so súhlasom.</li>}
     <li><strong>GitHub, Inc.</strong> – hosting webu (GitHub Pages); pri návšteve spracúva technické údaje ako IP adresa.</li>
   </ul>
 
   <h2>4. Prenos mimo EÚ</h2>
-  <p>Google{hasMeta && ', Meta'} a GitHub môžu údaje spracúvať aj v USA. Prenos sa opiera o rozhodnutie Európskej komisie o primeranosti – rámec ochrany údajov EÚ – USA (EU-US Data Privacy Framework), ku ktorému sú tieto spoločnosti certifikované, a doplnkovo o štandardné zmluvné doložky.</p>
+  <p>Google{hasMeta && ', Meta'}, GitHub a Cloudflare môžu údaje spracúvať aj v USA. Prenos sa opiera o rozhodnutie Európskej komisie o primeranosti – rámec ochrany údajov EÚ – USA (EU-US Data Privacy Framework), ku ktorému sú tieto spoločnosti certifikované, a doplnkovo o štandardné zmluvné doložky.</p>
 
   <h2>5. Ako dlho údaje uchovávame</h2>
   <ul>
-    <li>Dopyty a fotky: 24 mesiacov od posledného kontaktu, alebo kým nepožiadaš o vymazanie – podľa toho, čo nastane skôr. Ak vznikne zmluva, účtovné doklady uchovávame tak dlho, ako vyžaduje zákon.</li>
+    <li>Dopyt bez objednávky (údaje z formulára a fotky): 12 mesiacov od posledného kontaktu, alebo kým nepožiadate o vymazanie – podľa toho, čo nastane skôr.</li>
+    <li>Účet v aplikácii: do jeho zrušenia.</li>
+    <li>Chat a nahrané súbory: do zrušenia účtu, najdlhšie 12 mesiacov po skončení spolupráce.</li>
+    <li>Účtovné doklady: tak dlho, ako vyžaduje zákon.</li>
     {(hasGa || hasMeta) && <li>Cookies: podľa tabuľky na stránke <a href={base + 'cookies/'}>Cookies</a>.</li>}
   </ul>
 
-  <h2>6. Tvoje práva</h2>
+  <h2>6. Zabezpečenie</h2>
+  <p>Prenos dát je šifrovaný (HTTPS/TLS). V databáze platí zabezpečenie na úrovni riadkov (RLS) – každý používateľ vidí len svoje dáta. Členovia tímu majú prístup chránený viacfaktorovým overením (MFA).</p>
+
+  <h2>7. Vaše práva</h2>
   <ul>
     <li>prístup k údajom a ich kópia (čl. 15),</li>
     <li>oprava nesprávnych údajov (čl. 16),</li>
@@ -69,5 +80,5 @@ const EMAIL = 'martinpecnik011@gmail.com';
     <li>kedykoľvek odvolať súhlas, ak sa spracúvanie opiera o súhlas (čl. 7 ods. 3).</li>
   </ul>
   <p>Stačí napísať na <a href={`mailto:${EMAIL}`}>{EMAIL}</a>. Odpovieme bez zbytočného odkladu, najneskôr do 1 mesiaca.</p>
-  <p>Ak si myslíš, že s údajmi zaobchádzame nesprávne, môžeš podať sťažnosť dozornému orgánu: <strong>Úrad na ochranu osobných údajov Slovenskej republiky</strong>, Hraničná 12, 820 07 Bratislava, <a href="https://dataprotection.gov.sk" target="_blank" rel="noopener">dataprotection.gov.sk</a>.</p>
+  <p>Ak si myslíte, že s údajmi zaobchádzame nesprávne, môžete podať sťažnosť dozornému orgánu: <strong>Úrad na ochranu osobných údajov Slovenskej republiky</strong>, Hraničná 12, 820 07 Bratislava, <a href="https://dataprotection.gov.sk" target="_blank" rel="noopener">dataprotection.gov.sk</a>.</p>
 </Legal>

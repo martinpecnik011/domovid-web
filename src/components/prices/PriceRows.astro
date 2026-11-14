@@ -1,0 +1,41 @@
+---
+// Clean price list: one row per package — name and what's included on the left, price (net and with VAT) on the right.
+import { withVat } from '../../config/site';
+
+export interface Row { name: string; detail: string; price: number; unit: string; featured?: boolean; badge?: string; href: string }
+export interface Props { rows: Row[] }
+const { rows } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<ul class="pr">
+  {rows.map((r) => (
+    <li class:list={['pr-row reveal', { featured: r.featured }]}>
+      <div class="pr-name">
+        <h3>{r.name}{r.badge && <span class="badge">{r.badge}</span>}</h3>
+        <p class="muted">{r.detail}</p>
+      </div>
+      <div class="pr-price">
+        {r.price === 0
+          ? <><span class="amount">0 €</span><span class="vat">ukážka zadarmo</span></>
+          : <><span class="amount">{r.price} € <span>/ {r.unit}</span></span><span class="vat">bez DPH · <strong>{withVat(r.price)}</strong> s DPH</span></>}
+      </div>
+      <a class:list={['btn btn-sm', r.featured ? 'btn-brass' : 'btn-ghost']} href={base + r.href}>Chcem ponuku</a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .pr { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .pr-row { position: relative; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; align-items: center; gap: 16px 40px; padding: clamp(24px, 3vw, 40px) 0; border-bottom: 1px solid var(--line); }
+  .pr-row.featured::before { content: ""; position: absolute; left: 0; top: -1px; width: 120px; height: 3px; background: var(--gold); }
+  .pr-name { display: grid; gap: 6px; }
+  .pr-name h3 { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: clamp(1.7rem, 2.6vw, 2.4rem); }
+  .pr-price { display: grid; gap: 4px; justify-items: end; text-align: right; }
+  .pr-price .amount { font-size: clamp(2.4rem, 3.6vw, 3.4rem); }
+  .pr-price .vat { font-size: 0.9rem; }
+  @media (max-width: 860px) {
+    .pr-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .pr-name { grid-column: 1 / -1; }
+    .pr-price { justify-items: start; text-align: left; }
+  }
+</style>

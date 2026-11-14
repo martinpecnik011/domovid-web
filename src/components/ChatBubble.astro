@@ -1,0 +1,140 @@
+---
+// Mini chat on every web page: greeting, quick replies, a composer and sign-up / sign-in. Sending (or "Celý chat")
+// switches to the full chat in /app/; the typed text travels along in sessionStorage (same origin), never in the URL.
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const quick = ['Chcem ponuku', 'Mám otázku k cene', 'Chcem poslať fotky'];
+---
+<div class="cb" id="cb" data-app={base + 'app/'}>
+  <div id="cb-panel" class="cb-panel" role="dialog" aria-modal="false" aria-labelledby="cb-title" hidden>
+    <div class="cb-head">
+      <div class="cb-avatar" aria-hidden="true"><img src={base + 'media/logo.png'} alt="" width="40" height="40"><span class="cb-dot"></span></div>
+      <div class="cb-who">
+        <h2 id="cb-title" class="cb-title">Tím Domovid</h2>
+        <p class="cb-sub">odpovedáme do pár hodín</p>
+      </div>
+      <a class="cb-icon" href={base + 'app/'} data-cb-full title="Prepnúť na celý chat" aria-label="Prepnúť na celý chat">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" /></svg>
+      </a>
+      <button type="button" class="cb-icon cb-close" aria-label="Zavrieť">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </div>
+
+    <div class="cb-thread">
+      <p class="cb-msg">Dobrý deň, tu Domovid. S čím vám môžeme pomôcť?</p>
+      <p class="cb-msg">Prvé video na ukážku je <strong>zadarmo</strong>, hotové do 48 hodín.</p>
+      <div class="cb-quick">
+        {quick.map((q) => <button type="button" class="cb-chip" data-quick={q}>{q}</button>)}
+      </div>
+    </div>
+
+    <div class="cb-auth" data-cb-auth>
+      <p>Aby sme vám mohli odpísať, prihláste sa. Registrácia je zadarmo, stačí e-mail.</p>
+      <div class="cb-auth-btns">
+        <a class="cb-btn gold" href={base + 'app/?registracia=1'} data-cb-go>Zaregistrovať sa</a>
+        <a class="cb-btn ghost" href={base + 'app/'} data-cb-go>Prihlásiť sa</a>
+      </div>
+    </div>
+    <div class="cb-auth cb-continue" data-cb-continue hidden>
+      <a class="cb-btn gold" href={base + 'app/'} data-cb-go>Pokračovať v chate</a>
+    </div>
+
+    <form class="cb-composer" data-cb-form>
+      <label for="cb-text" class="cb-sr">Správa</label>
+      <input id="cb-text" type="text" maxlength="1000" placeholder="Napíšte správu…" autocomplete="off">
+      <button type="submit" class="cb-send" aria-label="Odoslať do chatu">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+      </button>
+    </form>
+  </div>
+
+  <button type="button" class="cb-bubble" aria-expanded="false" aria-controls="cb-panel" aria-label="Otvoriť chat">
+    <span class="cb-label" data-cb-label>Napíšte nám</span>
+    <span class="cb-circle">
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="currentColor"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" transform="translate(0 -1)" /></svg>
+    </span>
+  </button>
+</div>
+
+<script>
+  import '../scripts/chat-bubble';
+</script>
+
+<style>
+  .cb {
+    position: fixed; z-index: 61;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: calc(max(36px, env(safe-area-inset-bottom) + 20px) + var(--cb-offset, 0px));
+    display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
+    transition: bottom 0.2s ease; font-family: var(--f-body);
+  }
+  .cb-bubble { display: flex; align-items: center; gap: 10px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--cream); font: inherit; }
+  .cb-circle {
+    position: relative; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--gold); color: var(--navy); box-shadow: 0 14px 34px -10px rgba(0, 0, 0, 0.7); transition: transform 0.2s ease;
+  }
+  .cb-bubble:hover .cb-circle { transform: scale(1.06); }
+  .cb-bubble:focus-visible { outline: none; }
+  .cb-bubble:focus-visible .cb-circle { outline: 3px solid var(--cream); outline-offset: 3px; }
+  .cb-circle::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--gold); opacity: 0; pointer-events: none; }
+  .cb-pulse .cb-circle::after { animation: cb-ring 1.4s ease-out 2; }
+  @keyframes cb-ring { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.7); opacity: 0; } }
+  .cb-label {
+    padding: 10px 16px; border-radius: 999px; font-size: 0.92rem; font-weight: 600;
+    background: var(--navy-deep); border: 1px solid var(--line-strong); box-shadow: var(--shadow);
+  }
+  .cb-label.teaser { border-color: var(--gold); }
+  .cb[data-open] .cb-label { display: none; }
+
+  .cb-panel {
+    width: 380px; max-width: calc(100vw - 24px); max-height: min(640px, calc(100dvh - 130px));
+    display: flex; flex-direction: column; overflow: hidden;
+    background: var(--navy-deep); border: 1px solid var(--line-strong); border-top: 3px solid var(--gold);
+    border-radius: 20px; box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.85); color: var(--cream);
+    animation: cb-in 0.22s ease-out;
+  }
+  .cb-panel[hidden] { display: none; }
+  @keyframes cb-in { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+  .cb-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 12px 16px; border-bottom: 1px solid var(--line); }
+  .cb-avatar { position: relative; flex: none; width: 40px; height: 40px; }
+  .cb-avatar img { width: 40px; height: 40px; border-radius: 10px; }
+  .cb-dot { position: absolute; right: -2px; bottom: -2px; width: 12px; height: 12px; border-radius: 50%; background: #2fbf6b; border: 2px solid var(--navy-deep); }
+  .cb-who { flex: 1; min-width: 0; }
+  .cb-title { margin: 0; font-family: var(--f-body); font-size: 1rem; font-weight: 700; letter-spacing: 0; }
+  .cb-sub { margin: 2px 0 0; font-size: 0.8rem; color: var(--ink-muted); }
+  .cb-icon { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--ink-muted); cursor: pointer; }
+  .cb-icon:hover { background: rgba(245, 240, 232, 0.08); color: var(--cream); }
+
+  .cb-thread {
+    flex: 1; min-height: 0; overflow-y: auto; display: grid; gap: 8px; align-content: start; padding: 16px;
+    background: url('/domovid-web/media/logo-mark.svg') center 60% / 52% no-repeat;
+  }
+  .cb-msg { justify-self: start; max-width: 88%; margin: 0; padding: 10px 14px; border-radius: 16px 16px 16px 6px; background: rgba(245, 240, 232, 0.08); font-size: 0.93rem; line-height: 1.45; }
+  .cb-msg strong { color: var(--gold); }
+  .cb-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .cb-chip { padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(224, 173, 85, 0.6); background: transparent; color: var(--cream); font: 600 0.85rem/1.2 var(--f-body); cursor: pointer; }
+  .cb-chip:hover { background: var(--gold); color: var(--navy); }
+
+  .cb-auth { display: grid; gap: 10px; padding: 14px 16px; border-top: 1px solid var(--line); background: rgba(224, 173, 85, 0.08); }
+  .cb-auth[hidden] { display: none; }
+  .cb-auth p { margin: 0; font-size: 0.85rem; color: var(--ink-muted); }
+  .cb-auth-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cb-continue .cb-btn { min-height: 46px; font-size: 0.95rem; }
+  .cb-btn { display: grid; place-items: center; min-height: 42px; padding: 0 12px; border-radius: 999px; font-weight: 700; font-size: 0.9rem; text-decoration: none; }
+  .cb-btn.gold { background: var(--gold); color: var(--navy); }
+  .cb-btn.ghost { border: 1px solid var(--line-strong); color: var(--cream); }
+  .cb-btn.ghost:hover { border-color: var(--cream); }
+
+  .cb-composer { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
+  .cb-composer input { flex: 1; min-width: 0; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(245, 240, 232, 0.06); color: var(--cream); font: inherit; font-size: 16px; }
+  .cb-composer input:focus { outline: 2px solid var(--gold); border-color: transparent; }
+  .cb-send { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--gold); color: var(--navy); display: grid; place-items: center; cursor: pointer; }
+  .cb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .cb-close:focus-visible, .cb-icon:focus-visible, .cb-btn:focus-visible, .cb-chip:focus-visible, .cb-send:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+
+  @media (max-width: 767px) { .cb-label:not(.teaser) { display: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .cb, .cb-circle, .cb-panel { transition: none; animation: none; }
+    .cb-circle::after { animation: none; }
+  }
+</style>

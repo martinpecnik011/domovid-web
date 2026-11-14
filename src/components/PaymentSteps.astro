@@ -1,0 +1,15 @@
+---
+import { PAYMENT_STEPS } from '../config/site';
+---
+<ol class="cols-line pay">
+  {PAYMENT_STEPS.map((s, i) => (
+    <li><span class="pay-no">{i + 1}</span><p>{s}</p></li>
+  ))}
+</ol>
+
+<style>
+  .pay { list-style: none; margin: 0; padding: 0; }
+  .pay li { display: grid; gap: 12px; align-content: start; }
+  .pay-no { font-family: var(--f-display); font-stretch: 118%; font-weight: 800; font-size: 2.6rem; line-height: 1; color: var(--gold); }
+  .pay p { font-size: 1.15rem; font-weight: 600; max-width: 26ch; }
+</style>

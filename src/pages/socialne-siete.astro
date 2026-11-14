@@ -1,0 +1,79 @@
+---
+import Base from '../layouts/Base.astro';
+import ServiceIntro from '../components/ServiceIntro.astro';
+import SampleTrio from '../components/SampleTrio.astro';
+import PaymentSteps from '../components/PaymentSteps.astro';
+import FaqList from '../components/FaqList.astro';
+import CtaBand from '../components/CtaBand.astro';
+import OtherServices from '../components/OtherServices.astro';
+import SocialPrices from '../components/prices/SocialPrices.astro';
+import AddonPrices from '../components/prices/AddonPrices.astro';
+import { FAQ_SOCIAL, DELIVERY } from '../config/site';
+import { UKAZKY } from '../config/ukazky';
+
+const samples = ['siete-co-urobim', 'siete-hladam', 'tipy-3-chyby'].map((id) => UKAZKY.find((u) => u.id === id)!).filter(Boolean);
+---
+<Base
+  title="Obsah na sociálne siete pre makléra – Domovid"
+  description="Mesačné videá na sociálne siete pre realitného makléra: ponuky, tipy, osobná značka. 10, 15 alebo 30 videí mesačne, bez viazanosti."
+  path="socialne-siete/"
+  faq={FAQ_SOCIAL}
+  black
+>
+  <main>
+    <ServiceIntro
+      label="Obsah na sociálne siete"
+      variant="social"
+      title="Vaše siete žijú, <em>aj keď vy predávate.</em>"
+      lead="Každý mesiac pripravíme hotové videá na mieru a plán zverejňovania. Ponuky, tipy pre predávajúcich aj vašu osobnú značku. Bez viazanosti."
+      facts={[{ k: 'Vstup', v: 'vaše ponuky a témy' }, { k: 'Výstup', v: '10, 15 alebo 30 videí mesačne' }, { k: 'Viazanosť', v: 'žiadna' }, { k: 'Cena', v: 'od 290 € bez DPH' }]}
+    />
+
+    <section class="section" id="ukazky" aria-labelledby="ukazky-title">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Ukážky</span>
+          <h2 id="ukazky-title">Tri videá, ktoré sme pripravili na siete</h2>
+        </div>
+        <SampleTrio items={samples} />
+      </div>
+    </section>
+
+    <section class="section alt" id="cena" aria-labelledby="cena-title">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Cena</span>
+          <h2 id="cena-title">Tri balíky, bez viazanosti</h2>
+        </div>
+        <SocialPrices />
+        <div class="addons-gap"><AddonPrices group="social" /></div>
+        <div class="pay-block">
+          <h3>Ako platíte</h3>
+          <PaymentSteps />
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="wrap faq-wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Časté otázky</span>
+          <h2 id="faq-title">Čo makléri chcú vedieť</h2>
+        </div>
+        <FaqList items={FAQ_SOCIAL} />
+      </div>
+    </section>
+
+    <CtaBand />
+    <OtherServices current="social" />
+  </main>
+</Base>
+
+<script>import '../scripts/inview-video';</script>
+
+<style>
+  .pay-block { display: grid; gap: 24px; margin-top: clamp(56px, 7vw, 100px); }
+  .faq-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(32px, 6vw, 120px); align-items: start; }
+  :global(.addons-gap) { margin-top: clamp(40px, 5vw, 72px); }
+  @media (max-width: 900px) { .faq-wrap { grid-template-columns: minmax(0, 1fr); } }
+</style>

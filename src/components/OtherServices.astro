@@ -1,0 +1,31 @@
+---
+import { SERVICES } from '../config/site';
+
+export interface Props {
+  current: 'video' | 'viz' | 'social';
+}
+const { current } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const others = SERVICES.filter((s) => s.id !== current);
+---
+<section class="section other" aria-labelledby="other-title">
+  <div class="wrap">
+    <h2 id="other-title" class="eyebrow">Ďalšie služby</h2>
+    <ul class="other-list">
+      {others.map((s) => (
+        <li><a href={base + s.href}><span class="o-name">{s.label}</span><span class="o-claim muted">{s.claim}</span><span class="o-go" aria-hidden="true">→</span></a></li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .other h2 { margin-bottom: 20px; font-family: var(--f-body); }
+  .other-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .other-list a { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: center; gap: 20px; padding: 30px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .o-name { font-family: var(--f-display); font-stretch: 112%; font-weight: 700; font-size: clamp(1.6rem, 3.2vw, 2.8rem); transition: color 0.2s ease; }
+  .o-go { font-size: 2rem; color: var(--gold); transition: transform 0.2s ease; }
+  .other-list a:hover .o-name { color: var(--gold); }
+  .other-list a:hover .o-go { transform: translateX(8px); }
+  @media (max-width: 760px) { .other-list a { grid-template-columns: minmax(0, 1fr) auto; } .o-claim { display: none; } }
+</style>

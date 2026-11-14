@@ -1,0 +1,38 @@
+---
+import { DELIVERY } from '../config/site';
+
+const stats = [
+  { n: 48, suf: ' h', label: `od fotiek po hotové video` },
+  { n: 0, suf: ' €', label: 'za prvé video na ukážku' },
+  { n: 6, pre: '4–', suf: '', label: 'fotiek z mobilu stačí' },
+];
+---
+<section class="section st" id="uvod">
+  <div class="wrap">
+    <p class="st-text reveal">Inzerát bez videa zanikne medzi stovkami ďalších. <em>My z neho urobíme príbeh,</em> pri ktorom sa kupujúci zastaví. Vy sa venujete klientom, o obsah sa postaráme my, do {DELIVERY}.</p>
+    <dl class="st-stats">
+      {stats.map((s) => (
+        <div class="reveal">
+          <dt class="st-num"><span>{s.pre ?? ''}</span><span data-count={s.n}>{s.n}</span><span>{s.suf}</span></dt>
+          <dd>{s.label}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>
+
+<style>
+  .st { border-top: 0; }
+  .st-text { font-family: var(--f-display); font-weight: 500; font-size: clamp(1.9rem, 3.8vw, 3.6rem); line-height: 1.12; max-width: 34ch; }
+  .st-text em { color: var(--gold); }
+  .st-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); margin: clamp(56px, 7vw, 110px) 0 0; border-top: 1px solid var(--line); }
+  .st-stats > div { padding-top: 28px; }
+  .st-stats > div + div { padding-left: clamp(16px, 3vw, 48px); border-left: 1px solid var(--line); }
+  .st-num { font-family: var(--f-display); font-weight: 600; font-size: clamp(3.6rem, 8vw, 7.5rem); line-height: 0.9; color: var(--gold); font-variant-numeric: lining-nums tabular-nums; }
+  .st-stats dd { margin: 12px 0 0; color: var(--ink-muted); }
+  @media (max-width: 700px) {
+    .st-stats { grid-template-columns: minmax(0, 1fr); }
+    .st-stats > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+    .st-stats > div { padding-block: 22px; }
+  }
+</style>

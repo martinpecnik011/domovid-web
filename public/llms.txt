@@ -1,34 +1,43 @@
 # Domovid
 
-> Domovid robí z fotiek nehnuteľnosti vertikálne video (9:16) pre realitných maklérov na Slovensku a v Česku. Stačí poslať 4–6 fotiek z mobilu a do 24 hodín je hotové video s pohybmi kamery, strihom a hudbou, pripravené na Instagram, Facebook aj do inzerátu. Bez kamery, fotografa či kameramana.
+> Domovid pripravuje videá, vizualizácie a obsah na sociálne siete pre realitných maklérov na Slovensku a v Česku. Z fotiek nehnuteľnosti vzniká vertikálne video (9:16) s pohybmi kamery, strihom a hudbou, pripravené na Instagram, Facebook aj do inzerátu. Bez kamery, fotografa či kameramana.
 
-## Služba
+## Služby
 
-- Pre koho: samostatní realitní makléri, realitné kancelárie a developerské projekty (Slovensko a Česko).
-- Čo dostaneš: vertikálne video 9:16 pre Reels (1080 × 1920), plynulé pohyby kamery, hudbu a strih na mieru, náhľad na schválenie, video v plnej kvalite pre IG, FB aj inzerát (stiahnutie je možné až po platbe) a úpravu, ak niečo nesedí.
-- Dodanie: do 24 hodín od prijatia fotiek. Na požiadanie aj verzia pre realitný portál alebo web.
-- Video vytvára AI zo statických fotiek; ukážky na webe sú AI koncepty štýlu Domovid, nie reálne inzeráty.
+- Videá nehnuteľností: z 4–6 fotiek vám pripravíme vertikálne video, jednotlivo alebo v mesačnom balíku. Prvá verzia príde ako náhľad na schválenie; stiahnutie v plnej kvalite je možné až po platbe.
+- Vizualizácie: video s vizualizáciou prostredia, jednotlivo alebo v mesačnom balíku, najviac 5 vizualizácií na nehnuteľnosť.
+- Sociálne siete: mesačné vedenie obsahu na sociálnych sieťach (10, 15 alebo 30 videí mesačne), viazanosť 3 mesiace.
+- Videá vytvára AI zo statických fotiek; ukážky na webe sú AI koncepty štýlu Domovid, nie reálne inzeráty.
 
-## Cenník
+## Cenník (bez DPH, platba prevodom na účet – IBAN)
 
-- Jedno video: 50 € za video. Na jednu konkrétnu ponuku, 1 video do 24 hodín, formát pre IG aj FB, bez záväzku.
-- Mesačný balík: 140 € mesačne. 4 videá mesačne, prednostné spracovanie, jednotný štýl.
+- Video: 50 € za video, alebo 140 € mesačne (4 nehnuteľnosti).
+- Video s vizualizáciou: 62 € za video, alebo 200 € mesačne.
+- Sociálne siete: 290 € (10 videí), 390 € (15 videí), 690 € (30 videí) mesačne; viazanosť 3 mesiace.
+- Doplnky: klon hlasu +40 €/mes, digitálne dvojča +110 €/mes (vyžaduje váš písomný súhlas s použitím hlasu a podoby), oba formáty (9:16 aj 16:9) +10 €, expresne do 12 hodín +15 €.
 
 ## Ako objednať
 
-1. Pošli 4–6 fotiek nehnuteľnosti (exteriér, obývačka, kuchyňa a ďalšie miestnosti) cez WhatsApp alebo formulár na webe. Stačí mobil.
-2. AI vytvorí video s pohybmi kamery, strihom a hudbou vo formáte 9:16, do 24 hodín.
-3. Prvá verzia príde ako náhľad na schválenie; stiahnutie v plnej kvalite je možné až po platbe, potom ju publikuješ na Instagram, Facebook alebo do inzerátu.
+1. Pošlite 4–6 fotiek nehnuteľnosti cez WhatsApp alebo formulár na webe. Stačí mobil.
+2. Pripravíme video a pošleme vám náhľad na schválenie.
+3. Po schválení a platbe prevodom na účet (IBAN) si stiahnete video v plnej kvalite a publikujete ho.
 
 ## Kontakt
 
+- E-mail: martinpecnik011@gmail.com
 - WhatsApp: +421 915 384 940 (https://wa.me/421915384940)
 - Instagram: https://www.instagram.com/domo_vid/
 - Facebook: https://www.facebook.com/1216967761499957
 
 ## Stránky
 
-- [Domov](https://martinpecnik011.github.io/domovid-web/): služba, ukážky, cenník a formulár na demo video
-- [Časté otázky](https://martinpecnik011.github.io/domovid-web/#faq): odpovede o cene, rýchlosti, fotkách a použití videa
-- [Ochrana súkromia](https://martinpecnik011.github.io/domovid-web/ochrana-sukromia/): spracúvanie osobných údajov
-- [Cookies](https://martinpecnik011.github.io/domovid-web/cookies/): zásady používania cookies
+- [Domov](https://martinpecnik011.github.io/domovid-web/): prehľad služieb a formulár
+- [Videá nehnuteľností](https://martinpecnik011.github.io/domovid-web/videa-z-fotiek/)
+- [Vizualizácie](https://martinpecnik011.github.io/domovid-web/vizualizacie/)
+- [Sociálne siete](https://martinpecnik011.github.io/domovid-web/socialne-siete/)
+- [Ukážky](https://martinpecnik011.github.io/domovid-web/ukazky/)
+- [Cenník](https://martinpecnik011.github.io/domovid-web/cennik/)
+- [Kontakt](https://martinpecnik011.github.io/domovid-web/kontakt/)
+- [Ochrana osobných údajov](https://martinpecnik011.github.io/domovid-web/ochrana-sukromia/)
+- [Podmienky používania](https://martinpecnik011.github.io/domovid-web/podmienky/)
+- [Cookies](https://martinpecnik011.github.io/domovid-web/cookies/)

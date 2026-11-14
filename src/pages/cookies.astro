@@ -8,7 +8,9 @@ const hasMeta = META_PIXEL_ID !== '';
 const gaSuffix = hasGa ? GA4_ID.replace(/^G-/, '') : '<ID>';
 
 const rows = [
-  { name: 'domovid-consent', kind: 'localStorage', type: 'Nevyhnutné', purpose: 'Pamätá si tvoju voľbu v nastaveniach cookies.', provider: 'Domovid', ttl: '12 mesiacov', on: true },
+  { name: 'domovid-consent', kind: 'localStorage', type: 'Nevyhnutné', purpose: 'Pamätá si vašu voľbu v nastaveniach cookies.', provider: 'Domovid', ttl: '12 mesiacov', on: true },
+  { name: 'sb-*-auth-token', kind: 'localStorage', type: 'Nevyhnutné', purpose: 'Udržiava vaše prihlásenie do aplikácie (Supabase).', provider: 'Supabase', ttl: 'do odhlásenia', on: true },
+  { name: 'service worker cache', kind: 'cache', type: 'Nevyhnutné', purpose: 'Vyrovnávacia pamäť aplikácie (PWA), aby sa rýchlo načítala.', provider: 'Domovid', ttl: 'do aktualizácie aplikácie', on: true },
   { name: '_ga', kind: 'cookie', type: 'Analytické', purpose: 'Rozlíši návštevníkov pre štatistiku návštevnosti.', provider: 'Google (Analytics 4)', ttl: '2 roky', on: hasGa },
   { name: `_ga_${gaSuffix}`, kind: 'cookie', type: 'Analytické', purpose: 'Uchováva stav relácie pre Google Analytics 4.', provider: 'Google (Analytics 4)', ttl: '2 roky', on: hasGa },
   { name: '_fbp', kind: 'cookie', type: 'Marketingové', purpose: 'Meria, či reklamy na Facebooku a Instagrame privádzajú dopyty.', provider: 'Meta Platforms (Pixel)', ttl: '3 mesiace', on: hasMeta },
@@ -16,14 +18,14 @@ const rows = [
 ---
 <Legal
   title="Cookies"
-  description="Aké cookies a lokálne úložisko používa web Domovid, na čo slúžia, ako dlho platia a ako zmeníš svoj súhlas."
+  description="Aké cookies a lokálne úložisko používa web Domovid, na čo slúžia, ako dlho platia a ako môžete zmeniť svoj súhlas."
   path="cookies/"
-  updated="13. 10. 2026"
+  updated="12. 11. 2026"
 >
   <p>
-    Cookies sú malé súbory, ktoré si prehliadač ukladá pri návšteve webu. Nevyhnutné úložisko používame vždy.
+    Cookies sú malé súbory, ktoré si prehliadač ukladá pri návšteve webu. Nevyhnutné úložisko (uložený súhlas, prihlásenie do aplikácie, vyrovnávacia pamäť aplikácie) používame vždy.
     {(hasGa || hasMeta)
-      ? 'Analytické a marketingové cookies sa nastavia až po tvojom súhlase – dovtedy sa nástroje Google ani Meta vôbec nenačítajú.'
+      ? 'Analytické a marketingové cookies sa nastavia až po vašom súhlase – dovtedy sa nástroje Google ani Meta vôbec nenačítajú.'
       : 'Analytické ani marketingové nástroje momentálne nepoužívame.'}
   </p>
 
@@ -48,9 +50,9 @@ const rows = [
   </div>
 
   <h2>Zmena súhlasu</h2>
-  <p>Svoju voľbu môžeš kedykoľvek zmeniť alebo odvolať. Po odvolaní sa stránka znovu načíta bez meracích nástrojov a ich cookies vymažeme.</p>
+  <p>Svoju voľbu môžete kedykoľvek zmeniť alebo odvolať. Po odvolaní sa stránka znovu načíta bez meracích nástrojov a ich cookies vymažeme.</p>
   <p><button type="button" class="cc-open-btn" data-cc-open>Zmeniť nastavenia cookies</button></p>
-  <p>Cookies môžeš zmazať aj v nastaveniach prehliadača. Viac o tom, ako spracúvame osobné údaje, nájdeš v časti <a href={base + 'ochrana-sukromia/'}>Ochrana osobných údajov</a>.</p>
+  <p>Cookies môžete zmazať aj v nastaveniach prehliadača. Viac o tom, ako spracúvame osobné údaje, nájdete v časti <a href={base + 'ochrana-sukromia/'}>Ochrana osobných údajov</a>.</p>
 </Legal>
 
 <style>

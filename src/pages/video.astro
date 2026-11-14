@@ -4,11 +4,11 @@ import Base from '../layouts/Base.astro';
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 ---
-<Base title="Vaše video – Domovid" description="Súkromná stránka na schválenie a stiahnutie vášho videa." path="video/" noindex nofollow tracking={false}>
+<Base title="Vaše video – Domovid" description="Súkromná stránka na schválenie a stiahnutie vášho videa." path="video/" noindex nofollow tracking={false} chrome={false} chat={false}>
   <nav>
     <div class="wrap">
       <div class="nav-inner">
-        <a class="logo" href={base}>Domov<span>id</span></a>
+        <a class="logo" href={base}><span>Domov<b>id</b></span></a>
       </div>
     </div>
   </nav>

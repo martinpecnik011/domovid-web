@@ -23,6 +23,7 @@ if (dialog && video) {
       // Keyboard clicks have detail 0 and no pointer movement to judge.
       if (e.detail > 0 && Math.hypot(e.clientX - downX, e.clientY - downY) > MOVE_LIMIT) return;
       opener = btn;
+      video.muted = true; // starts muted; the viewer can unmute via controls
       video.src = btn.dataset.video ?? '';
       setScroll(true);
       dialog.showModal();

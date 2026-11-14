@@ -13,6 +13,7 @@ function makeEnv({ sheetRows = null, props = {}, existingFolders = [], klienti =
   let nextId = 1;
   const folders = new Map();
   const log = { mails: [], locks: 0, events: [] };
+  const cache = new Map();
 
   function makeFolder(name) {
     const id = 'folder-' + nextId++;
@@ -120,6 +121,12 @@ function makeEnv({ sheetRows = null, props = {}, existingFolders = [], klienti =
       }
     },
     MailApp: { sendEmail: (m) => log.mails.push(m) },
+    CacheService: {
+      getScriptCache: () => ({
+        get: (k) => (cache.has(k) ? cache.get(k) : null),
+        put: (k, v) => { cache.set(k, v); }
+      })
+    },
     LockService: {
       getScriptLock: () => ({
         waitLock: () => { log.locks++; log.events.push('lock'); },
@@ -324,7 +331,7 @@ test('(j) confirmation names Martin Pecník, promises the result on WhatsApp and
   env.ctx.doPost(jsonPost(base));
   const [notify, confirm] = env.log.mails;
   assert.match(notify.body, /Zľavový kód: -/);
-  assert.match(confirm.body, /Hotové video ti pošleme na WhatsApp na číslo 0900 123 456\./);
+  assert.match(confirm.body, /Hotové video vám pošleme na WhatsApp na číslo 0900 123 456\./);
   assert.match(confirm.body, /Martin Pecník, Domovid/);
   assert.doesNotMatch(confirm.body, /wa\.me|\+421 915/);
   assert.match(confirm.body, /odpoveďou na tento e-mail/);
@@ -622,4 +629,26 @@ test('owner mail failure does not break approve response', () => {
   const env = unlockEnv([], [uvid('', VID)]);
   env.ctx.MailApp.sendEmail = () => { throw new Error('quota'); };
   assert.equal(reply(env.ctx.doPost(jsonPost({ ...review, id: VID }))).approved, true);
+});
+
+test('(rl) confirmation mail goes to one address at most once per hour; lead flood is capped', () => {
+  const env = makeEnv();
+  env.ctx.doPost(jsonPost(base));
+  env.ctx.doPost(jsonPost(base));
+  const confirms = env.log.mails.filter((m) => m.to !== 'martinpecnik011@gmail.com');
+  assert.equal(confirms.length, 1);
+  assert.match(confirms[0].body, /^Dobrý deň/);
+  assert.doesNotMatch(confirms[0].body, /\b(ti|tvoj|pošli|dostaneš)\b/);
+  for (let i = 0; i < 40; i++) env.ctx.doPost(jsonPost(base));
+  assert.equal(env.getRows().length - 1, 30, 'only LEAD_LIMIT rows per window');
+  const out = reply(env.ctx.doPost(jsonPost(base)));
+  assert.equal(out.error, 'limit');
+});
+
+test('(app) offer from the app: confirmation points to the chat, no e-mail photos request', () => {
+  const env = makeEnv();
+  env.ctx.doPost(jsonPost({ ...base, source: 'app' }));
+  const confirm = env.log.mails.find((m) => m.to === base.email);
+  assert.match(confirm.body, /vo svojom chate v aplikácii Domovid/);
+  assert.doesNotMatch(confirm.body, /odpoveďou na tento e-mail/);
 });

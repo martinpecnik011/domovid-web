@@ -1,0 +1,79 @@
+---
+import Base from '../layouts/Base.astro';
+import ServiceIntro from '../components/ServiceIntro.astro';
+import SampleTrio from '../components/SampleTrio.astro';
+import PaymentSteps from '../components/PaymentSteps.astro';
+import FaqList from '../components/FaqList.astro';
+import CtaBand from '../components/CtaBand.astro';
+import OtherServices from '../components/OtherServices.astro';
+import VideoPrices from '../components/prices/VideoPrices.astro';
+import AddonPrices from '../components/prices/AddonPrices.astro';
+import { FAQ_VIDEO, DELIVERY } from '../config/site';
+import { UKAZKY } from '../config/ukazky';
+
+const samples = ['fpv', 'vila', 'byt'].map((id) => UKAZKY.find((u) => u.id === id)!).filter(Boolean);
+---
+<Base
+  title="Video z fotiek nehnuteľnosti pre maklérov – Domovid"
+  description="Z 4–6 fotiek vašej ponuky urobíme video do 48 hodín. Pre realitných maklérov, bez kamery a kameramana. Prvé video na ukážku zadarmo."
+  path="videa-z-fotiek/"
+  faq={FAQ_VIDEO}
+  black
+>
+  <main>
+    <ServiceIntro
+      label="Videá nehnuteľností"
+      variant="video"
+      title="Z fotiek z mobilu <em>video, ktoré predáva.</em>"
+      lead="Pošlete 4–6 fotiek ponuky, my z nich urobíme video s pohybom kamery, strihom do hudby a titulkami. Inzerát s videom nezanikne medzi stovkami ďalších."
+      facts={[{ k: 'Vstup', v: '4–6 fotiek z mobilu' }, { k: 'Výstup', v: 'video 9:16 alebo 16:9' }, { k: 'Termín', v: `do ${DELIVERY}` }, { k: 'Cena', v: 'od 50 € bez DPH' }]}
+    />
+
+    <section class="section" id="ukazky" aria-labelledby="ukazky-title">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Ukážky</span>
+          <h2 id="ukazky-title">Tri videá, ktoré vznikli len z fotiek</h2>
+        </div>
+        <SampleTrio items={samples} />
+      </div>
+    </section>
+
+    <section class="section alt" id="cena" aria-labelledby="cena-title">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Cena</span>
+          <h2 id="cena-title">Prvé video zadarmo, potom od 50 €</h2>
+        </div>
+        <VideoPrices variant="video" />
+        <div class="addons-gap"><AddonPrices group="video" /></div>
+        <div class="pay-block">
+          <h3>Ako platíte</h3>
+          <PaymentSteps />
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="wrap faq-wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Časté otázky</span>
+          <h2 id="faq-title">Čo makléri chcú vedieť</h2>
+        </div>
+        <FaqList items={FAQ_VIDEO} />
+      </div>
+    </section>
+
+    <CtaBand />
+    <OtherServices current="video" />
+  </main>
+</Base>
+
+<script>import '../scripts/inview-video';</script>
+
+<style>
+  .pay-block { display: grid; gap: 24px; margin-top: clamp(56px, 7vw, 100px); }
+  .faq-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(32px, 6vw, 120px); align-items: start; }
+  :global(.addons-gap) { margin-top: clamp(40px, 5vw, 72px); }
+  @media (max-width: 900px) { .faq-wrap { grid-template-columns: minmax(0, 1fr); } }
+</style>

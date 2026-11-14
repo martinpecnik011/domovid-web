@@ -1,0 +1,21 @@
+---
+// Slowly running band of the three services, set in the display serif.
+const words = ['Videá nehnuteľností', 'Vizualizácie', 'Obsah na sociálne siete', 'Hotové do 48 hodín', 'Prvé video zadarmo'];
+const row = [...words, ...words];
+---
+<div class="mq" aria-hidden="true">
+  <div class="mq-track">
+    {[0, 1].map(() => <div class="mq-row">{row.map((w) => <span>{w}<i>✦</i></span>)}</div>)}
+  </div>
+</div>
+
+<style>
+  .mq { overflow: hidden; border-block: 1px solid var(--line); padding-block: clamp(18px, 2.4vw, 30px); background: var(--bg); }
+  .mq-track { display: flex; width: max-content; animation: mq 60s linear infinite; }
+  .mq-row { display: flex; }
+  .mq span { display: inline-flex; align-items: center; gap: clamp(20px, 2.6vw, 40px); padding-right: clamp(20px, 2.6vw, 40px); font-family: var(--f-display); font-style: italic; font-weight: 500; font-size: clamp(1.8rem, 3.6vw, 3.4rem); white-space: nowrap; color: var(--cream); }
+  .mq span:nth-child(2n) { color: transparent; -webkit-text-stroke: 1px rgba(224, 173, 85, 0.85); }
+  .mq i { font-style: normal; font-size: 0.5em; color: var(--gold); }
+  @keyframes mq { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .mq-track { animation: none; } }
+</style>

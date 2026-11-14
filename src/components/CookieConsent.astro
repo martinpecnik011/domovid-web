@@ -11,16 +11,16 @@ const tools = [hasGa && 'návštevnosť (Google Analytics)', hasMeta && 'účinn
     <h2 id="cc-title" class="cc-title" tabindex="-1">Cookies na Domovide</h2>
     <p id="cc-desc" class="cc-desc">
       {tools
-        ? <Fragment>Nevyhnutné úložisko používame vždy. Len s tvojím súhlasom meriame aj {tools}.</Fragment>
-        : <Fragment>Používame len nevyhnutné úložisko, ktoré si pamätá tvoju voľbu.</Fragment>}
-      {' '}Voľbu zmeníš kedykoľvek v pätičke. <a href={base + 'cookies/'}>Viac o cookies</a>
+        ? <Fragment>Nevyhnutné úložisko (voľba cookies, prihlásenie do aplikácie, vyrovnávacia pamäť aplikácie) používame vždy. Len s vaším súhlasom meriame aj {tools}.</Fragment>
+        : <Fragment>Používame len nevyhnutné úložisko: voľbu cookies, prihlásenie do aplikácie a vyrovnávaciu pamäť aplikácie.</Fragment>}
+      {' '}Voľbu môžete kedykoľvek zmeniť v pätičke. <a href={base + 'cookies/'}>Viac o cookies</a>
     </p>
 
     <div id="cc-settings" class="cc-settings" hidden>
       <div class="cc-row">
         <div>
           <span class="cc-name" id="cc-n-nec">Nevyhnutné</span>
-          <span class="cc-note">Uloženie tvojej voľby a chod webu. Vždy zapnuté.</span>
+          <span class="cc-note">Uloženie vašej voľby, prihlásenie do aplikácie a chod webu. Vždy zapnuté.</span>
         </div>
         <input type="checkbox" class="cc-switch" role="switch" checked disabled aria-labelledby="cc-n-nec">
       </div>
@@ -65,16 +65,15 @@ const tools = [hasGa && 'návštevnosť (Google Analytics)', hasMeta && 'účinn
   }
   .cc-box {
     pointer-events: auto;
-    max-width: 760px;
-    margin: 0 auto;
+    max-width: 520px;
+    margin: 0;
     display: grid;
     gap: 10px;
     padding: 16px 18px;
-    background: var(--glass-strong);
-    backdrop-filter: blur(18px) saturate(1.35);
-    -webkit-backdrop-filter: blur(18px) saturate(1.35);
-    border: 1px solid var(--line);
-    border-radius: 20px;
+    background: var(--navy-deep);
+    border: 1px solid var(--line-strong);
+    border-top: 3px solid var(--gold);
+    border-radius: 16px;
     box-shadow: var(--shadow);
     max-height: calc(100dvh - 24px);
     overflow-y: auto;
@@ -136,15 +135,15 @@ const tools = [hasGa && 'návštevnosť (Google Analytics)', hasMeta && 'účinn
     min-width: 120px;
     padding: 11px 18px;
     border-radius: 999px;
-    border: 1px solid var(--ink);
-    background: var(--ink);
-    color: var(--sky);
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--cream);
     font: 600 0.92rem/1 var(--f-body);
     white-space: nowrap;
     cursor: pointer;
     transition: filter 0.2s ease;
   }
-  .cc-btn:hover { filter: brightness(1.15); }
+  .cc-btn:hover { background: var(--gold); color: var(--navy); }
   .cc-link {
     flex: 0 0 auto;
     padding: 11px 8px;

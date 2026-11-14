@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import { CONTACT_EMAIL, INSTAGRAM_URL, FACEBOOK_URL, DELIVERY } from '../config/site';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<Base
+  title="Kontakt – Domovid"
+  description="Napíšte nám, čo potrebujete: video z fotiek, vizualizáciu alebo obsah na sociálne siete pre realitných maklérov. Prvé video na ukážku zadarmo."
+  path="kontakt/"
+>
+  <main class="wrap kt">
+    <div class="kt-main">
+      <span class="eyebrow">Kontakt</span>
+      <h1>Povedzte nám, <em>čo predávate.</em></h1>
+      <p class="lead">Prihláste sa, vyplňte krátky dotazník a priložte fotky. Dopyt príde rovno do vášho súkromného chatu s nami a prvé video na ukážku máte do {DELIVERY} zadarmo.</p>
+      <div class="ctas">
+        <a class="btn btn-brass" href={`${base}app/?ponuka=1`}>Chcem ponuku</a>
+        <a class="btn btn-ghost" href={`${base}app/`}>Napísať do chatu</a>
+      </div>
+    </div>
+    <ul class="kt-list">
+      <li><span class="eyebrow">E-mail</span><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
+      <li><span class="eyebrow">Instagram</span><a href={INSTAGRAM_URL} target="_blank" rel="noopener">@domo_vid</a></li>
+      <li><span class="eyebrow">Facebook</span><a href={FACEBOOK_URL} target="_blank" rel="noopener">Domovid</a></li>
+      <li><span class="eyebrow">Platba</span><span>Prvé video zadarmo, potom polovica vopred a polovica po odovzdaní, prevodom na účet (IBAN).</span></li>
+    </ul>
+  </main>
+</Base>
+
+<style>
+  .kt { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: clamp(40px, 7vw, 140px); padding-block: clamp(56px, 9vw, 150px); align-items: start; }
+  .kt-main { display: grid; gap: 24px; justify-items: start; }
+  .kt-main h1 { font-size: clamp(2.6rem, 5.4vw, 5rem); }
+  .kt-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .kt-list li { display: grid; gap: 6px; padding: 24px 0; border-bottom: 1px solid var(--line); }
+  .kt-list a { font-family: var(--f-display); font-stretch: 112%; font-weight: 700; font-size: clamp(1.2rem, 1.8vw, 1.6rem); text-decoration: none; overflow-wrap: anywhere; }
+  .kt-list a:hover { color: var(--gold); }
+  @media (max-width: 860px) { .kt { grid-template-columns: minmax(0, 1fr); } }
+</style>

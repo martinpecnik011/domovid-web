@@ -1,0 +1,108 @@
+---
+import Base from '../layouts/Base.astro';
+import VideoPrices from '../components/prices/VideoPrices.astro';
+import SocialPrices from '../components/prices/SocialPrices.astro';
+import AddonPrices from '../components/prices/AddonPrices.astro';
+import PaymentSteps from '../components/PaymentSteps.astro';
+import FaqList from '../components/FaqList.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { FAQ_PRICING, SERVICES, VAT_RATE } from '../config/site';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const href = (id: string) => base + SERVICES.find((s) => s.id === id)!.href;
+---
+<Base
+  title="Cenník – Domovid"
+  description="Ceny videí z fotiek, vizualizácií a obsahu na sociálne siete pre realitných maklérov. Prvé video na ukážku zadarmo, polovica vopred a polovica po odovzdaní."
+  path="cennik/"
+  faq={FAQ_PRICING}
+  hero
+>
+  <main>
+    <header class="cn-hero">
+      <div class="cn-media" aria-hidden="true">
+        <img src={base + 'media/hero.jpg'} alt="" width="1920" height="1080" decoding="async">
+        <video data-hero data-src-lg={base + 'media/hero.mp4'} data-src-sm={base + 'media/hero-720.mp4'} poster={base + 'media/hero.jpg'} muted loop playsinline preload="none"></video>
+      </div>
+      <div class="wrap cn-head">
+        <span class="eyebrow">Cenník</span>
+        <h1>Prvé video zadarmo. <em>Potom platíte na dve časti.</em></h1>
+        <p class="lead">Ceny sú bez DPH, pri každej je aj cena s DPH {Math.round(VAT_RATE * 100)} %. Obsah na sociálne siete je bez viazanosti.</p>
+        <nav class="cn-jump" aria-label="Časti cenníka">
+          <a href="#videa">Videá nehnuteľností</a><a href="#vizualizacie">Vizualizácie</a><a href="#siete">Obsah na siete</a><a href="#doplnky">Doplnky</a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="section" aria-labelledby="h-platba">
+      <div class="wrap">
+        <div class="section-head"><span class="eyebrow">Ako platíte</span><h2 id="h-platba">Bez rizika pre vás</h2></div>
+        <PaymentSteps />
+      </div>
+    </section>
+
+    <section class="section" id="videa" aria-labelledby="h-videa">
+      <div class="wrap">
+        <div class="section-head row">
+          <div><span class="eyebrow">01</span><h2 id="h-videa">Videá nehnuteľností</h2></div>
+          <a class="btn btn-ghost btn-sm" href={href('video')}>Viac o službe</a>
+        </div>
+        <VideoPrices variant="video" />
+      </div>
+    </section>
+
+    <section class="section alt" id="vizualizacie" aria-labelledby="h-viz">
+      <div class="wrap">
+        <div class="section-head row">
+          <div><span class="eyebrow">02</span><h2 id="h-viz">Vizualizácie</h2></div>
+          <a class="btn btn-ghost btn-sm" href={href('viz')}>Viac o službe</a>
+        </div>
+        <VideoPrices variant="viz" />
+      </div>
+    </section>
+
+    <section class="section" id="siete" aria-labelledby="h-siete">
+      <div class="wrap">
+        <div class="section-head row">
+          <div><span class="eyebrow">03</span><h2 id="h-siete">Obsah na sociálne siete</h2></div>
+          <a class="btn btn-ghost btn-sm" href={href('social')}>Viac o službe</a>
+        </div>
+        <SocialPrices />
+      </div>
+    </section>
+
+    <section class="section alt" id="doplnky" aria-labelledby="h-doplnky">
+      <div class="wrap">
+        <div class="section-head"><span class="eyebrow">Doplnky</span><h2 id="h-doplnky">Čo si viete priobjednať</h2></div>
+        <AddonPrices group="all" />
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="wrap faq-wrap">
+        <div class="section-head"><span class="eyebrow">Časté otázky</span><h2>Otázky k cenám</h2></div>
+        <FaqList items={FAQ_PRICING} />
+      </div>
+    </section>
+
+    <CtaBand />
+  </main>
+</Base>
+
+<script>import '../scripts/hero-video';</script>
+
+<style>
+  .cn-hero { position: relative; min-height: 86svh; margin-top: -77px; display: grid; align-items: end; overflow: hidden; isolation: isolate; }
+  .cn-media { position: absolute; inset: 0; z-index: -1; }
+  .cn-media img, .cn-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .cn-media video { opacity: 0; transition: opacity 1.4s ease; }
+  .cn-media :global(video.on) { opacity: 1; }
+  .cn-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, var(--bg) 4%, rgba(14, 25, 34, 0.7) 45%, rgba(14, 25, 34, 0.35)); }
+  .cn-head { display: grid; gap: 24px; padding-top: 160px; padding-bottom: clamp(48px, 6vw, 90px); }
+  .cn-head h1 { max-width: 18ch; }
+  .cn-jump { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .cn-jump a { padding: 10px 18px; border-radius: 999px; border: 1px solid var(--line-strong); text-decoration: none; font-weight: 600; font-size: 0.92rem; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background 0.2s ease, color 0.2s ease; }
+  .cn-jump a:hover { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+  .faq-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(32px, 6vw, 120px); align-items: start; }
+  @media (max-width: 900px) { .faq-wrap { grid-template-columns: minmax(0, 1fr); } }
+</style>

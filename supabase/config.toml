@@ -1,0 +1,63 @@
+project_id = "domovid-web"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+
+[db]
+port = 54322
+major_version = 15
+
+[storage]
+enabled = true
+file_size_limit = "500MiB"
+
+[auth]
+enabled = true
+site_url = "https://martinpecnik011.github.io/domovid-web/app/"
+additional_redirect_urls = ["http://localhost:4321/domovid-web/app/"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+secure_password_change = true
+otp_length = 6
+otp_expiry = 600
+
+[auth.email.template.magic_link]
+subject = "Váš prihlasovací kód – Domovid"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.confirmation]
+subject = "Váš prihlasovací kód – Domovid"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.rate_limit]
+email_sent = 30           # e-mails per hour
+sign_in_sign_ups = 30     # per 5 minutes per IP
+token_verifications = 30  # per 5 minutes per IP
+
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+# Martin zapne neskôr
+[auth.captcha]
+enabled = false
+provider = "turnstile"
+secret = "env(SUPABASE_AUTH_CAPTCHA_SECRET)"
+
+# [auth.sessions]  # paid-plan feature
+# timebox = "24h"
+# inactivity_timeout = "8h"
+
+[auth.external.google]
+enabled = false
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
