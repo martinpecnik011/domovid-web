@@ -11,7 +11,7 @@ major_version = 15
 
 [storage]
 enabled = true
-file_size_limit = "500MiB"
+file_size_limit = "50MiB"   # free plan maximum; the app itself caps uploads at 500 MB client-side
 
 [auth]
 enabled = true
@@ -34,6 +34,16 @@ content_path = "./supabase/templates/magic_link.html"
 [auth.email.template.confirmation]
 subject = "Váš prihlasovací kód – Domovid"
 content_path = "./supabase/templates/confirmation.html"
+
+# Custom SMTP (Brevo). The key is never stored here: it comes from ~/.config/domovid/brevo_smtp_key via env.
+[auth.email.smtp]
+enabled = true
+host = "smtp-relay.brevo.com"
+port = 587
+user = "c2ddbe001@smtp-brevo.com"
+pass = "env(BREVO_SMTP_KEY)"
+admin_email = "domo.vid001@gmail.com"
+sender_name = "Domovid"
 
 [auth.rate_limit]
 email_sent = 30           # e-mails per hour
