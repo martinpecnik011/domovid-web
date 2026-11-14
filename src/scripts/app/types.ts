@@ -77,6 +77,8 @@ export interface Adapter {
     /** Subscription + content changes of one customer (null = all, staff). */
     subscribePlan(customerId: string | null, cb: () => void): () => void;
     uploadAttachment(conversationId: string, messageId: string, file: File, onProgress: (ratio: number) => void): Promise<void>;
+    /** Staff-only HTML tool from the private `staff` bucket (e.g. the calculator). */
+    getStaffTool(name: string): Promise<string>;
     /** conversationId null = every conversation visible to the user (staff inbox). */
     subscribe(conversationId: string | null, cb: () => void): () => void;
   };

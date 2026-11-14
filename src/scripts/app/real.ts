@@ -125,6 +125,11 @@ export function createReal(base: string): Adapter {
           .subscribe();
         return () => { void sb.removeChannel(ch); };
       },
+      async getStaffTool(name) {
+        const { data, error } = await sb.storage.from('staff').download(name);
+        if (error || !data) throw new Error(error?.message || 'not found');
+        return await data.text();
+      },
       async uploadAttachment(conversationId, messageId, file, onProgress) {
         const safe = file.name.replace(/[^\w.\-]+/g, '_') || 'file';
         const path = `${conversationId}/${messageId}/${safe}`;

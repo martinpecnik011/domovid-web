@@ -171,6 +171,11 @@ export function createMock(): Adapter {
         db.content = db.content.filter((c) => c.id !== id); save(db); emitPlan(it?.customer_id ?? null);
       },
       subscribePlan(customerId, cb) { const l = { id: customerId, cb }; planCbs.add(l); return () => { planCbs.delete(l); }; },
+      async getStaffTool(name) {
+        const db = load(); const p = requireMe(db);
+        if (p.role !== 'staff' || !db.aal2) throw new Error('forbidden');
+        return `<!doctype html><html lang="sk"><body style="margin:0;padding:32px;font-family:system-ui;background:#0e1922;color:#f5f0e8"><h1 style="color:#e0ad55">Mock: ${name}</h1><p>V ostrom režime sa tu načíta kalkulačka zo súkromného úložiska.</p></body></html>`;
+      },
       async uploadAttachment(conversationId, messageId, file, onProgress) {
         for (const r of [0.2, 0.6, 1]) { onProgress(r); await sleep(40); }
         const id = uuid();

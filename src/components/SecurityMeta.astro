@@ -2,13 +2,16 @@
 // Security policy for a static GitHub Pages site: Pages cannot send response headers,
 // so the CSP travels as a <meta> tag (frame-ancestors is unsupported there; see frame-guard.ts).
 // Emitted only in production builds, because the Vite dev server injects inline scripts and a websocket.
+// CALC_HASH = sha256 of the admin calculator's inline script (~/Domovid-work/biznis-plan/kalkulacka.html, private bucket
+// `staff`); it runs in a srcdoc iframe that inherits this policy. Recompute it whenever the calculator changes.
+const CALC_HASH = "'sha256-IXZ2Luso1JewazrH0Qpc5swqXMoxY5hK3vzEL7d/dBM='";
 const csp = [
   "default-src 'self'",
-  "script-src 'self' https://www.googletagmanager.com https://connect.facebook.net",
-  "style-src 'self' 'unsafe-inline'",
+  `script-src 'self' ${CALC_HASH} https://www.googletagmanager.com https://connect.facebook.net`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://*.supabase.co https://*.r2.dev https://www.google-analytics.com https://www.googletagmanager.com https://www.facebook.com",
   "media-src 'self' blob: https://*.supabase.co https://*.r2.dev",
-  "font-src 'self' data:",
+  "font-src 'self' data: https://fonts.gstatic.com",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://script.google.com https://script.googleusercontent.com https://*.r2.dev https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.facebook.com https://connect.facebook.net",
   "worker-src 'self'",
   "manifest-src 'self'",
