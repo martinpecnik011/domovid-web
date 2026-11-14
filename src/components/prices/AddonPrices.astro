@@ -1,0 +1,38 @@
+---
+import { PRICES, withVat } from '../../config/site';
+
+export interface Props {
+  group: 'video' | 'social' | 'all';
+}
+const { group } = Astro.props;
+const groups = [
+  { key: 'video', title: 'Doplnky k videám', items: PRICES.addons.video },
+  { key: 'social', title: 'Doplnky k obsahu na sociálne siete', items: PRICES.addons.social },
+].filter((g) => group === 'all' || g.key === group);
+---
+<div class="ap">
+  {groups.map((g) => (
+    <div>
+      <h3 class="ap-title">{g.title}</h3>
+      <ul class="ap-list">
+        {g.items.map((a) => (
+          <li>
+            <span class="ap-name">{a.name}<span class="muted"> · {a.desc}</span></span>
+            <span class="ap-price">+{a.price} € <span class="muted">/ {a.unit} bez DPH · {withVat(a.price)} s DPH</span></span>
+          </li>
+        ))}
+      </ul>
+      {g.key === 'social' && <p class="small">{PRICES.consentNote}</p>}
+    </div>
+  ))}
+</div>
+
+<style>
+  .ap { display: grid; gap: 36px; }
+  .ap-title { font-size: 1.15rem; margin-bottom: 8px; }
+  .ap-list { list-style: none; margin: 0 0 10px; padding: 0; }
+  .ap-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .ap-name { font-weight: 600; }
+  .ap-price { font-weight: 700; color: var(--gold); }
+  .ap-price .muted { font-weight: 400; }
+</style>

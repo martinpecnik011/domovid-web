@@ -1,23 +1,73 @@
 ---
 import Base from '../layouts/Base.astro';
-import Stage from '../components/Stage.astro';
-import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
+import Marquee from '../components/Marquee.astro';
+import Statement from '../components/Statement.astro';
+import SampleRow from '../components/SampleRow.astro';
 import HowItWorks from '../components/HowItWorks.astro';
-import Showcase from '../components/Showcase.astro';
-import Faq from '../components/Faq.astro';
-import Pricing from '../components/Pricing.astro';
-import Footer from '../components/Footer.astro';
+import FaqList from '../components/FaqList.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { SERVICES, FAQ } from '../config/site';
+import { UKAZKY } from '../config/ukazky';
+
+const svc = (id: string) => SERVICES.find((s) => s.id === id)!;
+const cut = (id: string) => UKAZKY.find((c) => c.id === id)!;
+const rows = [
+  { s: svc('video'), c: cut('video-z-fotiek'), title: 'Video z fotiek vašej ponuky', from: '4–6 fotiek z mobilu', to: 'video s pohybom kamery' },
+  { s: svc('viz'), c: cut('premena-izby'), title: 'Prázdny byt premeníme na zariadený', from: 'prázdna izba', to: 'zariadený domov' },
+  { s: svc('social'), c: cut('tipy-3-chyby'), title: 'Obsah na vaše sociálne siete', from: 'vaše ponuky a tipy', to: 'videá na každý týždeň' },
+];
 ---
-<Base path="">
-  <Stage />
-  <Nav />
+<Base path="" faq={FAQ} hero>
   <main>
     <Hero />
+    <Marquee />
+    <Statement />
+
+    <section class="section" id="ukazky" aria-labelledby="ukazky-title">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Čo robíme</span>
+          <h2 id="ukazky-title">Tri služby, tri ukážky. <em>Pozrite sa sami.</em></h2>
+        </div>
+        {rows.map((r, i) => (
+          <SampleRow
+            no={i + 1}
+            label={r.s.label}
+            title={r.title}
+            text={r.s.short}
+            from={r.from}
+            to={r.to}
+            price={r.s.fromPrice}
+            unit={r.s.fromUnit}
+            href={r.s.href}
+            video={r.c.video}
+            poster={r.c.poster}
+            flip={i % 2 === 1}
+          />
+        ))}
+      </div>
+    </section>
+
     <HowItWorks />
-    <Showcase />
-    <Faq />
-    <Pricing />
+
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="wrap faq-wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Časté otázky</span>
+          <h2 id="faq-title">Na čo sa makléri pýtajú</h2>
+        </div>
+        <FaqList items={FAQ} />
+      </div>
+    </section>
+
+    <CtaBand />
   </main>
-  <Footer />
 </Base>
+
+<script>import '../scripts/inview-video'; import '../scripts/effects';</script>
+
+<style>
+  .faq-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(32px, 6vw, 120px); align-items: start; }
+  @media (max-width: 900px) { .faq-wrap { grid-template-columns: minmax(0, 1fr); } }
+</style>

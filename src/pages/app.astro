@@ -1,0 +1,35 @@
+---
+// Customer/staff chat app: /app/. Private, client-side only (GitHub Pages), no analytics or consent scripts.
+import '@fontsource-variable/cormorant-garamond/wght.css';
+import '@fontsource-variable/cormorant-garamond/wght-italic.css';
+import '@fontsource/figtree/400.css';
+import '@fontsource/figtree/500.css';
+import '@fontsource/figtree/600.css';
+import '@fontsource/figtree/700.css';
+import '../styles/app.css';
+import SecurityMeta from '../components/SecurityMeta.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<SecurityMeta />
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#14232F">
+<title>Domovid – aplikácia</title>
+<link rel="icon" href="data:,">
+<link rel="manifest" href={`${base}manifest.webmanifest`}>
+</head>
+<body>
+<div class="stage" aria-hidden="true"><img src={`${base}media/hero.jpg`} alt="" width="1920" height="1080" decoding="async"></div>
+<div id="app" data-testid="app-root"><p class="loading">Načítavame…</p></div>
+<noscript><p class="loading">Aplikácia vyžaduje zapnutý JavaScript.</p></noscript>
+<script>
+  import '../scripts/frame-guard';
+  import '../scripts/app/main';
+</script>
+</body>
+</html>

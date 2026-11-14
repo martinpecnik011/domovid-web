@@ -1,16 +1,90 @@
 ---
+export interface Props {
+  /** Current page path relative to the site root, '' = home. */
+  current: string;
+}
+const { current } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const links = [
+  { href: 'videa-z-fotiek/', label: 'Videá nehnuteľností' },
+  { href: 'vizualizacie/', label: 'Vizualizácie' },
+  { href: 'socialne-siete/', label: 'Obsah na siete' },
+  { href: 'ukazky/', label: 'Ukážky' },
+  { href: 'cennik/', label: 'Cenník' },
+];
+const isCurrent = (href: string) => current === href;
 ---
-<nav aria-label="Hlavná navigácia">
+<nav aria-label="Hlavná navigácia" data-nav>
   <div class="wrap">
     <div class="nav-inner">
-      <a class="logo" href="#top">Domov<span>id</span></a>
+      <a class="logo" href={base}><img src={base + 'media/logo.png'} alt="" width="34" height="34"><span>Domov<b>id</b></span></a>
       <div class="nav-links">
-        <a href="#ako">Ako to funguje</a>
-        <a href="#ukazky">Ukážky</a>
-        <a href="#faq">Otázky</a>
-        <a href="#cennik">Cenník</a>
+        {links.map((l) => (
+          <a href={base + l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a>
+        ))}
       </div>
-      <a class="btn btn-brass btn-sm" href="#dopyt">Chcem demo video</a>
+      <div class="nav-cta">
+        <a class="btn btn-ghost btn-sm nav-chat" href={base + 'app/'} data-open-minichat><svg class="chat-ic" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg><span data-chat-label>Chat · prihlásenie</span><i class="chat-dot" aria-hidden="true"></i></a>
+        <a class="btn btn-brass btn-sm" href={base + 'app/?ponuka=1'}>Chcem ponuku</a>
+      </div>
+      <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav-drawer" aria-label="Otvoriť menu" data-nav-toggle>
+        <span class="bars" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="nav-drawer" id="nav-drawer" hidden data-nav-drawer>
+      {links.map((l) => (
+        <a class="drawer-link" href={base + l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a>
+      ))}
+      <div class="drawer-cta">
+        <a class="btn btn-ghost nav-chat" href={base + 'app/'} data-open-minichat><svg class="chat-ic" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><path d="M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /></svg><span data-chat-label>Chat · prihlásenie</span></a>
+        <a class="btn btn-brass" href={base + 'app/?ponuka=1'}>Chcem ponuku</a>
+      </div>
     </div>
   </div>
 </nav>
+<script>import '../scripts/nav';</script>
+
+<style>
+  nav .wrap { position: relative; }
+  .nav-links { display: flex; align-items: center; flex-wrap: nowrap; }
+  .nav-links a, .drawer-link { position: relative; white-space: nowrap; }
+  .nav-links a[aria-current="page"]::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -8px; height: 2px; background: var(--gold);
+  }
+  .nav-cta { display: flex; align-items: center; gap: 10px; }
+  .nav-chat { position: relative; gap: 8px; }
+  .chat-ic { color: var(--gold); }
+  .chat-dot { position: absolute; top: 6px; left: 30px; width: 8px; height: 8px; border-radius: 50%; background: #2fbf6b; box-shadow: 0 0 0 2px var(--bg); }
+  .nav-toggle {
+    display: none; width: 46px; height: 46px; padding: 0; border: 1px solid var(--line-strong); border-radius: 50%;
+    background: transparent; color: var(--cream); cursor: pointer; place-items: center;
+  }
+  .bars, .bars::before, .bars::after {
+    display: block; width: 18px; height: 2px; border-radius: 2px; background: currentColor; content: "";
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .bars { position: relative; }
+  .bars::before { position: absolute; top: -6px; }
+  .bars::after { position: absolute; top: 6px; }
+  .nav-toggle[aria-expanded="true"] .bars { background: transparent; }
+  .nav-toggle[aria-expanded="true"] .bars::before { transform: translateY(6px) rotate(45deg); }
+  .nav-toggle[aria-expanded="true"] .bars::after { transform: translateY(-6px) rotate(-45deg); }
+  .nav-drawer { display: none; }
+
+  @media (max-width: 1099px) {
+    .nav-links, .nav-cta { display: none; }
+    .nav-toggle { display: grid; }
+    .nav-drawer:not([hidden]) {
+      display: grid; gap: 2px; position: fixed; left: 0; right: 0; top: 76px; bottom: 0;
+      padding: 16px var(--pad) 32px; background: var(--bg); border-top: 1px solid var(--line);
+      overflow-y: auto; align-content: start;
+    }
+    .drawer-link {
+      display: block; padding: 18px 0; text-decoration: none; font-family: var(--f-display); font-stretch: 112%;
+      font-weight: 650; font-size: 1.6rem; color: var(--cream); border-bottom: 1px solid var(--line);
+    }
+    .drawer-link[aria-current="page"] { color: var(--gold); }
+    .drawer-cta { display: grid; gap: 10px; padding-top: 24px; }
+  }
+  @media (min-width: 1100px) { .nav-drawer { display: none !important; } }
+</style>

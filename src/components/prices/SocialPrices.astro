@@ -1,0 +1,15 @@
+---
+import PriceRows from './PriceRows.astro';
+import { PRICES } from '../../config/site';
+
+const rows = PRICES.social.plans.map((p) => ({
+  name: `${p.videos} videí mesačne`,
+  detail: `Bez viazanosti · scenár, strih, titulky, hudba a plán zverejňovania · ${Math.round(p.price / p.videos)} € za video${p.videos === 30 ? ' · voiceover v cene (bez AI portrétu)' : ''}`,
+  price: p.price,
+  unit: 'mesiac',
+  featured: 'featured' in p,
+  badge: 'featured' in p ? 'Najobľúbenejší' : undefined,
+  href: `app/?ponuka=1&sluzba=social&balik=${p.videos}`,
+}));
+---
+<PriceRows rows={rows} />

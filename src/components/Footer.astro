@@ -1,56 +1,67 @@
 ---
+import { CONTACT_EMAIL } from '../config/site';
+
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const services = [
+  { href: 'videa-z-fotiek/', label: 'Videá nehnuteľností' },
+  { href: 'vizualizacie/', label: 'Vizualizácie' },
+  { href: 'socialne-siete/', label: 'Obsah na sociálne siete' },
+  { href: 'ukazky/', label: 'Ukážky' },
+  { href: 'cennik/', label: 'Cenník' },
+];
+const company = [
+  { href: 'app/?ponuka=1', label: 'Chcem ponuku' },
+  { href: 'app/', label: 'Prihlásiť sa' },
+  { href: 'kontakt/', label: 'Kontakt' },
+];
 ---
-<footer data-scene="vecer">
-  <div class="wrap">
-    <div class="tile footer-inner">
-      <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:12px">
-        <span class="logo">Domov<span>id</span></span>
-        <span class="tagline">Video pre realitných maklérov, ktoré predáva.</span>
-      </div>
-      <div class="footer-links">
-        <a href="https://www.instagram.com/domo_vid/" target="_blank" rel="noopener">Instagram</a>
-        <a href="https://www.facebook.com/1216967761499957" target="_blank" rel="noopener">Facebook</a>
-        <a href="https://www.tiktok.com/@domo_vid" target="_blank" rel="noopener">TikTok</a>
-        <a href="https://www.youtube.com/@domo_vid" target="_blank" rel="noopener">YouTube</a>
-      </div>
-      <div class="legal-links">
-        <a href={base + 'ochrana-sukromia/'}>Ochrana osobných údajov</a>
-        <a href={base + 'podmienky/'}>Podmienky používania</a>
-        <a href={base + 'cookies/'}>Cookies</a>
-        <button type="button" class="legal-btn" data-cc-open>Nastavenia cookies</button>
-      </div>
+<footer>
+  <div class="wrap foot">
+    <div class="brand">
+      <a class="logo" href={base}><img src={base + 'media/logo.png'} alt="" width="34" height="34"><span>Domov<b>id</b></span></a>
+      <p class="muted">Videá, vizualizácie a obsah na sociálne siete pre realitných maklérov.</p>
+      <a class="mail" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
     </div>
+    <div class="col">
+      <span class="eyebrow">Služby</span>
+      {services.map((l) => <a href={base + l.href}>{l.label}</a>)}
+    </div>
+    <div class="col">
+      <span class="eyebrow">Domovid</span>
+      {company.map((l) => <a href={base + l.href}>{l.label}</a>)}
+    </div>
+    <div class="col">
+      <span class="eyebrow">Sledujte nás</span>
+      <a href="https://www.instagram.com/domo_vid/" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://www.facebook.com/1216967761499957" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://www.tiktok.com/@domo_vid" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://www.youtube.com/@domo_vid" target="_blank" rel="noopener">YouTube</a>
+    </div>
+  </div>
+  <div class="wrap legal">
+    <span>© {new Date().getFullYear()} Domovid · Martin Pecník</span>
+    <a href={base + 'ochrana-sukromia/'}>Ochrana osobných údajov</a>
+    <a href={base + 'podmienky/'}>Podmienky používania</a>
+    <a href={base + 'cookies/'}>Cookies</a>
+    <button type="button" class="legal-btn" data-cc-open>Nastavenia cookies</button>
   </div>
 </footer>
 
 <style>
-  /* 1.17rem (18.7px, weight 750) counts as WCAG large text, so the brass "id" passes 3:1. */
-  .logo { font-size: 1.17rem; }
-  /* Two rows now, so the pill radius from global.css would look pinched. */
-  .footer-inner { border-radius: 22px; }
-  .legal-links {
-    flex-basis: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 18px;
-    font-size: 0.82rem;
-    border-top: 1px solid var(--line);
-    padding-top: 10px;
+  footer { border-top: 1px solid var(--line); background: var(--navy-deep); }
+  body.is-black footer { background: #000; }
+  .foot { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; padding-block: clamp(56px, 7vw, 96px); }
+  .brand { display: grid; gap: 14px; align-content: start; max-width: 36ch; }
+  .mail { color: var(--gold); text-decoration: none; font-weight: 600; }
+  .col { display: grid; gap: 12px; align-content: start; }
+  .col a { text-decoration: none; color: var(--ink-muted); }
+  .col a:hover { color: var(--cream); }
+  .legal {
+    display: flex; flex-wrap: wrap; gap: 8px 24px; padding-block: 22px 32px; font-size: 0.85rem;
+    color: var(--ink-muted); border-top: 1px solid var(--line);
   }
-  .legal-links a,
-  .legal-btn {
-    color: var(--ink-muted);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-  .legal-btn {
-    padding: 0;
-    background: none;
-    border: 0;
-    font: inherit;
-    cursor: pointer;
-  }
-  .legal-links a:hover,
-  .legal-btn:hover { color: var(--ink); }
+  .legal a, .legal-btn { color: var(--ink-muted); text-decoration: none; }
+  .legal-btn { padding: 0; background: none; border: 0; font: inherit; cursor: pointer; }
+  .legal a:hover, .legal-btn:hover { color: var(--cream); }
+  @media (max-width: 860px) { .foot { grid-template-columns: 1fr 1fr; } .brand { grid-column: 1 / -1; } }
 </style>

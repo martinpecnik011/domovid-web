@@ -15,7 +15,7 @@ export const REVIEW_ENDPOINT: string = import.meta.env.PUBLIC_REVIEW_ENDPOINT ||
 /** A delivery id is an unguessable lowercase alphanumeric token (the folder name in the bucket). */
 export const DELIVERY_ID_RE = /^[a-z0-9]{8,32}$/;
 
-/** Shown instead of the download while the invoice is unpaid. Single source of the copy. */
+/** Shown instead of the download while the payment is outstanding. Single source of the copy. */
 export const LOCKED_TEXT = 'Stiahnutie v plnej kvalite sa odomkne po prijatí platby. Číslo účtu (IBAN) na úhradu vám pošleme.';
 
 /** Locked text when the price block shows the IBAN (manifest `price.iban`). */

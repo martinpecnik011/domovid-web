@@ -29,17 +29,21 @@ var PACKAGE_WARNING = 'Váš mesačný balík videí je už vyčerpaný – fotk
 var R2_BASE_PROP = 'R2_PUBLIC_BASE';
 var R2_BASE_DEFAULT = 'https://pub-bc98670f5e3646368728e7feaba801a7.r2.dev';
 var ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+// Abuse limits (CacheService windows): flood of leads/reviews, and the confirmation mail used to bomb one address.
+var LEAD_LIMIT = 30, REVIEW_LIMIT = 60, LIMIT_WINDOW_S = 600;
+var CONFIRM_WINDOW_S = 3600;
 
 function doPost(e) {
   var p = parsePayload(e);
   if (!p) return json({ ok: false });
 
-  if (p.type === 'review') return handleReview(p);
+  if (p.type === 'review') return withinLimit('review', REVIEW_LIMIT, LIMIT_WINDOW_S) ? handleReview(p) : json({ ok: false, error: 'limit' });
 
   // Honeypot / minimal validation: silently accept junk so bots learn nothing.
   if (p.company || !p.name || !p.phone) {
     return json({ ok: true });
   }
+  if (!withinLimit('lead', LEAD_LIMIT, LIMIT_WINDOW_S)) return json({ ok: false, error: 'limit' });
 
   var name = clean(p.name, 120);
   // Caller's discount code (validated by the website); stored as typed, upper-cased, for the monthly report.
@@ -85,7 +89,7 @@ function doPost(e) {
       'Tabuľka: ' + SpreadsheetApp.getActiveSpreadsheet().getUrl()
   });
 
-  sendConfirmation(clean(p.email, 160), name, photos.saved, clean(p.phone, 40), discount, warning);
+  sendConfirmation(clean(p.email, 160), name, photos.saved, clean(p.phone, 40), discount, warning, p.source === 'app');
 
   return json(warning ? { ok: true, warning: warning } : { ok: true });
 }
@@ -281,33 +285,37 @@ function getUploadRoot() {
 }
 
 // Confirmation to the customer, only when they left a valid-looking e-mail.
-function sendConfirmation(email, name, photoCount, phone, discount, warning) {
+// fromApp: the offer came from the signed-in questionnaire, so its photos already sit in the customer's chat.
+function sendConfirmation(email, name, photoCount, phone, discount, warning, fromApp) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  if (!withinLimit('confirm:' + email.toLowerCase(), 1, CONFIRM_WINDOW_S)) return;
   var first = String(name).replace(/^'/, '').split(/\s+/)[0] || '';
-  var next = photoCount > 0
+  var next = fromApp
+    ? 'Dopyt aj fotky máte uložené vo svojom chate v aplikácii Domovid. Prvé video na ukážku je zadarmo a pošleme vám ho tam.\n\n'
+    : photoCount > 0
     ? 'Prijali sme aj ' + photoCount + ' ' + fotiek(photoCount) + ' nehnuteľnosti, takže ich už ' +
-      'nemusíš posielať. Prvú verziu videa dostaneš ako náhľad na schválenie, stiahnutie v plnej kvalite je možné až po platbe.\n\n'
-    : 'Ak chceš začať hneď, pošli 4–6 fotiek nehnuteľnosti odpoveďou na tento e-mail. ' +
-      'Prvú verziu videa dostaneš ako náhľad na schválenie, stiahnutie v plnej kvalite je možné až po platbe.\n\n';
+      'nemusíte posielať. Prvú verziu videa dostanete ako náhľad na schválenie, stiahnutie v plnej kvalite je možné až po platbe.\n\n'
+    : 'Ak chcete začať hneď, pošlite 4–6 fotiek nehnuteľnosti odpoveďou na tento e-mail. ' +
+      'Prvú verziu videa dostanete ako náhľad na schválenie, stiahnutie v plnej kvalite je možné až po platbe.\n\n';
   var discountLine = discount
-    ? 'Tvoj zľavový kód ' + discount + ' sme zaznamenali, zľavu 10 % odpočítame z ceny. Číslo účtu (IBAN) na úhradu ti pošleme.\n\n'
+    ? 'Váš zľavový kód ' + discount + ' sme zaznamenali, zľavu 10 % odpočítame z ceny. Číslo účtu (IBAN) na úhradu vám pošleme.\n\n'
     : '';
   MailApp.sendEmail({
     to: email,
     replyTo: NOTIFY_EMAIL,
     name: 'Domovid',
-    subject: 'Domovid: tvoj dopyt sme prijali',
+    subject: 'Domovid: váš dopyt sme prijali',
     body:
-      'Ahoj' + (first ? ' ' + first : '') + ',\n\n' +
-      'ďakujeme za záujem o Domovid. Tvoj dopyt sme prijali a ozveme sa ti do 24 hodín. ' +
-      'Hotové video ti pošleme na WhatsApp' + (phone ? ' na číslo ' + phone : '') + '.\n\n' +
+      'Dobrý deň' + (first ? ', ' + first : '') + ',\n\n' +
+      'ďakujeme za záujem o Domovid. Váš dopyt sme prijali a ozveme sa vám do 24 hodín. ' +
+      'Hotové video vám pošleme na WhatsApp' + (phone ? ' na číslo ' + phone : '') + '.\n\n' +
       next +
       discountLine +
       (warning ? warning + '\n\n' : '') +
       'Martin Pecník, Domovid\n' +
       'https://martinpecnik011.github.io/domovid-web/\n\n' +
-      'Tento e-mail ti prišiel, lebo si vyplnil formulár na webe Domovid. ' +
-      'Ak to nebol ty, stačí odpovedať a údaje vymažeme.'
+      'Tento e-mail vám prišiel, lebo ste vyplnili formulár na webe Domovid. ' +
+      'Ak ste to neboli vy, stačí odpovedať a údaje vymažeme.'
   });
 }
 
@@ -512,6 +520,20 @@ function getSheet(name, headers) {
     sheet.getRange(1, lastCol + 1, 1, headers.length - lastCol).setValues([headers.slice(lastCol)]);
   }
   return sheet;
+}
+
+// Fixed-window counter; true while `key` stays within `max` hits per `seconds`. Fails open if the cache is unavailable.
+function withinLimit(key, max, seconds) {
+  try {
+    var cache = CacheService.getScriptCache();
+    var k = 'rl:' + key;
+    var n = Number(cache.get(k)) || 0;
+    if (n >= max) return false;
+    cache.put(k, String(n + 1), seconds);
+    return true;
+  } catch (err) {
+    return true;
+  }
 }
 
 // Strip leading formula characters so a submitted "=HYPERLINK(...)" stays plain text.

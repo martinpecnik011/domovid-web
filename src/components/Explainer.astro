@@ -1,0 +1,149 @@
+---
+// In-page animation that shows what goes in and what comes out of a service. Pure CSS loops,
+// paused for prefers-reduced-motion (the end state is shown instead).
+export interface Props {
+  variant: 'video' | 'viz' | 'social';
+}
+const { variant } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const m = base + 'media/';
+const days = Array.from({ length: 28 }, (_, i) => i + 1);
+const postDays = [2, 4, 6, 9, 11, 13, 16, 18, 20, 23, 25, 27];
+---
+{variant === 'video' && (
+  <div class="ex ex-video" aria-label="Z fotiek z mobilu vznikne video s pohybom kamery">
+    <figure class="ex-in">
+      <div class="stack" aria-hidden="true">
+        {[1, 2, 3, 4].map((n) => <img src={`${m}explain/foto-${n}.jpg`} alt="" loading="lazy" decoding="async" style={`--i:${n - 1}`} />)}
+      </div>
+      <figcaption><b>Vstup</b>4–6 fotiek z mobilu</figcaption>
+    </figure>
+    <div class="ex-mid" aria-hidden="true">
+      <span class="flow"><i></i></span>
+      <ul class="tags">
+        <li style="--i:0">Pohyb kamery</li><li style="--i:1">Strih do hudby</li><li style="--i:2">Titulky a popisky</li><li style="--i:3">Formát 9:16 / 16:9</li>
+      </ul>
+    </div>
+    <figure class="ex-out">
+      <div class="phone"><video data-src={`${m}ukazky/video-z-fotiek.mp4`} poster={`${m}ukazky/video-z-fotiek.jpg`} muted loop playsinline preload="none"></video></div>
+      <figcaption><b>Výstup</b>hotové video do 48 hodín</figcaption>
+    </figure>
+  </div>
+)}
+
+{variant === 'viz' && (
+  <div class="ex ex-viz" aria-label="Z fotky prázdnej izby vznikne zariadený interiér">
+    <figure class="ba">
+      <img src={`${m}explain/izba-pred.jpg`} alt="Prázdna izba pred vizualizáciou" loading="lazy" decoding="async">
+      <img class="after" src={`${m}explain/izba-po.jpg`} alt="Tá istá izba zariadená vo vizualizácii" loading="lazy" decoding="async">
+      <span class="wipe" aria-hidden="true"></span>
+      <span class="lbl l-pred" aria-hidden="true">Pred · prázdna izba</span>
+      <span class="lbl l-po" aria-hidden="true">Po · AI vizualizácia</span>
+    </figure>
+    <div class="ex-side">
+      <div class="phone"><video data-src={`${m}ukazky/premena-obyvacka.mp4`} poster={`${m}ukazky/premena-obyvacka.jpg`} muted loop playsinline preload="none"></video></div>
+      <p class="muted">Z fotky prázdnej miestnosti vznikne video, v ktorom sa izba zariadi priamo pred očami kupujúceho.</p>
+    </div>
+  </div>
+)}
+
+{variant === 'social' && (
+  <div class="ex ex-social" aria-label="Z vašich ponúk a tipov pripravíme mesačný plán hotových videí">
+    <figure class="ex-in">
+      <ul class="inputs" aria-hidden="true">
+        <li style="--i:0">Vaše nové ponuky</li><li style="--i:1">Tipy pre predávajúcich</li><li style="--i:2">Predané nehnuteľnosti</li><li style="--i:3">Osobná značka makléra</li>
+      </ul>
+      <figcaption><b>Vstup</b>čo predávate a čo chcete povedať</figcaption>
+    </figure>
+    <figure class="cal" aria-hidden="true">
+      <div class="cal-head">Plán na mesiac</div>
+      <div class="cal-grid">
+        {days.map((d) => {
+          const k = postDays.indexOf(d);
+          return <span class:list={['day', { post: k >= 0 }]} style={k >= 0 ? `--k:${k}` : undefined}>{d}</span>;
+        })}
+      </div>
+    </figure>
+    <figure class="ex-out">
+      <div class="phone"><video data-src={`${m}strihy/beatcut.mp4`} poster={`${m}strihy/beatcut.jpg`} muted loop playsinline preload="none"></video></div>
+      <figcaption><b>Výstup</b>10, 15 alebo 30 hotových videí mesačne</figcaption>
+    </figure>
+  </div>
+)}
+
+<style>
+  .ex { display: grid; align-items: center; gap: clamp(24px, 4vw, 72px); }
+  figure { margin: 0; }
+  figcaption { display: grid; gap: 2px; margin-top: 18px; color: var(--ink-muted); font-size: 0.95rem; }
+  figcaption b { color: var(--gold); font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; }
+  .phone { width: 100%; max-width: 300px; aspect-ratio: 9 / 16; border-radius: 26px; padding: 8px; background: #111; border: 1px solid #2a2a2a; box-shadow: 0 40px 90px -30px rgba(224, 173, 85, 0.25); }
+  .phone video { width: 100%; height: 100%; object-fit: cover; border-radius: 19px; background: #000; }
+
+  /* --- video: photos -> pipeline -> phone --- */
+  .ex-video, .ex-social { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.8fr); }
+  .stack { position: relative; aspect-ratio: 4 / 3; }
+  .stack img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 14px;
+    border: 4px solid #f5f0e8; box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.9);
+    transform: rotate(calc((var(--i) - 1.5) * 4deg)) translate(calc(var(--i) * 10px), calc(var(--i) * -8px));
+    animation: deal 10s cubic-bezier(.6,0,.3,1) infinite; animation-delay: calc(var(--i) * -2.5s);
+  }
+  @keyframes deal {
+    0%, 20% { transform: rotate(-5deg) translate(0, 0) scale(1); z-index: 4; opacity: 1; }
+    25% { transform: rotate(8deg) translate(70%, -6%) scale(0.5); z-index: 4; opacity: 0; }
+    26%, 45% { transform: rotate(4deg) translate(30px, -24px) scale(0.92); z-index: 1; opacity: 1; }
+    50%, 70% { transform: rotate(2deg) translate(20px, -16px) scale(0.95); z-index: 2; }
+    75%, 95% { transform: rotate(-2deg) translate(10px, -8px) scale(0.98); z-index: 3; }
+    100% { transform: rotate(-5deg) translate(0, 0) scale(1); z-index: 4; }
+  }
+  .ex-mid { display: grid; gap: 22px; }
+  .flow { position: relative; height: 2px; background: linear-gradient(90deg, transparent, rgba(224, 173, 85, 0.5), transparent); overflow: hidden; }
+  .flow i { position: absolute; top: -3px; left: -10%; width: 22%; height: 8px; border-radius: 8px; background: var(--gold); filter: blur(1px); box-shadow: 0 0 18px var(--gold); animation: run 2.5s linear infinite; }
+  @keyframes run { to { left: 100%; } }
+  .tags, .inputs { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .tags li, .inputs li {
+    justify-self: start; padding: 9px 16px; border-radius: 999px; border: 1px solid rgba(224, 173, 85, 0.5); font-weight: 600; font-size: 0.95rem;
+    animation: pop 10s ease infinite; animation-delay: calc(var(--i) * 0.6s);
+  }
+  @keyframes pop { 0%, 4% { opacity: 0.25; transform: translateX(-8px); } 8%, 92% { opacity: 1; transform: none; background: rgba(224, 173, 85, 0.12); } 100% { opacity: 0.25; } }
+  .ex-out { justify-self: center; display: grid; justify-items: center; text-align: center; width: 100%; }
+  .ex-out .phone { animation: glow 2.5s ease-in-out infinite alternate; }
+  @keyframes glow { to { box-shadow: 0 40px 110px -24px rgba(224, 173, 85, 0.45); } }
+
+  /* --- viz: before/after wipe --- */
+  .ex-viz { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); }
+  .ba { position: relative; aspect-ratio: 2768 / 1117; border-radius: 18px; overflow: hidden; background: #111; }
+  .ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ba .after { clip-path: inset(0 100% 0 0); animation: reveal 8s cubic-bezier(.7,0,.3,1) infinite; }
+  .wipe { position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--gold); box-shadow: 0 0 24px var(--gold); animation: wipe 8s cubic-bezier(.7,0,.3,1) infinite; }
+  @keyframes reveal { 0%, 12% { clip-path: inset(0 100% 0 0); } 45%, 80% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 100% 0 0); } }
+  @keyframes wipe { 0%, 12% { left: 0; opacity: 0; } 14% { opacity: 1; } 45% { left: 100%; opacity: 1; } 47%, 80% { left: 100%; opacity: 0; } 82% { opacity: 1; left: 100%; } 100% { left: 0; opacity: 1; } }
+  .lbl { position: absolute; bottom: 16px; padding: 7px 14px; border-radius: 999px; font-size: 0.85rem; font-weight: 700; }
+  .l-pred { left: 16px; background: rgba(0, 0, 0, 0.7); color: #f5f0e8; animation: lpred 8s ease infinite; }
+  .l-po { right: 16px; background: var(--gold); color: var(--navy); animation: lpo 8s ease infinite; }
+  @keyframes lpred { 0%, 20% { opacity: 1; } 32%, 88% { opacity: 0; } 96%, 100% { opacity: 1; } }
+  @keyframes lpo { 0%, 30% { opacity: 0; } 42%, 80% { opacity: 1; } 90%, 100% { opacity: 0; } }
+  .ex-side { display: grid; gap: 18px; justify-items: center; text-align: center; }
+
+  /* --- social: inputs -> month plan -> phone --- */
+  .cal { padding: 22px; border-radius: 18px; border: 1px solid rgba(245, 240, 232, 0.14); }
+  .cal-head { font-weight: 700; margin-bottom: 14px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .day { aspect-ratio: 1; display: grid; place-items: center; border-radius: 8px; font-size: 0.8rem; color: var(--ink-muted); background: rgba(245, 240, 232, 0.04); }
+  .day.post { animation: post 9s ease infinite; animation-delay: calc(var(--k) * 0.35s); }
+  @keyframes post { 0%, 3% { background: rgba(245, 240, 232, 0.04); color: var(--ink-muted); } 6%, 85% { background: var(--gold); color: var(--navy); font-weight: 700; } 100% { background: rgba(245, 240, 232, 0.04); } }
+
+  @media (max-width: 960px) {
+    .ex-video, .ex-social, .ex-viz { grid-template-columns: minmax(0, 1fr); }
+    .ex-mid { order: 0; }
+    .phone { max-width: 260px; }
+    .stack { max-width: 520px; width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stack img, .tags li, .inputs li, .flow i, .ex-out .phone, .day.post { animation: none; }
+    .ba .after { animation: none; clip-path: inset(0 0 0 50%); }
+    .wipe { animation: none; left: 50%; }
+    .lbl { animation: none; }
+    .day.post { background: var(--gold); color: var(--navy); }
+  }
+</style>

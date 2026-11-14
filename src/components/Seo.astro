@@ -10,8 +10,9 @@ import {
   SERVICE_TYPE,
   AREA_SERVED,
   CONTACT_EMAIL,
-  PRICING,
-  FAQ,
+  PRICES,
+  SERVICES,
+  type FaqItem,
 } from '../config/site';
 
 export interface Props {
@@ -30,6 +31,10 @@ export interface Props {
   type?: 'website' | 'article';
   /** schema.org type of the WebPage node, e.g. 'AboutPage', 'ContactPage'. */
   pageType?: string;
+  /** Browser UI colour (meta theme-color) for this page. */
+  themeColor?: string;
+  /** Visible FAQ of the page; FAQPage JSON-LD is emitted only when given (markup must match what is on the page). */
+  faq?: FaqItem[];
 }
 
 const {
@@ -37,14 +42,16 @@ const {
   description,
   path = '',
   ogTitle = OG_TITLE,
-  image = 'media/bg-vila.jpg',
+  image = 'media/og.jpg',
   noindex = false,
   nofollow = false,
   type = 'website',
   pageType = 'WebPage',
+  themeColor = '#f3f7fa',
+  faq,
 } = Astro.props;
 const url = SITE_URL + path;
-const isHome = path === '';
+const showOffers = path === '' || path === 'cennik/';
 const favicon =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E" +
   "%3Crect width='64' height='64' rx='14' fill='%23142330'/%3E" +
@@ -95,6 +102,47 @@ const webpage = {
   isPartOf: { '@id': id('website') },
   about: { '@id': id('organization') },
 };
+const offerOf = (
+  serviceId: string,
+  name: string,
+  description: string,
+  price: number,
+  unitText: string,
+) => {
+  const svc = SERVICES.find((x) => x.id === serviceId)!;
+  return {
+    '@type': 'Offer',
+    name,
+    description,
+    url: SITE_URL + svc.href,
+    price,
+    priceCurrency: 'EUR',
+    valueAddedTaxIncluded: false,
+    priceSpecification: {
+      '@type': 'UnitPriceSpecification',
+      price,
+      priceCurrency: 'EUR',
+      valueAddedTaxIncluded: false,
+      unitText,
+    },
+    itemOffered: {
+      '@type': 'Service',
+      name: svc.label,
+      serviceType: svc.claim,
+      provider: { '@id': id('organization') },
+      areaServed: AREA_SERVED,
+    },
+  };
+};
+const offers = [
+  offerOf('video', 'Videá nehnuteľností: 1 video', 'Video z fotiek vašej ponuky do 24 hodín.', PRICES.video.single, 'video'),
+  offerOf('video', 'Videá nehnuteľností: mesačný balík', `${PRICES.video.monthlyCount} videá mesačne.`, PRICES.video.monthly, 'mesiac'),
+  offerOf('viz', 'Vizualizácie: 1 video', `Najviac ${PRICES.viz.maxViz} vizualizácií na nehnuteľnosť.`, PRICES.viz.single, 'video'),
+  offerOf('viz', 'Vizualizácie: mesačný balík', `${PRICES.viz.monthlyCount} nehnuteľnosti mesačne.`, PRICES.viz.monthly, 'mesiac'),
+  ...PRICES.social.plans.map((p) =>
+    offerOf('social', `Sociálne siete: ${p.videos} videí mesačne`, `Viazanosť ${PRICES.social.commitmentMonths} mesiace.`, p.price, 'mesiac'),
+  ),
+];
 const service = {
   '@type': 'ProfessionalService',
   '@id': id('service'),
@@ -109,50 +157,24 @@ const service = {
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
     name: 'Cenník',
-    itemListElement: PRICING.map((p) => ({
-      '@type': 'Offer',
-      name: p.name,
-      description: [p.description, ...p.features].join(' · '),
-      url: SITE_URL + '#cennik',
-      price: p.price,
-      priceCurrency: 'EUR',
-      valueAddedTaxIncluded: false,
-      ...(p.billing
-        ? {
-            priceSpecification: {
-              '@type': 'UnitPriceSpecification',
-              price: p.price,
-              priceCurrency: 'EUR',
-              valueAddedTaxIncluded: false,
-              unitText: p.billing,
-            },
-          }
-        : {}),
-      itemOffered: {
-        '@type': 'Service',
-        name: SERVICE_TYPE,
-        serviceType: SERVICE_TYPE,
-        provider: { '@id': id('organization') },
-        areaServed: AREA_SERVED,
-      },
-    })),
+    itemListElement: offers,
   },
 };
-// FAQPage only on home: the markup must match questions that are visible on the same page.
+// FAQPage only when the page passes its visible FAQ: the markup must match questions shown on the same page.
 const faqPage = {
   '@type': 'FAQPage',
-  '@id': SITE_URL + '#faq',
-  url: SITE_URL + '#faq',
+  '@id': url + '#faq',
+  url: url + '#faq',
   inLanguage: 'sk',
   isPartOf: { '@id': id('website') },
-  mainEntity: FAQ.map((f) => ({
+  mainEntity: (faq ?? []).map((f) => ({
     '@type': 'Question',
     name: f.q,
     acceptedAnswer: { '@type': 'Answer', text: f.a },
   })),
 };
 
-const graph = isHome ? [organization, website, webpage, service, faqPage] : [organization, website, webpage];
+const graph = [organization, website, webpage, ...(showOffers ? [service] : []), ...(faq?.length ? [faqPage] : [])];
 const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c');
 ---
 <title>{title}</title>
@@ -168,7 +190,10 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#f3f7fa">
+<!-- Deliberate: the browser bar on web pages stays light (#f3f7fa, matching the light page header);
+     public/manifest.webmanifest uses navy #14232F for the installed PWA (splash/standalone title bar).
+     Pages may override via the themeColor prop. -->
+<meta name="theme-color" content={themeColor}>
 <link rel="icon" href={favicon}>
 <link rel="canonical" href={url}>
 <link rel="sitemap" href={SITE_URL + 'sitemap-index.xml'}>

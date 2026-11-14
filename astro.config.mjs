@@ -11,16 +11,21 @@ export default defineConfig({
   trailingSlash: 'ignore',
   compressHTML: true,
   build: { inlineStylesheets: 'auto' },
+  // Every script ships as an external file so the CSP can forbid inline scripts (see SecurityMeta.astro).
+  vite: { build: { assetsInlineLimit: 0 } },
   integrations: [
     sitemap({
-      filter: (page) => !page.includes('/video'),
+      // Exclude the PWA app and the client delivery page by path segment (not '/videa-z-fotiek/').
+      filter: (page) => !/\/(app|video)\/?$/.test(new URL(page).pathname),
       serialize(item) {
-        const isHome = /\/domovid-web\/?$/.test(item.url);
+        const path = new URL(item.url).pathname.replace(/^\/domovid-web\/?/, '').replace(/\/$/, '');
+        const isHome = path === '';
+        const isLegal = /^(ochrana-sukromia|podmienky|cookies)/.test(path);
         return {
           ...item,
           lastmod: buildDate,
-          changefreq: isHome ? 'weekly' : 'yearly',
-          priority: isHome ? 1.0 : 0.3,
+          changefreq: isHome ? 'weekly' : 'monthly',
+          priority: isHome ? 1.0 : isLegal ? 0.3 : 0.8,
         };
       },
     }),
