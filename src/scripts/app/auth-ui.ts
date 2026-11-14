@@ -77,6 +77,14 @@ export function renderLogin(adapter: Adapter, root: HTMLElement, base: string, e
     el('p', { class: 'note strong' }, 'Prihlásenie nič nestojí — platíte len objednané služby'),
     el('p', { class: 'trust' }, icon('lock', 14), 'Súkromné — vaše správy vidí len tím Domovid.'),
     backLink(base)), 'login');
+  // Came from the web's sign-up prompt via "Pokračovať cez Google": go straight to Google (once).
+  const q = new URLSearchParams(location.search);
+  if (q.get('google') === '1' && (GOOGLE_LOGIN || adapter.mock)) {
+    q.delete('google');
+    history.replaceState(null, '', location.pathname + (q.toString() ? `?${q}` : ''));
+    adapter.auth.signInWithOAuth('google').catch(() => showError('Prihlásenie cez Google sa nepodarilo. Skúste to znova.'));
+    return;
+  }
   input.focus();
 }
 

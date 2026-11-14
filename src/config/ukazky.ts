@@ -15,8 +15,6 @@ export interface Ukazka {
 export const UKAZKY: Ukazka[] = [
   { id: 'video-z-fotiek', title: 'Rodinný dom z fotiek', desc: 'Fotky z mobilu premenené na video s pohybom kamery a popiskami', cats: ['video'], video: 'media/ukazky/video-z-fotiek.mp4', poster: 'media/ukazky/video-z-fotiek.jpg' },
   { id: 'fpv', title: 'Prelet domom', desc: 'Plynulý prelet od záhrady cez všetky miestnosti', cats: ['video'], video: 'media/strihy/fpv.mp4', poster: 'media/strihy/fpv.jpg' },
-  { id: 'vila', title: 'Moderná vila', desc: 'Exteriér z jednej fotky, deň prejde do večera', cats: ['video'], video: 'media/vila.mp4', poster: 'media/vila.webp' },
-  { id: 'byt', title: 'Mestský byt', desc: 'Bytový dom a interiér v jednom krátkom videu', cats: ['video'], video: 'media/byt.mp4', poster: 'media/byt.webp' },
   { id: 'premena-izby', title: 'Premena izby', desc: 'Prázdna izba sa zariadi priamo pred očami', cats: ['viz'], video: 'media/ukazky/premena-izby.mp4', poster: 'media/ukazky/premena-izby.jpg' },
   { id: 'premena-obyvacka', title: 'Premena obývačky', desc: 'Zastaraná obývačka v novom zariadení', cats: ['viz'], video: 'media/ukazky/premena-obyvacka.mp4', poster: 'media/ukazky/premena-obyvacka.jpg' },
   { id: 'premena-kuchyna', title: 'Premena kuchyne', desc: 'Pôvodná kuchyňa ako moderný priestor', cats: ['viz'], video: 'media/ukazky/premena-kuchyna.mp4', poster: 'media/ukazky/premena-kuchyna.jpg' },
@@ -24,7 +22,6 @@ export const UKAZKY: Ukazka[] = [
   { id: 'siete-co-urobim', title: 'Čo za vás urobím', desc: 'Maklér predstaví svoje služby krok za krokom', cats: ['social'], video: 'media/ukazky/siete-co-urobim.mp4', poster: 'media/ukazky/siete-co-urobim.jpg' },
   { id: 'siete-hladam', title: 'Hľadám byty a domy', desc: 'Nábor nových ponúk: kupci, ktorí už čakajú', cats: ['social'], video: 'media/ukazky/siete-hladam.mp4', poster: 'media/ukazky/siete-hladam.jpg' },
   { id: 'tipy-3-chyby', title: '3 chyby pri predaji', desc: 'Tipy pre predávajúcich s hlasom a titulkami', cats: ['social'], video: 'media/ukazky/tipy-3-chyby.mp4', poster: 'media/ukazky/tipy-3-chyby.jpg' },
-  { id: 'studio', title: 'Fotky vám nepredajú byt', desc: 'Krátky reel s hookom pre predávajúcich', cats: ['video'], video: 'media/studio.mp4', poster: 'media/studio.webp' },
   { id: 'beatcut', title: 'Interiér do rytmu', desc: 'Reel strihaný do hudby, ponuka zaujme za pár sekúnd', cats: ['video'], video: 'media/strihy/beatcut.mp4', poster: 'media/strihy/beatcut.jpg' },
 ];
 

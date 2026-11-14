@@ -12,6 +12,7 @@ import CookieConsent from '../components/CookieConsent.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import ChatBubble from '../components/ChatBubble.astro';
+import RegisterPrompt from '../components/RegisterPrompt.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../config/site';
 
 export interface Props {
@@ -60,6 +61,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 <slot />
 {chrome && <Footer />}
 {chat && <ChatBubble />}
+{chat && <RegisterPrompt />}
 {tracking && <CookieConsent />}
 <script>import '../scripts/frame-guard'; import '../scripts/reveal'; import '../scripts/sw-register';</script>
 </body>

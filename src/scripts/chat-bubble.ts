@@ -1,7 +1,5 @@
-// Mini chat: opens by itself on the first visit (desktop; a teaser label on phones), offers sign-up / sign-in,
-// and hands whatever the visitor typed over to the full chat in /app/ through sessionStorage.
+// Mini chat: greeting, quick replies, sign-up / sign-in, and the hand-over of typed text to the full chat in /app/
 const DRAFT_KEY = 'domovid-chat-draft';
-const SEEN_KEY = 'domovid-cb-seen';
 const root = document.getElementById('cb');
 const bubble = root?.querySelector<HTMLButtonElement>('.cb-bubble');
 const panel = document.getElementById('cb-panel');
@@ -51,7 +49,6 @@ if (root && bubble && panel) {
     panel!.hidden = false;
     root!.dataset.open = '';
     bubble!.setAttribute('aria-expanded', 'true');
-    store.set(localStorage, SEEN_KEY, '1');
     if (focus) input.focus();
   }
   function close() {
@@ -97,18 +94,8 @@ if (root && bubble && panel) {
     else if (!e.shiftKey && (active === last || !panel.contains(active))) { e.preventDefault(); first.focus(); }
   });
 
-  // First visit: open on wide screens (without stealing focus), a teaser label on phones.
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!logged && !store.get(localStorage, SEEN_KEY)) {
-    window.setTimeout(() => {
-      if (isOpen()) return;
-      if (window.matchMedia('(min-width: 768px)').matches) open(false);
-      else { label.textContent = 'Prihláste sa · prvé video zadarmo'; label.classList.add('teaser'); }
-      if (!reduce) root.classList.add('cb-pulse');
-    }, 1800);
-  } else if (!reduce) {
-    window.setTimeout(() => root.classList.add('cb-pulse'), 4000);
-  }
+  // The sign-up prompt (RegisterPrompt) greets first-time visitors; the mini chat only pulses once.
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) window.setTimeout(() => root.classList.add('cb-pulse'), 4000);
 
   // Keep above the cookie bar.
   const cc = document.getElementById('cc');

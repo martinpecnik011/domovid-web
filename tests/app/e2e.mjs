@@ -436,14 +436,14 @@ async function miniChatScenario(tag, viewport, mobile) {
   page.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
   const t = (id) => page.getByTestId(id);
   await page.goto(SITE + '/domovid-web/');
-  if (mobile) {
-    await page.waitForFunction(() => document.querySelector('[data-cb-label]')?.classList.contains('teaser'));
-    check(`${tag} minichat: phone shows the sign-in teaser, panel stays closed`, (await page.locator('[data-cb-label]').innerText()).includes('Prihláste sa') && (await page.locator('#cb-panel').isHidden()));
-    await page.locator('.cb-bubble').click();
-  } else {
-    await page.locator('#cb-panel').waitFor({ state: 'visible', timeout: 5000 });
-    check(`${tag} minichat: opens by itself on the first visit`, true);
-  }
+  await t('register-prompt').waitFor({ state: 'visible', timeout: 5000 });
+  check(`${tag} sign-up prompt opens right after the page loads`, (await t('rp-google').getAttribute('href')) === '/domovid-web/app/?registracia=1&google=1' && (await t('rp-email').getAttribute('href')) === '/domovid-web/app/?registracia=1');
+  await t('register-prompt').getByRole('button', { name: 'Teraz nie' }).click();
+  await page.reload();
+  await page.waitForTimeout(1600);
+  check(`${tag} sign-up prompt is not repeated within the visit`, await t('register-prompt').isHidden());
+  check(`${tag} mini chat stays closed until clicked`, await page.locator('#cb-panel').isHidden());
+  await page.locator('.cb-bubble').click();
   check(`${tag} minichat: sign-up and sign-in offered`, (await page.getByRole('link', { name: 'Zaregistrovať sa' }).isVisible()) && (await page.locator('[data-cb-auth]').getByRole('link', { name: 'Prihlásiť sa' }).isVisible()));
   await page.evaluate(() => { document.getElementById('cb').dataset.app = '/domovid-web/app/?mock=1'; });
   await page.locator('#cb-text').fill('Dobrý deň, mám byt v centre.');
@@ -454,6 +454,12 @@ async function miniChatScenario(tag, viewport, mobile) {
   await t('code-0').fill('123456');
   await t('composer-text').waitFor();
   check(`${tag} minichat: typed text is prefilled in the full chat`, (await t('composer-text').inputValue()) === 'Dobrý deň, mám byt v centre.');
+  const rec = await page.evaluate(() => localStorage.getItem('domovid-login-at'));
+  check(`${tag} sign-in time is recorded for the 30-day limit`, !!rec && JSON.parse(rec).t > Date.now() - 60000, rec);
+  await page.evaluate(() => { const r = JSON.parse(localStorage.getItem('domovid-login-at')); r.t = Date.now() - 31 * 864e5; localStorage.setItem('domovid-login-at', JSON.stringify(r)); });
+  await page.reload();
+  await t('login').waitFor();
+  check(`${tag} after 30 days the customer is signed out with an explanation`, (await t('app-error').innerText()).includes('po 30 dňoch'));
   await page.goto(SITE + '/domovid-web/app/?mock=1&registracia=1');
   check(`${tag} minichat: sign-up link opens "Vytvorte si účet" (or the chat when signed in)`, (await t('login-signup-note').count()) === 1 || (await t('composer-text').count()) === 1);
   check(`${tag} minichat no console/page errors`, errs.length === 0, errs.join(' | '));

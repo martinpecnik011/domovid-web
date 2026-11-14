@@ -433,11 +433,31 @@ async function renderApp() {
   unsub = () => { u1(); u2(); };
 }
 
+// Security: a sign-in lasts at most 30 days, then the user signs in again. Supabase refresh tokens would keep the
+// session alive forever (server-side time-boxing is a paid feature), so the app enforces the limit itself.
+const LOGIN_KEY = 'domovid-login-at';
+const MAX_SESSION_MS = 30 * 24 * 60 * 60 * 1000;
+function sessionExpired(s: Session): boolean {
+  try {
+    const raw = localStorage.getItem(LOGIN_KEY);
+    const rec = raw ? (JSON.parse(raw) as { u: string; t: number }) : null;
+    if (!rec || rec.u !== s.userId) { localStorage.setItem(LOGIN_KEY, JSON.stringify({ u: s.userId, t: Date.now() })); return false; }
+    return Date.now() - rec.t > MAX_SESSION_MS;
+  } catch { return false; }
+}
+const forgetLogin = () => { try { localStorage.removeItem(LOGIN_KEY); } catch { /* storage blocked */ } };
+
 async function onSession(s: Session | null) {
   if (s && session?.userId === s.userId) return;
   unsub?.(); unsub = null; ui = null; nav = null; activeId = null; messages = []; convs = [];
   session = s; profile = null;
-  if (!s) { renderLogin(adapter, root, base); return; }
+  if (!s) { forgetLogin(); renderLogin(adapter, root, base); return; }
+  if (sessionExpired(s)) {
+    forgetLogin();
+    await adapter.auth.signOut().catch(() => {});
+    showError('Z bezpečnostných dôvodov vás po 30 dňoch odhlásime. Prihláste sa, prosím, znova.');
+    return;
+  }
   try {
     profile = await adapter.data.getProfile();
     if (!profile) throw new Error('no profile');

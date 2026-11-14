@@ -11,7 +11,7 @@ import AddonPrices from '../components/prices/AddonPrices.astro';
 import { FAQ_VIDEO, DELIVERY } from '../config/site';
 import { UKAZKY } from '../config/ukazky';
 
-const samples = ['fpv', 'vila', 'byt'].map((id) => UKAZKY.find((u) => u.id === id)!).filter(Boolean);
+const samples = ['video-z-fotiek', 'fpv', 'beatcut'].map((id) => UKAZKY.find((u) => u.id === id)!).filter(Boolean);
 ---
 <Base
   title="Video z fotiek nehnuteľnosti pre maklérov – Domovid"
@@ -33,7 +33,7 @@ const samples = ['fpv', 'vila', 'byt'].map((id) => UKAZKY.find((u) => u.id === i
       <div class="wrap">
         <div class="section-head reveal">
           <span class="eyebrow">Ukážky</span>
-          <h2 id="ukazky-title">Tri videá, ktoré vznikli len z fotiek</h2>
+          <h2 id="ukazky-title">Tri videá, ktoré vznikli z fotiek</h2>
         </div>
         <SampleTrio items={samples} />
       </div>
