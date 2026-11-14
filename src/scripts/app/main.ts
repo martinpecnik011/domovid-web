@@ -9,7 +9,8 @@ import { captureIntent, takeIntent, takeDraft, openOffer, type OfferPrefill } fr
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const useMock = !isConfigured || new URLSearchParams(location.search).get('mock') === '1';
-const MAX_BYTES = 500 * 1024 * 1024;
+// Supabase free plan: 50 MB per file (bucket `chat` uses the same limit).
+const MAX_BYTES = 50 * 1024 * 1024;
 const TIMECODE = /^\d{1,3}:[0-5]\d$/;
 const URL_ONLY = /^https?:\/\/\S+$/i;
 const root = document.getElementById('app')!;
@@ -219,7 +220,7 @@ function buildComposer() {
   }
   input.addEventListener('change', () => {
     for (const f of Array.from(input.files ?? [])) {
-      if (f.size > MAX_BYTES) showError(`Súbor „${f.name}“ je väčší ako 500 MB.`);
+      if (f.size > MAX_BYTES) showError(`Súbor „${f.name}“ je väčší ako 50 MB. Väčšie video nám pošlite ako odkaz (napr. WeTransfer alebo Google Drive).`);
       else if (!/^(image\/|video\/)|^application\/pdf$/.test(f.type)) showError(`Súbor „${f.name}“ nie je podporovaný. Priložte obrázok, video alebo PDF.`);
       else files.push(f);
     }

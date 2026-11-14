@@ -1,6 +1,7 @@
 import type { Adapter, MfaNeed } from './types';
 import { el, icon, label, googleLogo, showError } from './dom';
 import { hasIntent, wantsSignup } from './offer';
+import { GOOGLE_LOGIN } from '../../config/supabase';
 
 // Login by 6-digit e-mail code, Google, and the staff TOTP step.
 const MAX_TRIES = 5;
@@ -72,7 +73,7 @@ export function renderLogin(adapter: Adapter, root: HTMLElement, base: string, e
     !hasIntent() && wantsSignup() ? el('p', { class: 'note', 'data-testid': 'login-signup-note' }, 'Registrácia je zadarmo: zadajte e-mail a pošleme vám 6-miestny kód. Účet sa vytvorí sám, žiadne heslo netreba.') : null,
     hasIntent() ? el('p', { class: 'note', 'data-testid': 'login-offer-note' }, 'Po prihlásení sa otvorí krátky dotazník a váš dopyt príde rovno do súkromného chatu s nami. Prvé video na ukážku je zadarmo.') : null,
     el('ul', { class: 'chips' }, ...['súkromný chat', 'úpravy s časom vo videu', 'všetky podklady na jednom mieste'].map((t) => el('li', {}, t))),
-    form, el('p', { class: 'or' }, el('span', {}, 'alebo')), google,
+    form, ...(GOOGLE_LOGIN || adapter.mock ? [el('p', { class: 'or' }, el('span', {}, 'alebo')), google] : []),
     el('p', { class: 'note strong' }, 'Prihlásenie nič nestojí — platíte len objednané služby'),
     el('p', { class: 'trust' }, icon('lock', 14), 'Súkromné — vaše správy vidí len tím Domovid.'),
     backLink(base)), 'login');

@@ -1,6 +1,6 @@
 -- Private "chat" bucket. Path: <conversation_id>/<message_id>/<filename>
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('chat', 'chat', false, 524288000, array['image/*','video/*','application/pdf'])
+values ('chat', 'chat', false, 52428800, array['image/*','video/*','application/pdf'])
 on conflict (id) do update set
   public = excluded.public,
   file_size_limit = excluded.file_size_limit,

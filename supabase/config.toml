@@ -11,7 +11,7 @@ major_version = 15
 
 [storage]
 enabled = true
-file_size_limit = "50MiB"   # free plan maximum; the app itself caps uploads at 500 MB client-side
+file_size_limit = "50MiB"   # free plan maximum; the app and the chat bucket use the same 50 MB cap
 
 [auth]
 enabled = true

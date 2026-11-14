@@ -121,10 +121,10 @@ async function scenario(tag, viewport, mobile) {
   check(`${tag} 6 previews cleared`, (await t('preview').count()) === 0);
 
   // 7. limits + offline
-  await page.evaluate(() => { window.__sz = Object.getOwnPropertyDescriptor(Blob.prototype, 'size'); Object.defineProperty(Blob.prototype, 'size', { get: () => 501 * 1024 * 1024, configurable: true }); });
+  await page.evaluate(() => { window.__sz = Object.getOwnPropertyDescriptor(Blob.prototype, 'size'); Object.defineProperty(Blob.prototype, 'size', { get: () => 51 * 1024 * 1024, configurable: true }); });
   await t('file-input').setInputFiles({ name: 'velke.mp4', mimeType: 'video/mp4', buffer: Buffer.from('x') });
   await page.evaluate(() => Object.defineProperty(Blob.prototype, 'size', window.__sz));
-  check(`${tag} 7 >500 MB rejected with Slovak error`, (await t('app-error').innerText()).includes('väčší ako 500 MB') && (await t('preview').count()) === 0);
+  check(`${tag} 7 >50 MB rejected with Slovak error`, (await t('app-error').innerText()).includes('väčší ako 50 MB') && (await t('preview').count()) === 0);
   await ctx.setOffline(true);
   await t('offline-banner').waitFor({ state: 'visible' });
   check(`${tag} 7 offline banner shown`, (await t('offline-banner').innerText()).includes('offline'));
