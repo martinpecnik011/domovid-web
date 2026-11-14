@@ -72,6 +72,7 @@ async function scenario(tag, viewport, mobile) {
   await t('customer-chat').waitFor();
   check(`${tag} 2 chat visible with welcome message from Domovid`, (await t('msg').count()) === 1 && (await t('msg').first().innerText()).includes('tu Domovid'));
   check(`${tag} 2 mock switch visible only in mock mode`, await t('mock-switch').isVisible());
+  check(`${tag} 2 customer has no admin tabs`, (await t('staff-tabs').count()) === 0);
 
   // 3. send text; colours
   await sendText('Dobrý deň, mám otázku k videu');
@@ -188,6 +189,15 @@ async function scenario(tag, viewport, mobile) {
   await t('staff-inbox').waitFor();
   await t('conv-item').first().waitFor();
   check(`${tag} 9 staff list has the customer's conversation`, (await t('conv-item').count()) === 1 && (await t('conv-item').first().innerText()).includes('Jana Nováková'));
+  // admin tools: tabs Chaty / Kalkulačka / Domo dashboard, then back to the chats
+  check(`${tag} 9a admin tabs present`, (await t('staff-tabs').isVisible()) && (await t('stab-chat').getAttribute('aria-pressed')) === 'true');
+  await t('stab-calc').click();
+  await t('calc-frame').waitFor();
+  check(`${tag} 9a calculator loads from the private store in a frame`, (await page.frameLocator('[data-testid=calc-frame]').locator('h1').innerText()).includes('kalkulacka.html') && (await t('staff-inbox').isHidden()));
+  await t('stab-dash').click();
+  check(`${tag} 9a dashboard tab links to the PIN-protected dashboard`, (await t('open-dashboard').getAttribute('href')) === 'http://localhost:4800/' && (await t('open-dashboard').getAttribute('target')) === '_blank');
+  await t('stab-chat').click();
+  await t('staff-inbox').waitFor();
   if (mobile) {
     check(`${tag} 9 unread badge = 6 customer messages`, (await t('unread-badge').innerText()) === '6');
     await noOverflow('staff list');

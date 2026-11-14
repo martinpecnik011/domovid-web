@@ -190,6 +190,28 @@ check('15i A updates own addons (0 rows, unchanged)', (r.error || r.rows.length 
 r = await as(A, `insert into public.addons (code) values ('x')`);
 check('15j A inserts addon', !!r.error && /permission denied/.test(r.error), r.error || 'NO ERROR');
 
+// Gate 16: admin allow-list and the staff-only bucket
+await db.exec(`insert into public.staff_emails (email) values ('admin2@domovid.test')`);
+await db.exec(`insert into auth.users (id,email,raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000d1','Admin2@Domovid.test','{}')`);
+const adm = await q1(`select role, (select count(*) from public.conversations where customer_id='00000000-0000-0000-0000-0000000000d1') c from public.profiles where id='00000000-0000-0000-0000-0000000000d1'`);
+check('16a listed e-mail (any case) signs up as staff without a conversation', adm.role === 'staff' && +adm.c === 0, JSON.stringify(adm));
+await db.exec(`insert into auth.users (id,email,raw_user_meta_data) values ('00000000-0000-0000-0000-0000000000e1','e@domovid.test','{}')`);
+const cust = await q1(`select role, (select count(*) from public.conversations where customer_id='00000000-0000-0000-0000-0000000000e1') c from public.profiles where id='00000000-0000-0000-0000-0000000000e1'`);
+check('16b unlisted e-mail signs up as customer with a conversation', cust.role === 'customer' && +cust.c === 1, JSON.stringify(cust));
+await db.exec(`insert into public.staff_emails (email) values ('e@domovid.test')`);
+check('16c adding an existing user to the list promotes them', (await q1(`select role from public.profiles where id='00000000-0000-0000-0000-0000000000e1'`)).role === 'staff', 'role');
+r = await as(A, `select * from public.staff_emails`);
+check('16d customer cannot read the admin list', !!r.error || r.rows.length === 0, r.error || 'rows=' + r.rows.length);
+r = await as(A, `insert into public.staff_emails (email) values ('evil@x.test')`);
+check('16e customer cannot add an admin', !!r.error, r.error || 'NO ERROR');
+await db.exec(`insert into storage.objects (bucket_id, name) values ('staff', 'kalkulacka.html')`);
+r = await as(A, `select name from storage.objects where bucket_id='staff'`);
+check('16f customer cannot see staff tools', !r.error && r.rows.length === 0, r.error || 'rows=' + r.rows.length);
+r = await as(STAFF, `select name from storage.objects where bucket_id='staff'`, 'aal1');
+check('16g staff without MFA cannot see staff tools', !r.error && r.rows.length === 0, r.error || 'rows=' + r.rows.length);
+r = await as(STAFF, `select name from storage.objects where bucket_id='staff'`);
+check('16h staff with MFA sees staff tools', !r.error && r.rows.length === 1, r.error || 'rows=' + r.rows.length);
+
 if (process.env.FORCE_FAIL) check('FORCE_FAIL deliberate failure', false, 'FORCE_FAIL=1');
 
 console.log(failed ? `\n${failed} assertion(s) FAILED` : '\nALL ASSERTIONS PASSED');

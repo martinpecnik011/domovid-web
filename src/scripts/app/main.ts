@@ -1,4 +1,4 @@
-import { isConfigured } from '../../config/supabase';
+import { isConfigured, DASHBOARD_URL, CALCULATOR_FILE } from '../../config/supabase';
 import { messagesToCsv, downloadText } from './csv';
 import type { Adapter, Addon, ContentItem, Conversation, Message, Plan, Profile, Session, Subscription } from './types';
 import { el, icon, label, initials, dayLabel, fmtTime, fmtDay, fmtSize, uuid, safeHttp, errorBox, showError, NS } from './dom';
@@ -380,7 +380,39 @@ async function renderApp() {
     adapter.mock ? el('button', { type: 'button', class: 'mock-pill', 'data-testid': 'mock-switch', onclick: () => adapter.mock!.switchTo(staff ? 'customer' : 'staff') }, staff ? 'Mock: prepnúť na zákazníka' : 'Mock: prepnúť na staff') : null,
     el('button', { type: 'button', class: 'btn btn-ghost small', 'data-testid': 'profile-open', 'aria-label': 'Profil', onclick: openProfile }, icon('user', 16), el('span', { class: 'btn-txt' }, 'Profil')),
     el('button', { type: 'button', class: 'btn btn-ghost small', 'aria-label': 'Odhlásiť', 'data-testid': 'sign-out', onclick: () => { void adapter.auth.signOut(); } }, icon('out', 16), el('span', { class: 'btn-txt' }, 'Odhlásiť')));
-  root.replaceChildren(header, ...(staff ? [] : [tabs]), shell);
+  // admins: Chaty (all customers) / Kalkulačka (private bucket) / Domo dashboard (PIN on the Mac)
+  type StaffView = 'chat' | 'calc' | 'dash';
+  const staffPage = el('section', { class: 'page wide', hidden: true, 'data-testid': 'staff-page', 'aria-live': 'polite' });
+  const staffTabDefs: [StaffView, string][] = [['chat', 'Chaty'], ['calc', 'Kalkulačka'], ['dash', 'Domo dashboard']];
+  const staffTabs = el('div', { class: 'tabs', role: 'group', 'aria-label': 'Sekcie tímu', 'data-testid': 'staff-tabs' });
+  const staffTabBtns = staffTabDefs.map(([v, t]) => el('button', { type: 'button', class: 'tab', 'aria-pressed': v === 'chat' ? 'true' : 'false', 'data-testid': `stab-${v}`, onclick: () => { void setStaffView(v); } }, t));
+  staffTabs.append(...staffTabBtns);
+  async function setStaffView(v: StaffView) {
+    staffTabBtns.forEach((b, i) => b.setAttribute('aria-pressed', String(staffTabDefs[i][0] === v)));
+    shell.hidden = v !== 'chat'; staffPage.hidden = v === 'chat';
+    if (v === 'dash') {
+      staffPage.replaceChildren(el('div', { class: 'page-in tool-card' },
+        el('h2', { class: 'page-title' }, 'Domo dashboard'),
+        el('p', { class: 'muted' }, 'Prehľad zákaziek, taskov, stretnutí a schvaľovania od agenta Domo. Otvorí sa v novom okne a vypýta váš PIN.'),
+        el('a', { class: 'btn btn-gold', href: DASHBOARD_URL, target: '_blank', rel: 'noopener noreferrer', 'data-testid': 'open-dashboard' }, icon('plan', 16), 'Otvoriť dashboard'),
+        el('p', { class: 'note' }, 'Dashboard beží na počítači Domovidu; mimo neho sa otvorí až po zapnutí vzdialeného prístupu.')));
+      return;
+    }
+    if (v === 'calc') {
+      staffPage.replaceChildren(el('p', { class: 'loading' }, 'Načítavame kalkulačku…'));
+      try {
+        const html = await adapter.data.getStaffTool(CALCULATOR_FILE);
+        const frame = el('iframe', { class: 'tool-frame', title: 'Kalkulačka Domovid', sandbox: 'allow-scripts allow-same-origin allow-downloads allow-popups allow-modals', 'data-testid': 'calc-frame' });
+        frame.srcdoc = html;
+        staffPage.replaceChildren(frame);
+      } catch {
+        staffPage.replaceChildren(el('div', { class: 'page-in tool-card' },
+          el('h2', { class: 'page-title' }, 'Kalkulačka'),
+          el('p', { class: 'muted', 'data-testid': 'calc-error' }, 'Kalkulačku sa nepodarilo načítať. Je prístupná len adminom s overením v dvoch krokoch.')));
+      }
+    }
+  }
+  root.replaceChildren(header, staff ? staffTabs : tabs, shell, ...(staff ? [staffPage] : []));
 
   activeId = null;
   convs = await adapter.data.listConversations();

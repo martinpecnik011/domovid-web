@@ -5,4 +5,9 @@ export const SUPABASE_ANON_KEY: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e
 export const isConfigured: boolean = SUPABASE_URL !== 'REPLACE' && SUPABASE_ANON_KEY !== 'REPLACE';
 
 /** Google sign-in is offered only once the OAuth client is set up in Supabase (Authentication → Providers → Google). */
-export const GOOGLE_LOGIN: boolean = false;
+export const GOOGLE_LOGIN: boolean = true;
+
+/** Domo dashboard (runs on the Domovid Mac, asks for the team PIN itself). Shown to admins only. */
+export const DASHBOARD_URL: string = 'http://localhost:4800/';
+/** Staff tools in the private `staff` bucket. The calculator's inline script is allowed by its hash in SecurityMeta.astro. */
+export const CALCULATOR_FILE = 'kalkulacka.html';

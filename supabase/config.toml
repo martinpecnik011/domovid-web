@@ -68,6 +68,6 @@ secret = "env(SUPABASE_AUTH_CAPTCHA_SECRET)"
 # inactivity_timeout = "8h"
 
 [auth.external.google]
-enabled = false
+enabled = true
 client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
