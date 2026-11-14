@@ -48,10 +48,10 @@ Pozor: `supabase/seed.sql` je len na lokálne testovanie. Do ostrej databázy sa
 ## 4. Nastavenia prihlasovania (Auth)
 
 1. **Authentication → URL Configuration**:
-   - Site URL: `https://martinpecnik011.github.io/domovid-web/app/`
+   - Site URL: `https://domovid.sk/app/`
    - Redirect URLs (pridaj všetky):
-     - `http://localhost:4321/domovid-web/app/`
-     - `https://martinpecnik011.github.io/domovid-web/app/`
+     - `http://localhost:4321/app/`
+     - `https://domovid.sk/app/`
 2. **Authentication → Providers → Email**: zapni (prihlásenie jednorazovým kódom; heslo netreba). Nastav **OTP length = 6** a **OTP expiry = 600 s** (10 minút). Lokálne to nastaví `supabase/config.toml`; v cloude to nastav v dashboarde (odporúčané, vizuálne skontroluj) alebo cez `npx supabase config push` (spustí Claude).
 3. **Google provider:**
    1. Choď na https://console.cloud.google.com → vyber/vytvor projekt → **APIs & Services → Credentials → Create credentials → OAuth client ID**.

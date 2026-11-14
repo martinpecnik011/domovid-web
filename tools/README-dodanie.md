@@ -33,7 +33,7 @@ Po prijatí platby na účet (nastaví aj `Videá!Q`):
 python3 tools/dodaj_video.py --mark-paid ID --r2-bucket domovid-videa
 ```
 
-Na konci skript vypíše odkaz pre klienta `https://martinpecnik011.github.io/domovid-web/video/?id=ID`,
+Na konci skript vypíše odkaz pre klienta `https://domovid.sk/video/?id=ID`,
 veľkosť a bitrate mastera.
 
 ### Voliteľná 16:9 verzia
@@ -127,7 +127,7 @@ Testy: `python3 -m unittest tests/delivery/test_balik.py -v`.
      "rules": [
        {
          "allowed": {
-           "origins": ["https://martinpecnik011.github.io", "http://localhost:4321"],
+           "origins": ["https://domovid.sk", "https://www.domovid.sk", "https://martinpecnik011.github.io", "http://localhost:4321"],
            "methods": ["GET", "HEAD"],
            "headers": ["*"]
          },

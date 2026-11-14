@@ -42,4 +42,4 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
-Sitemap: https://martinpecnik011.github.io/domovid-web/sitemap-index.xml
+Sitemap: https://domovid.sk/sitemap-index.xml

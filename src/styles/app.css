@@ -131,7 +131,7 @@ input::placeholder, textarea::placeholder { color: #7f93a3; }
 
 /* thread */
 .thread { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 16px 16px 8px; }
-.pane { background-image: url('/domovid-web/media/logo-mark.svg'), radial-gradient(120% 80% at 50% 0%, rgba(224, 173, 85, 0.08), transparent 60%), linear-gradient(180deg, #0f1c26, #0b151d); background-repeat: no-repeat; background-position: center 58%, 0 0, 0 0; background-size: min(60%, 400px), cover, cover; }
+.pane { background-image: url('/media/logo-mark.svg'), radial-gradient(120% 80% at 50% 0%, rgba(224, 173, 85, 0.08), transparent 60%), linear-gradient(180deg, #0f1c26, #0b151d); background-repeat: no-repeat; background-position: center 58%, 0 0, 0 0; background-size: min(60%, 400px), cover, cover; }
 .day-sep { align-self: center; margin: 6px 0; }
 .day-sep span { padding: 3px 12px; border-radius: 999px; background: rgba(245, 240, 232, 0.07); color: var(--muted); font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.06em; }
 .empty { margin: auto; display: grid; justify-items: center; gap: 10px; text-align: center; padding: 20px; color: var(--muted); }
