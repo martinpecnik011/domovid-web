@@ -42,7 +42,7 @@ host = "smtp-relay.brevo.com"
 port = 587
 user = "c2ddbe001@smtp-brevo.com"
 pass = "env(BREVO_SMTP_KEY)"
-admin_email = "domo.vid001@gmail.com"
+admin_email = "noreply@domovid.sk"
 sender_name = "Domovid"
 
 [auth.rate_limit]
