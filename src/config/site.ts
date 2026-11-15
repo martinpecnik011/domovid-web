@@ -20,6 +20,8 @@ export const OG_TITLE = 'Domovid – videá, vizualizácie a sociálne siete pre
 export const SITE_NAME = 'Domovid';
 export const INSTAGRAM_URL = 'https://www.instagram.com/domo_vid/';
 export const FACEBOOK_URL = 'https://www.facebook.com/1216967761499957';
+export const YOUTUBE_URL = 'https://www.youtube.com/channel/UCWXzPKsNvPx8M2yosZ43k0Q';
+export const TIKTOK_URL = 'https://www.tiktok.com/@domo_vid';
 /** Square brand mark (512 × 512), path relative to the site root. */
 export const LOGO_PATH = 'media/logo.png';
 export const SERVICE_TYPE = 'Video z fotiek nehnuteľnosti pre realitných maklérov';

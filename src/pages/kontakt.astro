@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { CONTACT_EMAIL, INSTAGRAM_URL, FACEBOOK_URL, DELIVERY } from '../config/site';
+import { CONTACT_EMAIL, INSTAGRAM_URL, FACEBOOK_URL, YOUTUBE_URL, TIKTOK_URL, DELIVERY } from '../config/site';
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 ---
@@ -23,6 +23,8 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
       <li><span class="eyebrow">E-mail</span><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
       <li><span class="eyebrow">Instagram</span><a href={INSTAGRAM_URL} target="_blank" rel="noopener">@domo_vid</a></li>
       <li><span class="eyebrow">Facebook</span><a href={FACEBOOK_URL} target="_blank" rel="noopener">Domovid</a></li>
+      <li><span class="eyebrow">YouTube</span><a href={YOUTUBE_URL} target="_blank" rel="noopener">Domovid</a></li>
+      <li><span class="eyebrow">TikTok</span><a href={TIKTOK_URL} target="_blank" rel="noopener">@domo_vid</a></li>
       <li><span class="eyebrow">Platba</span><span>Prvé video zadarmo, potom polovica vopred a polovica po odovzdaní, prevodom na účet (IBAN).</span></li>
     </ul>
   </main>
