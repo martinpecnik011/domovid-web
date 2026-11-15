@@ -56,6 +56,7 @@ export function createReal(base: string): Adapter {
         if (error) throw new Error(error.message);
       },
       async getSession() { return toSession((await sb.auth.getSession()).data.session); },
+      async accessToken() { return (await sb.auth.getSession()).data.session?.access_token ?? null; },
       async signOut() { await sb.auth.signOut(); },
       onAuthStateChange(cb) {
         // supabase-js must not be called from inside its own callback: defer.

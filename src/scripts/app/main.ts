@@ -382,22 +382,31 @@ async function renderApp() {
     adapter.mock ? el('button', { type: 'button', class: 'mock-pill', 'data-testid': 'mock-switch', onclick: () => adapter.mock!.switchTo(staff ? 'customer' : 'staff') }, staff ? 'Mock: prepnúť na zákazníka' : 'Mock: prepnúť na staff') : null,
     el('button', { type: 'button', class: 'btn btn-ghost small', 'data-testid': 'profile-open', 'aria-label': 'Profil', onclick: openProfile }, icon('user', 16), el('span', { class: 'btn-txt' }, 'Profil')),
     el('button', { type: 'button', class: 'btn btn-ghost small', 'aria-label': 'Odhlásiť', 'data-testid': 'sign-out', onclick: () => { void adapter.auth.signOut(); } }, icon('out', 16), el('span', { class: 'btn-txt' }, 'Odhlásiť')));
-  // admins: Chaty (all customers) / Kalkulačka (private bucket) / Domo dashboard (PIN on the Mac)
+  // admins: Chaty (all customers) / Kalkulačka (private bucket) / Domo dashboard (signed in with this admin account)
   type StaffView = 'chat' | 'calc' | 'dash';
   const staffPage = el('section', { class: 'page wide', hidden: true, 'data-testid': 'staff-page', 'aria-live': 'polite' });
   const staffTabDefs: [StaffView, string][] = [['chat', 'Chaty'], ['calc', 'Kalkulačka'], ['dash', 'Domo dashboard']];
   const staffTabs = el('div', { class: 'tabs', role: 'group', 'aria-label': 'Sekcie tímu', 'data-testid': 'staff-tabs' });
   const staffTabBtns = staffTabDefs.map(([v, t]) => el('button', { type: 'button', class: 'tab', 'aria-pressed': v === 'chat' ? 'true' : 'false', 'data-testid': `stab-${v}`, onclick: () => { void setStaffView(v); } }, t));
   staffTabs.append(...staffTabBtns);
+  // The window opens synchronously (popup blockers); the token goes in the fragment, which no server logs.
+  function openDashboard(e: Event) {
+    e.preventDefault();
+    const w = window.open('', '_blank');
+    void adapter.auth.accessToken().then((t) => {
+      const url = t ? `${DASHBOARD_URL}login#sb=${encodeURIComponent(t)}` : DASHBOARD_URL;
+      if (w) { w.opener = null; w.location.href = url; } else location.href = url;
+    });
+  }
   async function setStaffView(v: StaffView) {
     staffTabBtns.forEach((b, i) => b.setAttribute('aria-pressed', String(staffTabDefs[i][0] === v)));
     shell.hidden = v !== 'chat'; staffPage.hidden = v === 'chat';
     if (v === 'dash') {
       staffPage.replaceChildren(el('div', { class: 'page-in tool-card' },
         el('h2', { class: 'page-title' }, 'Domo dashboard'),
-        el('p', { class: 'muted' }, 'Prehľad zákaziek, taskov, stretnutí a schvaľovania od agenta Domo. Otvorí sa v novom okne a vypýta váš PIN.'),
-        el('a', { class: 'btn btn-gold', href: DASHBOARD_URL, target: '_blank', rel: 'noopener noreferrer', 'data-testid': 'open-dashboard' }, icon('plan', 16), 'Otvoriť dashboard'),
-        el('p', { class: 'note' }, 'Dashboard beží na počítači Domovidu; mimo neho sa otvorí až po zapnutí vzdialeného prístupu.')));
+        el('p', { class: 'muted' }, 'Prehľad zákaziek, taskov, stretnutí a schvaľovania od agenta Domo. Otvorí sa v novom okne a prihlási vás týmto admin účtom.'),
+        el('a', { class: 'btn btn-gold', href: DASHBOARD_URL, target: '_blank', rel: 'noopener noreferrer', 'data-testid': 'open-dashboard', onclick: openDashboard }, icon('plan', 16), 'Otvoriť dashboard'),
+        el('p', { class: 'note' }, 'Dashboard beží na počítači Domovidu, takže musí byť zapnutý.')));
       return;
     }
     if (v === 'calc') {

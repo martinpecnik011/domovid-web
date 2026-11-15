@@ -58,6 +58,8 @@ export interface Adapter {
     mfaVerify(factorId: string, code: string): Promise<void>;
     signInWithOAuth(provider: 'google'): Promise<void>;
     getSession(): Promise<Session | null>;
+    /** Current access token (hands the admin sign-in to the Domo dashboard). */
+    accessToken(): Promise<string | null>;
     signOut(): Promise<void>;
     onAuthStateChange(cb: (s: Session | null) => void): () => void;
   };

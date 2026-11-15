@@ -204,7 +204,13 @@ async function scenario(tag, viewport, mobile) {
   await t('calc-frame').waitFor();
   check(`${tag} 9a calculator loads from the private store in a frame`, (await page.frameLocator('[data-testid=calc-frame]').locator('h1').innerText()).includes('kalkulacka.html') && (await t('staff-inbox').isHidden()));
   await t('stab-dash').click();
-  check(`${tag} 9a dashboard tab links to the PIN-protected dashboard`, (await t('open-dashboard').getAttribute('href')) === 'http://localhost:4800/' && (await t('open-dashboard').getAttribute('target')) === '_blank');
+  check(`${tag} 9a dashboard tab links to the dashboard`, (await t('open-dashboard').getAttribute('href')) === 'http://localhost:4800/' && (await t('open-dashboard').getAttribute('target')) === '_blank');
+  // Never reach the real dashboard on the Mac: answer the popup with an empty page.
+  await ctx.route('http://localhost:4800/**', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>dash</title>' }));
+  const [popup] = await Promise.all([ctx.waitForEvent('page'), t('open-dashboard').click()]);
+  await popup.waitForURL(/localhost:4800/);
+  check(`${tag} 9a dashboard opens signed in with the admin token`, popup.url() === 'http://localhost:4800/login#sb=mock-access-token', popup.url());
+  await popup.close();
   await t('stab-chat').click();
   await t('staff-inbox').waitFor();
   if (mobile) {

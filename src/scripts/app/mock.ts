@@ -111,6 +111,7 @@ export function createMock(): Adapter {
       },
       async signInWithOAuth() { const db = load(); signInCustomer(db, 'google.zakaznik@example.com'); save(db); emitAuth(db); },
       async getSession() { return sessionOf(load()); },
+      async accessToken() { return load().session ? 'mock-access-token' : null; },
       async signOut() { const db = load(); db.session = null; save(db); emitAuth(db); },
       onAuthStateChange(cb) { authCbs.add(cb); return () => { authCbs.delete(cb); }; },
     },
