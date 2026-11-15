@@ -313,7 +313,7 @@ function sendConfirmation(email, name, photoCount, phone, discount, warning, fro
       discountLine +
       (warning ? warning + '\n\n' : '') +
       'Martin Pecník, Domovid\n' +
-      'https://martinpecnik011.github.io/domovid-web/\n\n' +
+      'https://domovid.sk/\n\n' +
       'Tento e-mail vám prišiel, lebo ste vyplnili formulár na webe Domovid. ' +
       'Ak ste to neboli vy, stačí odpovedať a údaje vymažeme.'
   });

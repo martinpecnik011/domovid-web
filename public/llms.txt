@@ -31,13 +31,13 @@
 
 ## Stránky
 
-- [Domov](https://martinpecnik011.github.io/domovid-web/): prehľad služieb a formulár
-- [Videá nehnuteľností](https://martinpecnik011.github.io/domovid-web/videa-z-fotiek/)
-- [Vizualizácie](https://martinpecnik011.github.io/domovid-web/vizualizacie/)
-- [Sociálne siete](https://martinpecnik011.github.io/domovid-web/socialne-siete/)
-- [Ukážky](https://martinpecnik011.github.io/domovid-web/ukazky/)
-- [Cenník](https://martinpecnik011.github.io/domovid-web/cennik/)
-- [Kontakt](https://martinpecnik011.github.io/domovid-web/kontakt/)
-- [Ochrana osobných údajov](https://martinpecnik011.github.io/domovid-web/ochrana-sukromia/)
-- [Podmienky používania](https://martinpecnik011.github.io/domovid-web/podmienky/)
-- [Cookies](https://martinpecnik011.github.io/domovid-web/cookies/)
+- [Domov](https://domovid.sk/): prehľad služieb a formulár
+- [Videá nehnuteľností](https://domovid.sk/videa-z-fotiek/)
+- [Vizualizácie](https://domovid.sk/vizualizacie/)
+- [Sociálne siete](https://domovid.sk/socialne-siete/)
+- [Ukážky](https://domovid.sk/ukazky/)
+- [Cenník](https://domovid.sk/cennik/)
+- [Kontakt](https://domovid.sk/kontakt/)
+- [Ochrana osobných údajov](https://domovid.sk/ochrana-sukromia/)
+- [Podmienky používania](https://domovid.sk/podmienky/)
+- [Cookies](https://domovid.sk/cookies/)

@@ -1,6 +1,6 @@
 # Domovid web
 
-Landing page Domovid pre realitných maklérov: https://martinpecnik011.github.io/domovid-web/
+Landing page Domovid pre realitných maklérov: https://domovid.sk/
 
 Statický web v [Astro](https://astro.build) 5, nasadzovaný na GitHub Pages cez GitHub Actions.
 
@@ -27,7 +27,7 @@ Fonty (Archivo variable s osou šírky, Figtree, JetBrains Mono) sú self-hostov
 
 ```bash
 npm install
-npm run dev       # vývojový server: http://localhost:4321/domovid-web/
+npm run dev       # vývojový server: http://localhost:4321/
 npm run build     # statický výstup do dist/ (+ sitemap)
 npm run preview   # náhľad buildu z dist/
 ```

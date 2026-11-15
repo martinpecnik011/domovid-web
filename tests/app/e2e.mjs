@@ -9,7 +9,7 @@ const require = createRequire(process.env.PW_PATH + '/');
 const { chromium } = require('playwright');
 const { SCR } = process.env;
 const SITE = process.env.SITE || 'http://localhost:4471';
-const URL_APP = (process.env.SITE || 'http://localhost:4471') + '/domovid-web/app/?mock=1';
+const URL_APP = (process.env.SITE || 'http://localhost:4471') + '/app/?mock=1';
 const fails = [];
 const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name} ${info}`); if (!ok) fails.push(name); };
 fs.mkdirSync(SCR, { recursive: true });
@@ -43,7 +43,7 @@ async function scenario(tag, viewport, mobile) {
   // 1. login screen
   await page.goto(URL_APP);
   await t('login').waitFor();
-  check(`${tag} 1 noindex + manifest link`, (await page.locator('meta[name=robots]').getAttribute('content')) === 'noindex, nofollow' && (await page.locator('link[rel=manifest]').getAttribute('href')) === '/domovid-web/manifest.webmanifest');
+  check(`${tag} 1 noindex + manifest link`, (await page.locator('meta[name=robots]').getAttribute('content')) === 'noindex, nofollow' && (await page.locator('link[rel=manifest]').getAttribute('href')) === '/manifest.webmanifest');
   const lt = await t('login').innerText();
   check(`${tag} 1 login copy (hint, Google, no-cost note)`, lt.includes('Pošleme vám 6-miestny kód') && !/odkaz/i.test(lt.replace(/\s+/g, ' ')) && lt.includes('Pokračovať cez Google') && lt.includes('Prihlásenie nič nestojí — platíte len objednané služby') && lt.includes('Domovid'));
   check(`${tag} 1 e-mail input has a label`, (await page.getByLabel('E-mail').count()) === 1);
@@ -288,7 +288,7 @@ async function scenario(tag, viewport, mobile) {
   check(`${tag} 11 customer sees staff reply after reload`, (await page.getByText('Ahoj, "zdravím" z Domovidu').count()) === 1 && (await t('att-image').count()) === 1);
 
   // 12. customer: Môj plán / Cenník
-  check(`${tag} 12 header: logo + "Späť na web" both link to BASE_URL in the same tab`, (await t('back-to-web').getAttribute('href')) === '/domovid-web/' && (await t('logo-link').getAttribute('href')) === '/domovid-web/' && !(await t('back-to-web').getAttribute('target')) && (await t('back-to-web').innerText()).includes('Späť na web'));
+  check(`${tag} 12 header: logo + "Späť na web" both link to BASE_URL in the same tab`, (await t('back-to-web').getAttribute('href')) === '/' && (await t('logo-link').getAttribute('href')) === '/' && !(await t('back-to-web').getAttribute('target')) && (await t('back-to-web').innerText()).includes('Späť na web'));
   await t('tab-plan').click();
   await t('sub-card').first().waitFor();
   const social = page.locator('[data-testid=sub-card][data-category=social]');
@@ -365,7 +365,7 @@ async function socialScenario(tag, viewport, mobile) {
   const t = (id) => page.getByTestId(id);
   const noOverflow = async (n) => check(`${tag} ${n}: no horizontal overflow`, !(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)));
   const sum = () => t('offer-sum').innerText();
-  const base = SITE + '/domovid-web/';
+  const base = SITE + '/';
 
   await page.goto(base + 'socialne-siete/');
   const html = await page.locator('main').innerText();
@@ -375,7 +375,7 @@ async function socialScenario(tag, viewport, mobile) {
   await noOverflow('socialne-siete');
   await page.screenshot({ path: path.join(SCR, `social-page-${tag}.png`), fullPage: true });
   const href = await page.locator('.pr-row', { hasText: '30 videí' }).getByRole('link', { name: 'Chcem ponuku' }).getAttribute('href');
-  check(`${tag} social: plan CTA goes to the app offer`, href === '/domovid-web/app/?ponuka=1&sluzba=social&balik=30', href);
+  check(`${tag} social: plan CTA goes to the app offer`, href === '/app/?ponuka=1&sluzba=social&balik=30', href);
 
   // login first, then the questionnaire opens prefilled
   await page.goto(SITE + href + '&mock=1');
@@ -435,9 +435,9 @@ async function miniChatScenario(tag, viewport, mobile) {
   page.on('pageerror', (e) => errs.push(String(e)));
   page.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
   const t = (id) => page.getByTestId(id);
-  await page.goto(SITE + '/domovid-web/');
+  await page.goto(SITE + '/');
   await t('register-prompt').waitFor({ state: 'visible', timeout: 5000 });
-  check(`${tag} sign-up prompt opens right after the page loads`, (await t('rp-google').getAttribute('href')) === '/domovid-web/app/?registracia=1&google=1' && (await t('rp-email').getAttribute('href')) === '/domovid-web/app/?registracia=1');
+  check(`${tag} sign-up prompt opens right after the page loads`, (await t('rp-google').getAttribute('href')) === '/app/?registracia=1&google=1' && (await t('rp-email').getAttribute('href')) === '/app/?registracia=1');
   await t('register-prompt').getByRole('button', { name: 'Teraz nie' }).click();
   await page.reload();
   await page.waitForTimeout(1600);
@@ -445,7 +445,7 @@ async function miniChatScenario(tag, viewport, mobile) {
   check(`${tag} mini chat stays closed until clicked`, await page.locator('#cb-panel').isHidden());
   await page.locator('.cb-bubble').click();
   check(`${tag} minichat: sign-up and sign-in offered`, (await page.getByRole('link', { name: 'Zaregistrovať sa' }).isVisible()) && (await page.locator('[data-cb-auth]').getByRole('link', { name: 'Prihlásiť sa' }).isVisible()));
-  await page.evaluate(() => { document.getElementById('cb').dataset.app = '/domovid-web/app/?mock=1'; });
+  await page.evaluate(() => { document.getElementById('cb').dataset.app = '/app/?mock=1'; });
   await page.locator('#cb-text').fill('Dobrý deň, mám byt v centre.');
   await page.locator('.cb-send').click();
   await page.waitForURL(/\/app\//);
@@ -460,7 +460,7 @@ async function miniChatScenario(tag, viewport, mobile) {
   await page.reload();
   await t('login').waitFor();
   check(`${tag} after 30 days the customer is signed out with an explanation`, (await t('app-error').innerText()).includes('po 30 dňoch'));
-  await page.goto(SITE + '/domovid-web/app/?mock=1&registracia=1');
+  await page.goto(SITE + '/app/?mock=1&registracia=1');
   check(`${tag} minichat: sign-up link opens "Vytvorte si účet" (or the chat when signed in)`, (await t('login-signup-note').count()) === 1 || (await t('composer-text').count()) === 1);
   check(`${tag} minichat no console/page errors`, errs.length === 0, errs.join(' | '));
   await ctx.close();

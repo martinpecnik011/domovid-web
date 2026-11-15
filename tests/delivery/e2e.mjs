@@ -16,7 +16,7 @@ const WORK = process.env.WORK || path.join(SCR, 'work');
 const R2 = path.join(WORK, 'r2');
 const SHEET = path.join(WORK, 'sheet.json');
 const R2_BASE = 'http://localhost:8860';
-const BASE = (process.env.SITE || 'http://localhost:4460') + '/domovid-web/video/?id=';
+const BASE = (process.env.SITE || 'http://localhost:4460') + '/video/?id=';
 const IBAN = fs.readFileSync(path.join(HERE, 'fixtures', 'iban.txt'), 'utf8').split('\n')[0].replace(/\s+/g, '').toUpperCase();
 const [NP, PK, RN] = ['nopkg0000001', 'pkg000000001', 'renew0000001'];
 const fails = [];

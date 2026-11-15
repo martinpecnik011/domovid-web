@@ -15,8 +15,8 @@ file_size_limit = "50MiB"   # free plan maximum; the app and the chat bucket use
 
 [auth]
 enabled = true
-site_url = "https://martinpecnik011.github.io/domovid-web/app/"
-additional_redirect_urls = ["http://localhost:4321/domovid-web/app/"]
+site_url = "https://domovid.sk/app/"
+additional_redirect_urls = ["https://www.domovid.sk/app/", "https://martinpecnik011.github.io/domovid-web/app/", "http://localhost:4321/app/", "http://127.0.0.1:4322/app/"]
 jwt_expiry = 3600
 enable_signup = true
 

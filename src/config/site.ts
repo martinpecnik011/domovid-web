@@ -1,5 +1,5 @@
 /** Public site URL (GitHub Pages project site), with trailing slash. */
-export const SITE_URL = 'https://martinpecnik011.github.io/domovid-web/';
+export const SITE_URL = 'https://domovid.sk/';
 
 /** Who answers and from which address the confirmation e-mail comes (Apps Script runs under this account). */
 /** Genitive for "od …" (from …). */

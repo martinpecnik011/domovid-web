@@ -1,5 +1,5 @@
 const CACHE = 'domovid-v2';
-const BASE = '/domovid-web/';
+const BASE = '/';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.add(BASE)).then(() => self.skipWaiting()));
@@ -44,7 +44,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (/^\/domovid-web\/(_astro|icons|media)\//.test(url.pathname) || /\.(css|js|woff2?|png|jpe?g|webp|avif|svg)$/.test(url.pathname)) {
+  if (/^\/(_astro|icons|media)\//.test(url.pathname) || /\.(css|js|woff2?|png|jpe?g|webp|avif|svg)$/.test(url.pathname)) {
     event.respondWith(
       caches.match(req).then((hit) => hit || fetch(req).then((res) => {
         if (res.ok) {

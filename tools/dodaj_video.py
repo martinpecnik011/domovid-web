@@ -22,7 +22,7 @@ import balik
 
 os.environ["PATH"] = "/opt/homebrew/bin:" + os.environ.get("PATH", "")
 
-BASE_URL = "https://martinpecnik011.github.io/domovid-web/video/"
+BASE_URL = "https://domovid.sk/video/"
 BADGE = "DEMO · DOMOVID"
 FONTS = [
     "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
