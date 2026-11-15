@@ -90,7 +90,11 @@ export function createReal(base: string): Adapter {
         if (atts.length) {
           const signed = ok(await sb.storage.from(BUCKET).createSignedUrls(atts.map((a) => a.storage_path), 3600));
           const byPath = new Map(signed.map((s) => [s.path, s.signedUrl]));
-          atts.forEach((a: Attachment) => { a.url = byPath.get(a.storage_path) ?? undefined; });
+          // Videos also get a download link: Content-Disposition attachment, original file untouched.
+          const videos = atts.filter((a) => a.mime_type.startsWith('video/'));
+          const dl = videos.length ? ok(await sb.storage.from(BUCKET).createSignedUrls(videos.map((a) => a.storage_path), 3600, { download: true })) : [];
+          const dlByPath = new Map(dl.map((s) => [s.path, s.signedUrl]));
+          atts.forEach((a: Attachment) => { a.url = byPath.get(a.storage_path) ?? undefined; a.download_url = dlByPath.get(a.storage_path) ?? undefined; });
         }
         return rows.map((m) => ({ ...m, attachments: m.attachments ?? [] }));
       },

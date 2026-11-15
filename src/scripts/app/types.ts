@@ -8,6 +8,8 @@ export interface Attachment {
   mime_type: string; size_bytes: number; original_name: string;
   /** Display URL (signed URL / data URL); filled by the adapter. */
   url?: string;
+  /** Same file, served as a download of the original bytes (full quality). */
+  download_url?: string;
 }
 export interface Message {
   id: string; conversation_id: string; sender_id: string; kind: Kind; body: string | null;

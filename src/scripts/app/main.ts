@@ -46,7 +46,9 @@ const senderName = (m: Message): string => {
 function renderAttachment(a: Message['attachments'][number]): Node {
   if (!a.url) return el('p', { class: 'file' }, icon('link', 16), a.original_name);
   if (a.mime_type.startsWith('image/')) return el('a', { class: 'media', href: a.url, target: '_blank', rel: 'noopener' }, el('img', { src: a.url, alt: a.original_name, loading: 'lazy', 'data-testid': 'att-image' }));
-  if (a.mime_type.startsWith('video/')) return el('video', { class: 'media', src: a.url, controls: true, playsinline: true, preload: 'metadata', 'aria-label': a.original_name, 'data-testid': 'att-video' });
+  if (a.mime_type.startsWith('video/')) return el('div', { class: 'att-video' },
+    el('video', { class: 'media', src: a.url, controls: true, playsinline: true, preload: 'metadata', 'aria-label': a.original_name, 'data-testid': 'att-video' }),
+    el('a', { class: 'file', href: a.download_url || a.url, download: a.original_name, rel: 'noopener', 'data-testid': 'att-video-download' }, icon('download', 16), `Stiahnuť v plnej kvalite (${fmtSize(a.size_bytes)})`));
   return el('a', { class: 'file', href: a.url, target: '_blank', rel: 'noopener', 'data-testid': 'att-file' }, icon('download', 16), `${a.original_name} (${fmtSize(a.size_bytes)})`);
 }
 

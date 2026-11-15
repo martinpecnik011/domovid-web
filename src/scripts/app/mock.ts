@@ -135,7 +135,7 @@ export function createMock(): Adapter {
         const db = load(); requireMe(db);
         return db.messages.filter((m) => m.conversation_id === conversationId)
           .sort((a, b) => a.created_at.localeCompare(b.created_at))
-          .map((m) => ({ ...m, attachments: db.attachments.filter((a) => a.message_id === m.id).map((a) => ({ ...a, url: objectUrls.get(a.id) ?? a.url })) }));
+          .map((m) => ({ ...m, attachments: db.attachments.filter((a) => a.message_id === m.id).map((a) => { const url = objectUrls.get(a.id) ?? a.url; return { ...a, url, download_url: a.mime_type.startsWith('video/') ? url : undefined }; }) }));
       },
       async sendMessage(m) {
         const db = load(); const p = requireMe(db);

@@ -121,6 +121,15 @@ async function scenario(tag, viewport, mobile) {
   check(`${tag} 6 image inline in thread`, dim === 160, `naturalWidth=${dim}`);
   check(`${tag} 6 previews cleared`, (await t('preview').count()) === 0);
 
+  // 6b. video attachment: playable inline + download of the original file
+  const vid = { name: 'hotove-video.mp4', mimeType: 'video/mp4', buffer: Buffer.alloc(3 * 1024 * 1024, 1) };
+  await t('file-input').setInputFiles(vid);
+  await t('preview').waitFor();
+  await t('send-btn').click();
+  await t('att-video-download').waitFor();
+  const vdl = t('att-video-download');
+  check(`${tag} 6b video shows full-quality download`, (await t('att-video').count()) === 1 && (await vdl.innerText()).includes('Stiahnuť v plnej kvalite') && (await vdl.getAttribute('download')) === 'hotove-video.mp4' && !!(await vdl.getAttribute('href')));
+
   // 7. limits + offline
   await page.evaluate(() => { window.__sz = Object.getOwnPropertyDescriptor(Blob.prototype, 'size'); Object.defineProperty(Blob.prototype, 'size', { get: () => 51 * 1024 * 1024, configurable: true }); });
   await t('file-input').setInputFiles({ name: 'velke.mp4', mimeType: 'video/mp4', buffer: Buffer.from('x') });
@@ -199,7 +208,7 @@ async function scenario(tag, viewport, mobile) {
   await t('stab-chat').click();
   await t('staff-inbox').waitFor();
   if (mobile) {
-    check(`${tag} 9 unread badge = 6 customer messages`, (await t('unread-badge').innerText()) === '6');
+    check(`${tag} 9 unread badge = 7 customer messages`, (await t('unread-badge').innerText()) === '7');
     await noOverflow('staff list');
     await shot('staff');
     await t('conv-item').first().click();
@@ -277,7 +286,7 @@ async function scenario(tag, viewport, mobile) {
   check(`${tag} 10 CSV quoting of comma and quotes`, csv.includes('"Ahoj, ""zdravím"" z Domovidu"'));
   check(`${tag} 10 CSV formula neutralised with quote prefix`, csv.includes(`"'=HYPERLINK(""http://evil.example"",""klik"")"`));
   check(`${tag} 10 no CSV cell starts with raw = + - @`, !/(^|,)"?[=+\-@]/m.test(csv.replace(/^\ufeff/, '').replace(/^created_at.*\r\n/, '').split('\r\n').map((r) => r.replace(/^[^,]*,/, '')).join('\n')));
-  check(`${tag} 10 CSV row count = header + 8 messages`, rows.length === 9, `rows=${rows.length}`);
+  check(`${tag} 10 CSV row count = header + 9 messages`, rows.length === 10, `rows=${rows.length}`);
 
   // 11. customer sees staff reply, after reload too (localStorage persistence)
   await t('mock-switch').click();
