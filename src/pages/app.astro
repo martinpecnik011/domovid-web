@@ -20,7 +20,8 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#14232F">
 <title>Domovid – aplikácia</title>
-<link rel="icon" href="data:,">
+<link rel="icon" href={`${base}favicon.ico`} sizes="48x48">
+<link rel="icon" type="image/png" href={`${base}favicon-96.png`} sizes="96x96">
 <link rel="manifest" href={`${base}manifest.webmanifest`}>
 </head>
 <body>

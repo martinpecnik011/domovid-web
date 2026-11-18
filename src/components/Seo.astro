@@ -54,12 +54,6 @@ const {
 } = Astro.props;
 const url = SITE_URL + path;
 const showOffers = path === '' || path === 'cennik/';
-const favicon =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E" +
-  "%3Crect width='64' height='64' rx='14' fill='%23142330'/%3E" +
-  "%3Cpath d='M14 34 32 18l18 16v14H14z' fill='none' stroke='%23e0ad55' stroke-width='5' stroke-linejoin='round'/%3E" +
-  "%3Cpath d='M28 48V38h8v10' fill='%23e0ad55'/%3E%3C/svg%3E";
-
 const robots = noindex
   ? nofollow
     ? 'noindex, nofollow'
@@ -196,7 +190,9 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
      public/manifest.webmanifest uses navy #14232F for the installed PWA (splash/standalone title bar).
      Pages may override via the themeColor prop. -->
 <meta name="theme-color" content={themeColor}>
-<link rel="icon" href={favicon}>
+<!-- Favicon = the Domovid logo as real files: Google Search shows it only from a crawlable square icon, a multiple of 48 px. -->
+<link rel="icon" href={import.meta.env.BASE_URL + 'favicon.ico'} sizes="48x48">
+<link rel="icon" type="image/png" href={import.meta.env.BASE_URL + 'favicon-96.png'} sizes="96x96">
 <link rel="canonical" href={url}>
 <link rel="sitemap" href={SITE_URL + 'sitemap-index.xml'}>
 <script type="application/ld+json" is:inline set:html={jsonLd} />
