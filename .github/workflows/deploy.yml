@@ -23,7 +23,7 @@ jobs:
       - name: Build with Astro
         uses: withastro/action@56781b97402ce0487b7e61ce2cb960c0e2cc5289 # v3
         with:
-          node-version: 22
+          node-version: 24
           package-manager: npm
 
   deploy:
