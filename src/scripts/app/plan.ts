@@ -1,6 +1,7 @@
 import type { Addon, ContentItem, ContentKind, ContentStatus, PaymentStatus, Plan, PlanCategory, Subscription } from './types';
 import { el, icon, fmtDate, fmtDateFull, NS } from './dom';
 import { withVat } from '../../config/site';
+import type { OfferPrefill } from './offer';
 
 // Customer views: "Môj plán" (subscription + monthly content plan) and "Cenník".
 export const KIND_LABEL: Record<ContentKind, string> = { ponuka: 'Ponuka', osobna_znacka: 'Osobná značka', tip: 'Tip', nabor: 'Nábor', ine: 'Iné' };
@@ -16,10 +17,10 @@ export const planName = (sub: Subscription, plans: Plan[]) => {
   return p ? shortLabel(p) : 'Balík';
 };
 const unitText = (p: { unit: 'month' | 'once' | 'video' }) => (p.unit === 'month' ? 'mesiac' : p.unit === 'video' ? 'video' : 'jednorazovo');
-/** Chat message sent by "Chcem tento balík". */
-export const interestMessage = (p: Plan) => p.category === 'social'
-  ? `Mám záujem o balík ${p.videos} videí / mesiac (${p.price_net} € bez DPH)`
-  : `Mám záujem o balík ${CAT_LABEL[p.category]} – ${shortLabel(p)} (${p.price_net} € bez DPH${p.unit === 'month' ? ' / mesiac' : ', jednorazovo'})`;
+/** "Chcem tento balík" opens the offer questionnaire with the package preselected (location, photos… are still asked). */
+export const planPrefill = (p: Plan): OfferPrefill => p.category === 'social'
+  ? { service: 'social', plan: String(p.videos) }
+  : { service: p.category === 'video_viz' ? 'viz' : 'video', pkg: { label: `${CAT_LABEL[p.category]} – ${shortLabel(p)}`, price: p.price_net, monthly: p.unit === 'month' } };
 export const addonMessage = (a: Addon) => `Mám záujem o doplnok ${a.label} (+${a.price_net} € bez DPH / ${a.unit === 'month' ? 'mesiac' : 'video'})`;
 
 function ring(used: number, total: number): SVGSVGElement {

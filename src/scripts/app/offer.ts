@@ -20,7 +20,8 @@ const PLANS = ['10', '15', '30'];
 const TYPES = ['Byt', 'Rodinný dom', 'Pozemok', 'Komerčný priestor', 'Iné'];
 const FORMATS = ['Na výšku 9:16', 'Na šírku 16:9', 'Oba formáty'];
 
-export interface OfferPrefill { service?: Service; plan?: string; topics?: string[]; text?: string }
+/** pkg: a video package picked in the app's Cenník (net price; monthly or one-off). */
+export interface OfferPrefill { service?: Service; plan?: string; topics?: string[]; text?: string; pkg?: { label: string; price: number; monthly: boolean } }
 
 /** Remembers "the visitor wants an offer" across the login (and the Google redirect, which drops the query). */
 export function captureIntent(): void {
@@ -68,6 +69,7 @@ export function offerSummary(a: Record<string, string>, service: Service, photos
     if (a.topics) rows.push(`Témy: ${a.topics}`);
   } else {
     const facts = [a.type, a.location, a.price && `${a.price} €`, a.area && `${a.area} m²`].filter(Boolean).join(' · ');
+    if (a.pkg) rows.push(`Balík: ${a.pkg}`);
     if (facts) rows.push(`Nehnuteľnosť: ${facts}`);
     if (a.format) rows.push(`Formát: ${a.format}`);
     if (photos) rows.push(`Fotky: ${photos} v prílohe`);
@@ -93,6 +95,10 @@ export function openOffer({ adapter, profile, conversationId, prefill, done }: O
   let service: Service = prefill?.service ?? 'video';
   let photos: File[] = [];
   const id = (s: string) => `offer-${s}`;
+  // The picked video package applies only while its service stays selected.
+  const pkg = () => (prefill?.pkg && service === prefill.service && service !== 'social' ? prefill.pkg : null);
+  const pkgText = (k: NonNullable<OfferPrefill['pkg']>) => `${k.label} (${k.price} € bez DPH${k.monthly ? ' / mesiac' : ', jednorazovo'})`;
+  const pkgNote = el('p', { class: 'note', 'data-testid': 'offer-pkg' });
 
   const input = (name: string, attrs: Record<string, string | boolean>) => el('input', { id: id(name), name, 'data-testid': id(name), ...attrs });
   const field = (name: string, text: string, control: HTMLElement, cls = '') => el('div', { class: `field ${cls}` }, label(id(name), text), control);
@@ -171,6 +177,8 @@ export function openOffer({ adapter, profile, conversationId, prefill, done }: O
     if (voice && twin) { if (twin.checked) voice.checked = false; voice.disabled = twin.checked; }
   }
   function estimate(): { net: number; monthly: boolean } {
+    const k = pkg();
+    if (k) return { net: k.price + addonList().filter((a) => checked().includes(a.id)).reduce((n, a) => n + a.price, 0), monthly: k.monthly };
     const base = service === 'social'
       ? PRICES.social.plans.find((p) => String(p.videos) === val('plan'))?.price ?? 0
       : PRICES[service].single;
@@ -179,7 +187,7 @@ export function openOffer({ adapter, profile, conversationId, prefill, done }: O
   }
   function drawSum() {
     const e = estimate();
-    sum.textContent = `Orientačne ${e.net} € bez DPH (${withVat(e.net)} s DPH)${e.monthly ? ' mesačne, bez viazanosti' : ' za video'}. Prvé video na ukážku je zadarmo.`;
+    sum.textContent = `Orientačne ${e.net} € bez DPH (${withVat(e.net)} s DPH)${e.monthly ? (service === 'social' ? ' mesačne, bez viazanosti' : ' mesačne') : ' za video'}. Prvé video na ukážku je zadarmo.`;
   }
 
   const contact = needContact ? el('fieldset', { class: 'grp', 'data-testid': 'offer-contact' },
@@ -196,7 +204,7 @@ export function openOffer({ adapter, profile, conversationId, prefill, done }: O
   const form = el('form', { novalidate: true, onsubmit: (e) => { e.preventDefault(); void send(); } },
     el('div', { class: 'offer-head' },
       el('h2', { id: 'offer-title' }, needContact ? 'Chcem ponuku' : 'Chcem ďalšiu ponuku'),
-      el('p', { class: 'note' }, `Prvé video na ukážku je zadarmo, hotové do ${DELIVERY}. Dopyt sa uloží do vášho chatu s nami.`)),
+      el('p', { class: 'note' }, `Prvé video na ukážku je zadarmo, hotové do ${DELIVERY}. Dopyt sa uloží do vášho chatu s nami.`), pkgNote),
     svcBox, property, social, common, addons, contact,
     el('div', { class: 'sheet-actions' }, el('button', { type: 'button', class: 'btn btn-ghost', onclick: () => dlg.close() }, 'Zrušiť'), submit), progress);
   dlg.append(form);
@@ -204,6 +212,9 @@ export function openOffer({ adapter, profile, conversationId, prefill, done }: O
   function sync() {
     property.hidden = service === 'social';
     social.hidden = service !== 'social';
+    const k = pkg();
+    pkgNote.hidden = !k;
+    pkgNote.textContent = k ? `Vybraný balík: ${pkgText(k)}` : '';
     drawAddons();
     drawSum();
   }
@@ -231,6 +242,8 @@ export function openOffer({ adapter, profile, conversationId, prefill, done }: O
       topics: Array.from(form.querySelectorAll<HTMLInputElement>('input[name="topics"]:checked')).map((c) => c.value).join(', '),
       addons: addonList().filter((x) => checked().includes(x.id)).map((x) => `${x.name} (+${x.price} €)`).join(', '),
     };
+    const k = pkg();
+    if (k) answers.pkg = pkgText(k);
     const est = estimate();
     answers.estimate = `${est.net} € bez DPH (${withVat(est.net)} s DPH)${est.monthly ? ' mesačne' : ''}`;
     const files = service === 'social' ? [] : [...photos];

@@ -3,7 +3,7 @@ import { messagesToCsv, downloadText } from './csv';
 import type { Adapter, Addon, ContentItem, Conversation, Message, Plan, Profile, Session, Subscription } from './types';
 import { el, icon, label, initials, dayLabel, fmtTime, fmtDay, fmtSize, uuid, safeHttp, errorBox, showError, NS } from './dom';
 import { renderLogin, renderMfa } from './auth-ui';
-import { renderPlanPage, renderPricing, interestMessage, addonMessage } from './plan';
+import { renderPlanPage, renderPricing, planPrefill, addonMessage } from './plan';
 import { openSubscriptionPanel } from './staff-plan';
 import { captureIntent, takeIntent, takeDraft, openOffer, type OfferPrefill } from './offer';
 
@@ -348,7 +348,7 @@ async function renderApp() {
     try {
       const [plans, addons, subs, items] = await Promise.all([adapter.data.listPlans(), adapter.data.listAddons(), adapter.data.getSubscriptions(profile!.id), adapter.data.listContent(profile!.id)]);
       if (view === 'plan') renderPlanPage(page, { subs, plans, addons, items, toPricing: () => setView('pricing'), approve: (it) => { setView('chat'); ui?.composer.prefill(`Pozrel som si „${it.title}“ a schvaľujem ho.`); } });
-      else if (view === 'pricing') renderPricing(page, { subs, plans, addons, choose: (p: Plan) => { void sendInterest(interestMessage(p)); }, chooseAddon: (a: Addon) => { void sendInterest(addonMessage(a)); } });
+      else if (view === 'pricing') renderPricing(page, { subs, plans, addons, choose: (p: Plan) => startOffer(planPrefill(p)), chooseAddon: (a: Addon) => { void sendInterest(addonMessage(a)); } });
     } catch { showError('Plán sa nepodarilo načítať. Skontrolujte pripojenie.'); }
   }
   async function sendInterest(body: string) {
