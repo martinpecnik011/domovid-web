@@ -4,7 +4,7 @@ export const SITE_URL = 'https://domovid.sk/';
 /** Who answers and from which address the confirmation e-mail comes (Apps Script runs under this account). */
 /** Genitive for "od …" (from …). */
 export const OWNER_FROM = 'Martina Pecníka';
-export const CONTACT_EMAIL = 'martinpecnik011@gmail.com';
+export const CONTACT_EMAIL = 'info@domovid.sk';
 
 /** Lead form endpoint: Google Apps Script web app (see apps-script/SETUP.md). Empty string = form not connected. */
 export const FORM_ENDPOINT =
