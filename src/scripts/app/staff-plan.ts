@@ -80,7 +80,7 @@ export async function openSubscriptionPanel(adapter: Adapter, customerId: string
       field('Balík', 'sub-plan', plan),
       ...(addonBoxes.length ? [el('fieldset', { class: 'addons' }, el('legend', {}, 'Mesačné doplnky'),
         ...addonBoxes.map(({ a, box }) => el('label', { class: 'check', for: `addon-${a.code}` }, box, `${a.label} (+${a.price_net} € / mes.)`)))] : []),
-      el('div', { class: 'two' }, field('Videí v balíku', 'sub-included', included), field('Cena bez DPH (€)', 'sub-price', price)),
+      el('div', { class: 'two' }, field('Videí v balíku', 'sub-included', included), field('Cena v čistom (€)', 'sub-price', price)),
       el('div', { class: 'field' }, label('sub-used', 'Použité videá'), stepper),
       el('div', { class: 'two' }, field('Obdobie od', 'sub-start', start), field('Obdobie do', 'sub-end', end)),
       el('div', { class: 'two' }, field('Viazanosť do', 'sub-commit', commit), field('Platba', 'sub-pay', pay)),

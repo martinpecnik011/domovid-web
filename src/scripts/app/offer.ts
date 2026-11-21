@@ -1,6 +1,6 @@
 import type { Adapter, Profile } from './types';
 import { el, icon, label, uuid, fmtSize, showError } from './dom';
-import { FORM_ENDPOINT, DELIVERY, PRICES, withVat } from '../../config/site';
+import { FORM_ENDPOINT, DELIVERY, PRICES, grossPay } from '../../config/site';
 import { SOCIAL_TOPICS } from '../social-picker';
 
 // The offer questionnaire ("Chcem ponuku"). Only signed-in customers fill it; the answers and photos
@@ -97,7 +97,7 @@ export function openOffer({ adapter, profile, conversationId, prefill, done }: O
   const id = (s: string) => `offer-${s}`;
   // The picked video package applies only while its service stays selected.
   const pkg = () => (prefill?.pkg && service === prefill.service && service !== 'social' ? prefill.pkg : null);
-  const pkgText = (k: NonNullable<OfferPrefill['pkg']>) => `${k.label} (${k.price} € bez DPH${k.monthly ? ' / mesiac' : ', jednorazovo'})`;
+  const pkgText = (k: NonNullable<OfferPrefill['pkg']>) => `${k.label} (${k.price} € v čistom${k.monthly ? ' / mesiac' : ', jednorazovo'})`;
   const pkgNote = el('p', { class: 'note', 'data-testid': 'offer-pkg' });
 
   const input = (name: string, attrs: Record<string, string | boolean>) => el('input', { id: id(name), name, 'data-testid': id(name), ...attrs });
@@ -187,7 +187,7 @@ export function openOffer({ adapter, profile, conversationId, prefill, done }: O
   }
   function drawSum() {
     const e = estimate();
-    sum.textContent = `Orientačne ${e.net} € bez DPH (${withVat(e.net)} s DPH)${e.monthly ? (service === 'social' ? ' mesačne, bez viazanosti' : ' mesačne') : ' za video'}. Prvé video na ukážku je zadarmo.`;
+    sum.textContent = `Orientačne ${e.net} € v čistom (hrubá odmena na študentskej dohode ${grossPay(e.net)})${e.monthly ? (service === 'social' ? ' mesačne, bez viazanosti' : ' mesačne') : ' za video'}. Prvé video na ukážku je zadarmo.`;
   }
 
   const contact = needContact ? el('fieldset', { class: 'grp', 'data-testid': 'offer-contact' },
@@ -245,7 +245,7 @@ export function openOffer({ adapter, profile, conversationId, prefill, done }: O
     const k = pkg();
     if (k) answers.pkg = pkgText(k);
     const est = estimate();
-    answers.estimate = `${est.net} € bez DPH (${withVat(est.net)} s DPH)${est.monthly ? ' mesačne' : ''}`;
+    answers.estimate = `${est.net} € v čistom (hrubá na dohode ${grossPay(est.net)})${est.monthly ? ' mesačne' : ''}`;
     const files = service === 'social' ? [] : [...photos];
     busy = true; submit.disabled = true; progress.textContent = 'Odosielame…';
     let next = profile;

@@ -1,6 +1,6 @@
 import type { Addon, ContentItem, ContentKind, ContentStatus, PaymentStatus, Plan, PlanCategory, Subscription } from './types';
 import { el, icon, fmtDate, fmtDateFull, NS } from './dom';
-import { withVat } from '../../config/site';
+import { grossPay } from '../../config/site';
 import type { OfferPrefill } from './offer';
 
 // Customer views: "Môj plán" (subscription + monthly content plan) and "Cenník".
@@ -21,7 +21,7 @@ const unitText = (p: { unit: 'month' | 'once' | 'video' }) => (p.unit === 'month
 export const planPrefill = (p: Plan): OfferPrefill => p.category === 'social'
   ? { service: 'social', plan: String(p.videos) }
   : { service: p.category === 'video_viz' ? 'viz' : 'video', pkg: { label: `${CAT_LABEL[p.category]} – ${shortLabel(p)}`, price: p.price_net, monthly: p.unit === 'month' } };
-export const addonMessage = (a: Addon) => `Mám záujem o doplnok ${a.label} (+${a.price_net} € bez DPH / ${a.unit === 'month' ? 'mesiac' : 'video'})`;
+export const addonMessage = (a: Addon) => `Mám záujem o doplnok ${a.label} (+${a.price_net} € v čistom / ${a.unit === 'month' ? 'mesiac' : 'video'})`;
 
 function ring(used: number, total: number): SVGSVGElement {
   const r = 42, c = 2 * Math.PI * r;
@@ -62,7 +62,7 @@ function subCard(sub: Subscription, d: PlanPageDeps): HTMLElement {
   card.append(
     el('div', { class: 'sub-top' },
       el('div', {}, el('p', { class: 'eyebrow', 'data-testid': 'sub-category' }, CAT_LABEL[sub.category]), el('h2', { 'data-testid': 'sub-name' }, planName(sub, plans)),
-        sub.price_net != null ? el('p', { class: 'muted' }, `${eur(sub.price_net)} bez DPH${p?.unit === 'once' ? ', jednorazovo' : ' / mesiac'}`) : null),
+        sub.price_net != null ? el('p', { class: 'muted' }, `${eur(sub.price_net)} v čistom${p?.unit === 'once' ? ', jednorazovo' : ' / mesiac'}`) : null),
       el('span', { class: `pay ${payCls}`, 'data-testid': 'pay-badge' }, payText)),
     el('div', { class: 'sub-usage' },
       el('div', { class: 'ring-wrap' }, ring(sub.videos_used, sub.videos_included), el('span', { class: 'ring-txt', 'data-testid': 'sub-usage' }, `${sub.videos_used}/${sub.videos_included}`)),
@@ -115,9 +115,9 @@ function planCard(p: Plan, d: PricingDeps): HTMLElement {
     p.popular ? el('span', { class: 'flag' }, 'Najobľúbenejší') : null,
     el('p', { class: 'eyebrow' }, social ? p.label.split('–')[1]?.trim() ?? '' : p.unit === 'once' ? 'Jednorazovo' : 'Mesačne'),
     el('h3', {}, social ? `${p.videos} videí` : shortLabel(p), el('small', {}, social ? ' / mesiac' : p.unit === 'month' ? ' / mesiac' : '')),
-    el('p', { class: 'price' }, eur(p.price_net), el('small', {}, p.unit === 'once' ? ' bez DPH, jednorazovo' : ' bez DPH / mesiac')),
-    el('p', { class: 'muted', 'data-testid': 'plan-vat' }, `${withVat(p.price_net)} s DPH`),
-    p.unit === 'month' ? el('p', { class: 'muted' }, `${eur(p.per_video)} bez DPH za video`) : el('p', { class: 'muted' }, 'za jedno video'),
+    el('p', { class: 'price' }, eur(p.price_net), el('small', {}, p.unit === 'once' ? ' v čistom, jednorazovo' : ' v čistom / mesiac')),
+    el('p', { class: 'muted', 'data-testid': 'plan-vat' }, `hrubá odmena na dohode ${grossPay(p.price_net)}`),
+    p.unit === 'month' ? el('p', { class: 'muted' }, `${eur(p.per_video)} v čistom za video`) : el('p', { class: 'muted' }, 'za jedno video'),
     p.note ? el('p', { class: 'plan-note' }, icon('star', 14), p.note) : null,
     el('ul', { class: 'perks' }, ...perks.map((t) => el('li', {}, icon('check', 16), t))),
     current ? el('p', { class: 'current-flag', 'data-testid': 'current-plan' }, icon('check', 16), 'Váš balík')
@@ -129,8 +129,8 @@ function addonCard(a: Addon, d: PricingDeps): HTMLElement {
   return el('article', { class: 'plan-card addon', 'data-testid': `addon-card-${a.code}` },
     el('p', { class: 'eyebrow' }, a.unit === 'month' ? 'Mesačný doplnok' : 'Doplnok k videu'),
     el('h3', {}, a.label),
-    el('p', { class: 'price' }, `+${eur(a.price_net)}`, el('small', {}, ` bez DPH / ${unitText(a)}`)),
-    el('p', { class: 'muted' }, `+${withVat(a.price_net)} s DPH`),
+    el('p', { class: 'price' }, `+${eur(a.price_net)}`, el('small', {}, ` v čistom / ${unitText(a)}`)),
+    el('p', { class: 'muted' }, `hrubá +${grossPay(a.price_net)}`),
     a.note ? el('p', { class: 'muted' }, a.note) : null,
     active ? el('p', { class: 'current-flag', 'data-testid': 'current-addon' }, icon('check', 16), 'Aktívny doplnok')
       : el('button', { type: 'button', class: 'btn btn-light', 'data-testid': `choose-addon-${a.code}`, onclick: () => d.chooseAddon(a) }, 'Mám záujem o doplnok'));
@@ -155,6 +155,6 @@ export function renderPricing(c: HTMLElement, d: PricingDeps) {
   }
   c.replaceChildren(el('div', { class: 'page-in' },
     el('h2', { class: 'page-title' }, 'Cenník'),
-    el('p', { class: 'muted' }, 'Ceny sú bez DPH, pod každou je aj cena s DPH 23 %. Prvé video na ukážku je zadarmo, potom polovica vopred a polovica po odovzdaní. Sociálne siete sú bez viazanosti.'),
+    el('p', { class: 'muted' }, 'Zatiaľ nie sme firma ani platcovia DPH, preto spolupracujeme len na študentskú dohodu (dohoda o brigádnickej práci študentov). Ceny sú naša odmena v čistom, pod každou je orientačná hrubá odmena na dohode. Prvé video na ukážku je zadarmo, ďalej podpíšeme dohodu a odmenu vyplatíte po odovzdaní. Sociálne siete sú bez viazanosti.'),
     seg, body));
 }
