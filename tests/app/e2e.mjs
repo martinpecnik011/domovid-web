@@ -163,10 +163,10 @@ async function scenario(tag, viewport, mobile) {
   await t('to-pricing').click();
   await t('plan-card-video_4').waitFor();
   check(`${tag} 8b empty-state button opens Cenník (no "Váš balík" yet)`, (await t('current-plan').count()) === 0);
-  // price catalogue (all bez DPH), three sub-tabs
+  // price catalogue (all v čistom), three sub-tabs
   const pageText = async () => (await t('page').innerText()).replace(/\u00a0/g, ' ');
   let pt = await pageText();
-  check(`${tag} 8c Cenník "Videá nehnuteľností": 50 / 140 / 62 / 200 €, 5 vizualizácií, Bez/S vizualizáciou, Chcem tento balík`, ['Bez vizualizácie', 'S vizualizáciou', '50 €', '140 €', '62 €', '200 €', 'max. 5 vizualizácií na nehnuteľnosť', 'bez DPH', 'Chcem tento balík'].every((x) => pt.includes(x)) && (await page.locator('[data-testid^=plan-card-]').count()) === 4 && !/faktúr/i.test(pt));
+  check(`${tag} 8c Cenník "Videá nehnuteľností": 50 / 140 / 62 / 200 €, 5 vizualizácií, Bez/S vizualizáciou, Chcem tento balík`, ['Bez vizualizácie', 'S vizualizáciou', '50 €', '140 €', '62 €', '200 €', 'max. 5 vizualizácií na nehnuteľnosť', 'v čistom', 'Chcem tento balík'].every((x) => pt.includes(x)) && (await page.locator('[data-testid^=plan-card-]').count()) === 4 && !/faktúr/i.test(pt));
   const [g1, g2] = await Promise.all([t('plan-card-video_1').boundingBox(), t('plan-card-viz_1').boundingBox()]);
   if (!mobile) check(`${tag} 8c video and video_viz groups sit side by side on desktop`, Math.abs(g1.y - g2.y) < 4 && g2.x > g1.x);
   await noOverflow('cennik videa');
@@ -178,7 +178,7 @@ async function scenario(tag, viewport, mobile) {
   await shot('cennik-social');
   await t('ptab-doplnky').click();
   pt = await pageText();
-  check(`${tag} 8c Cenník "Doplnky": +10 € / video, +15 € / video`, ['+10 €', '+15 €', 'bez DPH / video'].every((x) => pt.includes(x)) && (await page.locator('[data-testid^=addon-card-]').count()) === 2);
+  check(`${tag} 8c Cenník "Doplnky": +10 € / video, +15 € / video`, ['+10 €', '+15 €', 'v čistom / video'].every((x) => pt.includes(x)) && (await page.locator('[data-testid^=addon-card-]').count()) === 2);
   await noOverflow('cennik doplnky');
   await shot('cennik-doplnky');
   await t('tab-chat').click();
@@ -322,7 +322,7 @@ async function scenario(tag, viewport, mobile) {
   await t('tab-pricing').click();
   await t('ptab-social').click();
   await t('plan-card-15').waitFor();
-  check(`${tag} 12 Cenník: 3 cards, 15 highlighted + "Váš balík", others "Chcem tento balík", bez DPH`, (await page.locator('[data-testid^=plan-card-]').count()) === 3 && (await t('plan-card-15').evaluate((e) => e.classList.contains('popular'))) && (await t('plan-card-15').locator('[data-testid=current-plan]').innerText()).includes('Váš balík') && (await t('choose-plan-10').innerText()) === 'Chcem tento balík' && (await t('page').innerText()).includes('bez DPH') && !/faktúr/i.test(await t('page').innerText()));
+  check(`${tag} 12 Cenník: 3 cards, 15 highlighted + "Váš balík", others "Chcem tento balík", v čistom`, (await page.locator('[data-testid^=plan-card-]').count()) === 3 && (await t('plan-card-15').evaluate((e) => e.classList.contains('popular'))) && (await t('plan-card-15').locator('[data-testid=current-plan]').innerText()).includes('Váš balík') && (await t('choose-plan-10').innerText()) === 'Chcem tento balík' && (await t('page').innerText()).includes('v čistom') && !/faktúr/i.test(await t('page').innerText()));
   await noOverflow('cennik');
   await shot('customer-cennik');
   const msgsBefore = await t('msg').count();
@@ -336,22 +336,22 @@ async function scenario(tag, viewport, mobile) {
   await t('ptab-social').click();
   check(`${tag} 12 Cenník marks the active add-on "Aktívny doplnok"`, (await t('addon-card-digital_twin').getByTestId('current-addon').count()) === 1 && (await t('choose-addon-voice_clone').count()) === 1);
   await t('choose-addon-voice_clone').click();
-  await page.getByText('Mám záujem o doplnok Klon hlasu (+40 € bez DPH / mesiac)').waitFor();
+  await page.getByText('Mám záujem o doplnok Klon hlasu (+40 € v čistom / mesiac)').waitFor();
   check(`${tag} 12 add-on interest posts its chat message`, (await t('thread').isVisible()));
   await t('tab-pricing').click();
   await t('ptab-videa').click();
   check(`${tag} 12 Cenník Videá: current plan marked "Váš balík" (viz_4)`, (await t('plan-card-viz_4').getByTestId('current-plan').count()) === 1);
   await t('choose-plan-video_1').click();
   await t('offer-sheet').waitFor();
-  check(`${tag} 12 video plan opens the questionnaire with property fields and the package`, (await t('offer-svc-video').isChecked()) && (await t('offer-property').isVisible()) && (await t('offer-location').isVisible()) && (await t('offer-pkg').innerText()).includes('Videá nehnuteľností – Jedno video (50 € bez DPH, jednorazovo)') && (await t('offer-sum').innerText()).includes('50 € bez DPH'));
+  check(`${tag} 12 video plan opens the questionnaire with property fields and the package`, (await t('offer-svc-video').isChecked()) && (await t('offer-property').isVisible()) && (await t('offer-location').isVisible()) && (await t('offer-pkg').innerText()).includes('Videá nehnuteľností – Jedno video (50 € v čistom, jednorazovo)') && (await t('offer-sum').innerText()).includes('50 € v čistom'));
   await t('offer-location').fill('Banská Bystrica, Radvaň');
   await t('offer-submit').click();
-  await t('thread').getByText('Balík: Videá nehnuteľností – Jedno video (50 € bez DPH, jednorazovo)').waitFor();
+  await t('thread').getByText('Balík: Videá nehnuteľností – Jedno video (50 € v čistom, jednorazovo)').waitFor();
   check(`${tag} 12 video plan questionnaire posts package + location to chat`, (await t('thread').isVisible()) && (await t('msg').last().innerText()).includes('Banská Bystrica, Radvaň'));
   await t('tab-pricing').click();
   await t('ptab-doplnky').click();
   await t('choose-addon-express').click();
-  await page.getByText('Mám záujem o doplnok Expresné doručenie (+15 € bez DPH / video)').waitFor();
+  await page.getByText('Mám záujem o doplnok Expresné doručenie (+15 € v čistom / video)').waitFor();
   check(`${tag} 12 video add-on interest posts its chat message`, (await t('thread').isVisible()));
 
   await t('sign-out').click();
@@ -409,7 +409,7 @@ async function socialScenario(tag, viewport, mobile) {
   await t('code-0').fill('123456');
   await t('offer-sheet').waitFor();
   check(`${tag} offer: prefilled social, plan 30, contact asked`, (await page.locator('input[name=service]:checked').inputValue()) === 'social' && (await page.locator('input[name=plan]:checked').inputValue()) === '30' && (await t('offer-contact').isVisible()) && !(await t('offer-property').isVisible()));
-  check(`${tag} offer: sum 690 with VAT`, (await sum()).includes('690 € bez DPH') && (await sum()).includes('848,70 €'));
+  check(`${tag} offer: sum 690 with gross pay`, (await sum()).includes('690 € v čistom') && (await sum()).includes('848,70 €'));
   await noOverflow('offer');
   await page.screenshot({ path: path.join(SCR, `offer-${tag}.png`) });
 
@@ -420,7 +420,7 @@ async function socialScenario(tag, viewport, mobile) {
   check(`${tag} offer: 390 + twin 110 = 500, voice exclusive`, (await sum()).includes('500 €') && (await t('offer-addon-voice').isDisabled()) && !(await t('offer-addon-voice').isChecked()));
 
   await page.locator('.svc-opt', { hasText: 'Video z fotiek' }).click();
-  check(`${tag} offer: video base 50, property fields shown`, (await sum()).includes('50 € bez DPH') && (await t('offer-property').isVisible()) && !(await t('offer-social').isVisible()));
+  check(`${tag} offer: video base 50, property fields shown`, (await sum()).includes('50 € v čistom') && (await t('offer-property').isVisible()) && !(await t('offer-social').isVisible()));
   await t('offer-addon-formats').check();
   await t('offer-addon-express').check();
   check(`${tag} offer: video 50 + 10 + 15 = 75`, (await sum()).includes('75 €'));
@@ -440,7 +440,7 @@ async function socialScenario(tag, viewport, mobile) {
   await t('offer-submit').click();
   await t('offer-sheet').waitFor({ state: 'detached' });
   const last = await t('msg').last().innerText();
-  check(`${tag} offer: message in chat has plan, topics, add-on, sum`, /Nový dopyt: Obsah na sociálne siete/.test(last) && /Balík: 15 videí/.test(last) && /Trh a ceny v regióne/.test(last) && /Digitálne dvojča/.test(last) && /500 € bez DPH/.test(last), last);
+  check(`${tag} offer: message in chat has plan, topics, add-on, sum`, /Nový dopyt: Obsah na sociálne siete/.test(last) && /Balík: 15 videí/.test(last) && /Trh a ceny v regióne/.test(last) && /Digitálne dvojča/.test(last) && /500 € v čistom/.test(last), last);
   check(`${tag} offer: header shows the saved name`, (await t('role-label').innerText()) === 'Test Maklér' || mobile);
   await t('offer-open').click();
   await t('offer-sheet').waitFor();

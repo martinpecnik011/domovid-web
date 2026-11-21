@@ -37,10 +37,6 @@ export const GROSS_FACTOR = 1.23;
 /** Gross pay on the student agreement formatted the Slovak way, e.g. 61,50 €. */
 export const grossPay = (net: number) =>
   (Math.round(net * GROSS_FACTOR * 100) / 100).toLocaleString('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-/** Legacy VAT display still used by the app (/app/) price texts; the public web no longer shows VAT. */
-export const VAT_RATE = 0.23;
-export const withVat = (net: number) =>
-  (Math.round(net * (1 + VAT_RATE) * 100) / 100).toLocaleString('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 /** How payment works, one sentence per step (pricing page, FAQ, app). */
 export const PAYMENT_STEPS = [
   'Prvé video na ukážku je zadarmo.',
