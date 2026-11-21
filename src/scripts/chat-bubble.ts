@@ -1,13 +1,5 @@
-// Mini chat: greeting, quick replies, sign-up / sign-in, and the hand-over of typed text to the full chat in /app/
-const DRAFT_KEY = 'domovid-chat-draft';
+// Chat button: links straight to the full chat in /app/; here only its label, a one-time pulse and the cookie-bar offset.
 const root = document.getElementById('cb');
-const bubble = root?.querySelector<HTMLButtonElement>('.cb-bubble');
-const panel = document.getElementById('cb-panel');
-
-const store = {
-  get: (s: Storage, k: string) => { try { return s.getItem(k); } catch { return null; } },
-  set: (s: Storage, k: string, v: string) => { try { s.setItem(k, v); } catch { /* private mode */ } },
-};
 
 function signedIn(): boolean {
   try {
@@ -17,84 +9,14 @@ function signedIn(): boolean {
   return false;
 }
 
-if (root && bubble && panel) {
-  const app = () => root.dataset.app || 'app/';
-  const input = panel.querySelector<HTMLInputElement>('#cb-text')!;
-  const form = panel.querySelector<HTMLFormElement>('[data-cb-form]')!;
-  const auth = panel.querySelector<HTMLElement>('[data-cb-auth]')!;
-  const label = root.querySelector<HTMLElement>('[data-cb-label]')!;
-  const FOCUSABLE = 'a[href], button:not([disabled]), input';
-  const isOpen = () => !panel.hidden;
-  const logged = signedIn();
-
-  const cont = panel.querySelector<HTMLElement>('[data-cb-continue]')!;
-  if (logged) {
-    auth.hidden = true;
-    cont.hidden = false;
-    label.textContent = 'Pokračovať v chate';
-  }
-  // The same window opens from the top navigation ("Chat · prihlásenie" / "Pokračovať v chate").
-  document.querySelectorAll<HTMLAnchorElement>('[data-open-minichat]').forEach((a) => {
-    const lbl = a.querySelector('[data-chat-label]');
-    if (lbl && logged) lbl.textContent = 'Pokračovať v chate';
-    a.addEventListener('click', (e) => {
-      e.preventDefault();
-      document.querySelector<HTMLButtonElement>('[data-nav-toggle][aria-expanded="true"]')?.click();
-      open();
-      bubble.classList.add('cb-pulse');
-    });
-  });
-
-  function open(focus = true) {
-    panel!.hidden = false;
-    root!.dataset.open = '';
-    bubble!.setAttribute('aria-expanded', 'true');
-    if (focus) input.focus();
-  }
-  function close() {
-    panel!.hidden = true;
-    delete root!.dataset.open;
-    bubble!.setAttribute('aria-expanded', 'false');
-  }
-  // Leave for the full chat; the typed text (if any) is prefilled there after sign-in.
-  function toChat(text: string, href = app()) {
-    const t = text.trim();
-    if (t) store.set(sessionStorage, DRAFT_KEY, t.slice(0, 1000));
-    location.href = href;
+if (root) {
+  // Signed-in visitors continue their conversation; the top navigation links say the same.
+  if (signedIn()) {
+    root.querySelector<HTMLElement>('[data-cb-label]')!.textContent = 'Pokračovať v chate';
+    document.querySelectorAll('[data-chat-link] [data-chat-label]').forEach((l) => (l.textContent = 'Pokračovať v chate'));
   }
 
-  bubble.addEventListener('click', () => (isOpen() ? close() : open()));
-  panel.querySelector('.cb-close')?.addEventListener('click', () => { close(); bubble.focus(); });
-  form.addEventListener('submit', (e) => { e.preventDefault(); if (input.value.trim()) toChat(input.value); else input.focus(); });
-  panel.querySelectorAll<HTMLButtonElement>('[data-quick]').forEach((b) => b.addEventListener('click', () => {
-    const q = b.dataset.quick || '';
-    if (q === 'Chcem ponuku') toChat('', app() + (app().includes('?') ? '&' : '?') + 'ponuka=1');
-    else { input.value = q === 'Mám otázku k cene' ? 'Dobrý deň, mám otázku k cene: ' : 'Dobrý deň, chcem vám poslať fotky nehnuteľnosti.'; input.focus(); }
-  }));
-  // Sign-up / sign-in links carry the draft too.
-  panel.querySelectorAll<HTMLAnchorElement>('[data-cb-go], [data-cb-full]').forEach((a) => a.addEventListener('click', (e) => {
-    e.preventDefault();
-    toChat(input.value, a.href);
-  }));
-
-  document.addEventListener('click', (e) => {
-    const t = e.target as Node;
-    if (isOpen() && !root.contains(t) && !(t instanceof Element && t.closest('[data-open-minichat]'))) close();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (!isOpen()) return;
-    if (e.key === 'Escape') { close(); bubble.focus(); return; }
-    if (e.key !== 'Tab') return;
-    const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((x) => x.offsetParent !== null);
-    if (!items.length) return;
-    const first = items[0];
-    const last = items[items.length - 1];
-    const active = document.activeElement;
-    if (e.shiftKey && (active === first || !panel.contains(active))) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && (active === last || !panel.contains(active))) { e.preventDefault(); first.focus(); }
-  });
-
-  // The sign-up prompt (RegisterPrompt) greets first-time visitors; the mini chat only pulses once.
+  // The sign-up prompt (RegisterPrompt) greets first-time visitors; the chat button only pulses once.
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) window.setTimeout(() => root.classList.add('cb-pulse'), 4000);
 
   // Keep above the cookie bar.
