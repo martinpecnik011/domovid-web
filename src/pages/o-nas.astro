@@ -1,0 +1,130 @@
+---
+import Base from '../layouts/Base.astro';
+import FaqList from '../components/FaqList.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { CONTACT_EMAIL, DELIVERY, PRICES, STUDENT_AGREEMENT_FULL, grossPay, type FaqItem } from '../config/site';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const net = PRICES.video.single;
+
+const steps = [
+  { t: 'Pošlete fotky', d: 'Prihlásite sa, vyplníte krátky dotazník a priložíte 4–6 fotiek z mobilu. Všetko ide do vášho súkromného chatu s nami.' },
+  { t: 'Prvé video zadarmo', d: `Do ${DELIVERY} máte ukážku. Bez záväzku a bez akejkoľvek zmluvy, len aby ste videli, čo vieme.` },
+  { t: 'Podpíšeme študentskú dohodu', d: 'Ak chcete pokračovať, uzatvoríme dohodu o brigádnickej práci študentov. Vy ste v nej zamestnávateľ, my brigádnici.' },
+  { t: 'Odmena po odovzdaní', d: 'Hotovú prácu odovzdáme v chate, vy ju schválite a odmenu vyplatíte podľa dohody. Potom si video stiahnete v plnej kvalite.' },
+];
+
+const FAQ_ABOUT: FaqItem[] = [
+  {
+    q: 'Prečo nie ste firma?',
+    a: 'Domovid je zatiaľ študentský projekt. Firmu plánujeme založiť, keď bude mať zmysel. Dovtedy nechceme nič obchádzať, preto platenú prácu robíme len na študentskú dohodu.',
+  },
+  {
+    q: 'Viete vystaviť faktúru?',
+    a: `Nie. Kým nie sme firma, faktúry nevystavujeme a nie sme platcovia DPH. Jediná možnosť platenej spolupráce je ${STUDENT_AGREEMENT_FULL}.`,
+  },
+  {
+    q: 'Koľko nás to bude stáť?',
+    a: `Ceny v cenníku sú naša odmena v čistom. Hrubú odmenu na dohode nastavíme tak, aby po zrážkach (daň, prípadné odvody) vyšla táto suma. Napríklad jedno video: ${net} € v čistom, hrubá odmena na dohode orientačne ${grossPay(net)}.`,
+  },
+  {
+    q: 'Čo musíme urobiť ako zamestnávateľ?',
+    a: 'Podpísať dohodu pred začatím práce, prihlásiť brigádnika do Sociálnej poisťovne a odmenu vyplatiť ako pri každej dohode. Všetky údaje, ktoré k tomu potrebujete, vám pošleme.',
+  },
+  {
+    q: 'Čo sa zmení, keď budete firma?',
+    a: 'Prejdeme na bežné faktúry. Dáme vám vedieť vopred a dohody, ktoré bežia, dokončíme za rovnakých podmienok.',
+  },
+];
+---
+<Base
+  title="O nás – Domovid"
+  description="Kto stojí za Domovidom, prečo zatiaľ nie sme firma a ako funguje spolupráca na študentskú dohodu (dohoda o brigádnickej práci študentov)."
+  path="o-nas/"
+  pageType="AboutPage"
+  faq={FAQ_ABOUT}
+>
+  <main>
+    <header class="wrap on-hero">
+      <span class="eyebrow">O nás</span>
+      <h1>Sme študenti. <em>Zatiaľ nie firma.</em></h1>
+      <p class="lead">Domovid robí videá, vizualizácie a obsah na sociálne siete pre realitných maklérov. Chceme, aby ste od začiatku presne vedeli, s kým spolupracujete a ako to funguje.</p>
+    </header>
+
+    <section class="section" aria-labelledby="h-kto">
+      <div class="wrap on-split">
+        <div class="section-head">
+          <span class="eyebrow">Kto sme</span>
+          <h2 id="h-kto">Martin a malý tím študentov</h2>
+        </div>
+        <div class="on-text">
+          <p>Domovid založil <strong>Martin Pecník</strong>. Popri škole sa venuje videu, automatizácii a nástrojom umelej inteligencie. Pomáha mu niekoľko spolužiakov a kamarátov, ktorí strihajú, pripravujú vizualizácie a starajú sa o sociálne siete.</p>
+          <p>Každé video pred odovzdaním kontrolujeme ručne. Ak niečo nesedí, opravíme to, kým ste spokojní.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" aria-labelledby="h-firma">
+      <div class="wrap on-split">
+        <div class="section-head">
+          <span class="eyebrow">Na rovinu</span>
+          <h2 id="h-firma">Prečo spolupracujeme na <em>študentskú dohodu</em></h2>
+        </div>
+        <div class="on-text">
+          <p>Zatiaľ nemáme založenú firmu, nemáme IČO a nie sme platcovia DPH. Preto nevystavujeme faktúry.</p>
+          <p>Kým nebudeme plnohodnotná firma, platenú spoluprácu robíme <strong>výhradne na základe dohody o brigádnickej práci študentov</strong>. Je to bežná a legálna forma brigády. Vy ste v nej zamestnávateľ a my študenti, ktorí pre vás robia konkrétnu prácu.</p>
+          <p>Ceny v <a href={base + 'cennik/'}>cenníku</a> sú naša odmena v čistom. Hrubú odmenu na dohode nastavíme tak, aby po zrážkach vyšla táto suma. Pri jednom videu je to {net} € v čistom, teda orientačne {grossPay(net)} v hrubom.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="h-ako">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Ako fungujeme</span>
+          <h2 id="h-ako">Od fotiek po vyplatenie odmeny</h2>
+        </div>
+        <ol class="cols-line on-steps" style="--cols: 4">
+          {steps.map((s, i) => (
+            <li class="reveal">
+              <span class="on-no">{i + 1}</span>
+              <h3>{s.t}</h3>
+              <p class="muted">{s.d}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <section class="section alt" id="faq">
+      <div class="wrap faq-wrap">
+        <div class="section-head">
+          <span class="eyebrow">Máte otázky?</span>
+          <h2>Pýtajte sa pokojne</h2>
+          <p class="muted">Ak tu odpoveď nenájdete, napíšte nám do chatu alebo na <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
+        </div>
+        <FaqList items={FAQ_ABOUT} />
+      </div>
+    </section>
+
+    <CtaBand />
+  </main>
+</Base>
+
+<style>
+  .on-hero { display: grid; gap: 24px; justify-items: start; padding-block: clamp(56px, 9vw, 150px) clamp(32px, 5vw, 72px); }
+  .on-hero h1 { font-size: clamp(2.6rem, 5.4vw, 5rem); max-width: 16ch; }
+  .on-hero h1 em, .on-split h2 em { color: var(--gold); }
+  .on-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: clamp(32px, 6vw, 120px); align-items: start; }
+  .on-split .section-head { margin-bottom: 0; }
+  .on-text { display: grid; gap: 18px; font-size: clamp(1.05rem, 1.3vw, 1.2rem); max-width: 62ch; }
+  .on-text p { margin: 0; }
+  .on-text a, #faq a { color: var(--gold); }
+  .on-steps { list-style: none; margin: 0; padding: 0; }
+  .on-steps li { display: grid; gap: 14px; align-content: start; }
+  .on-no { font-family: var(--f-display); font-stretch: 118%; font-weight: 800; font-size: 3.2rem; line-height: 1; color: var(--gold); }
+  .faq-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(32px, 6vw, 120px); align-items: start; }
+  @media (max-width: 900px) {
+    .on-split, .faq-wrap { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

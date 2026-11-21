@@ -6,14 +6,14 @@ import AddonPrices from '../components/prices/AddonPrices.astro';
 import PaymentSteps from '../components/PaymentSteps.astro';
 import FaqList from '../components/FaqList.astro';
 import CtaBand from '../components/CtaBand.astro';
-import { FAQ_PRICING, SERVICES, VAT_RATE } from '../config/site';
+import { FAQ_PRICING, SERVICES } from '../config/site';
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const href = (id: string) => base + SERVICES.find((s) => s.id === id)!.href;
 ---
 <Base
   title="Cenník – Domovid"
-  description="Ceny videí z fotiek, vizualizácií a obsahu na sociálne siete pre realitných maklérov. Prvé video na ukážku zadarmo, polovica vopred a polovica po odovzdaní."
+  description="Ceny videí z fotiek, vizualizácií a obsahu na sociálne siete pre realitných maklérov. Prvé video na ukážku zadarmo, ďalej len na študentskú dohodu s odmenou po odovzdaní."
   path="cennik/"
   faq={FAQ_PRICING}
   hero
@@ -26,8 +26,8 @@ const href = (id: string) => base + SERVICES.find((s) => s.id === id)!.href;
       </div>
       <div class="wrap cn-head">
         <span class="eyebrow">Cenník</span>
-        <h1>Prvé video zadarmo. <em>Potom platíte na dve časti.</em></h1>
-        <p class="lead">Ceny sú bez DPH, pri každej je aj cena s DPH {Math.round(VAT_RATE * 100)} %. Obsah na sociálne siete je bez viazanosti.</p>
+        <h1>Prvé video zadarmo. <em>Potom na študentskú dohodu.</em></h1>
+        <p class="lead">Zatiaľ nie sme firma, preto platba prebieha len cez študentskú dohodu. Ceny sú naša odmena v čistom, pri každej je aj orientačná hrubá odmena na dohode. Obsah na sociálne siete je bez viazanosti.</p>
         <nav class="cn-jump" aria-label="Časti cenníka">
           <a href="#videa">Videá nehnuteľností</a><a href="#vizualizacie">Vizualizácie</a><a href="#siete">Obsah na siete</a><a href="#doplnky">Doplnky</a>
         </nav>
@@ -36,7 +36,7 @@ const href = (id: string) => base + SERVICES.find((s) => s.id === id)!.href;
 
     <section class="section" aria-labelledby="h-platba">
       <div class="wrap">
-        <div class="section-head"><span class="eyebrow">Ako platíte</span><h2 id="h-platba">Bez rizika pre vás</h2></div>
+        <div class="section-head"><span class="eyebrow">Ako platíte</span><h2 id="h-platba">Len cez študentskú dohodu</h2></div>
         <PaymentSteps />
       </div>
     </section>

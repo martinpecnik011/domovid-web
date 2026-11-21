@@ -1,5 +1,5 @@
 ---
-import { PRICES, withVat } from '../../config/site';
+import { PRICES, grossPay } from '../../config/site';
 
 export interface Props {
   group: 'video' | 'social' | 'all';
@@ -18,7 +18,7 @@ const groups = [
         {g.items.map((a) => (
           <li>
             <span class="ap-name">{a.name}<span class="muted"> · {a.desc}</span></span>
-            <span class="ap-price">+{a.price} € <span class="muted">/ {a.unit} bez DPH · {withVat(a.price)} s DPH</span></span>
+            <span class="ap-price">+{a.price} € <span class="muted">/ {a.unit} v čistom · hrubá {grossPay(a.price)}</span></span>
           </li>
         ))}
       </ul>

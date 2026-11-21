@@ -1,6 +1,6 @@
 ---
-// Clean price list: one row per package — name and what's included on the left, price (net and with VAT) on the right.
-import { withVat } from '../../config/site';
+// Clean price list: one row per package — name and what's included on the left, price (net and gross pay on the student agreement) on the right.
+import { grossPay } from '../../config/site';
 
 export interface Row { name: string; detail: string; price: number; unit: string; featured?: boolean; badge?: string; href: string }
 export interface Props { rows: Row[] }
@@ -17,7 +17,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
       <div class="pr-price">
         {r.price === 0
           ? <><span class="amount">0 €</span><span class="vat">ukážka zadarmo</span></>
-          : <><span class="amount">{r.price} € <span>/ {r.unit}</span></span><span class="vat">bez DPH · <strong>{withVat(r.price)}</strong> s DPH</span></>}
+          : <><span class="amount">{r.price} € <span>/ {r.unit}</span></span><span class="vat">v čistom · hrubá odmena na dohode <strong>{grossPay(r.price)}</strong></span></>}
       </div>
       <a class:list={['btn btn-sm', r.featured ? 'btn-brass' : 'btn-ghost']} href={base + r.href}>Chcem ponuku</a>
     </li>

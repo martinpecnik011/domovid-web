@@ -113,13 +113,11 @@ const offerOf = (
     url: SITE_URL + svc.href,
     price,
     priceCurrency: 'EUR',
-    valueAddedTaxIncluded: false,
-    priceSpecification: {
+        priceSpecification: {
       '@type': 'UnitPriceSpecification',
       price,
       priceCurrency: 'EUR',
-      valueAddedTaxIncluded: false,
-      unitText,
+            unitText,
     },
     itemOffered: {
       '@type': 'Service',

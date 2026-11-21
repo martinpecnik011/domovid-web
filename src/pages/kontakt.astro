@@ -25,7 +25,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
       <li><span class="eyebrow">Facebook</span><a href={FACEBOOK_URL} target="_blank" rel="noopener">Domovid</a></li>
       <li><span class="eyebrow">YouTube</span><a href={YOUTUBE_URL} target="_blank" rel="noopener">Domovid</a></li>
       <li><span class="eyebrow">TikTok</span><a href={TIKTOK_URL} target="_blank" rel="noopener">@domo_vid</a></li>
-      <li><span class="eyebrow">Platba</span><span>Prvé video zadarmo, potom polovica vopred a polovica po odovzdaní, prevodom na účet (IBAN).</span></li>
+      <li><span class="eyebrow">Platba</span><span>Prvé video zadarmo, potom len na študentskú dohodu s odmenou po odovzdaní. <a class="kt-inline" href={`${base}o-nas/`}>Prečo?</a></span></li>
     </ul>
   </main>
 </Base>
@@ -38,5 +38,6 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
   .kt-list li { display: grid; gap: 6px; padding: 24px 0; border-bottom: 1px solid var(--line); }
   .kt-list a { font-family: var(--f-display); font-stretch: 112%; font-weight: 700; font-size: clamp(1.2rem, 1.8vw, 1.6rem); text-decoration: none; overflow-wrap: anywhere; }
   .kt-list a:hover { color: var(--gold); }
+  .kt-list a.kt-inline { font: inherit; color: var(--gold); text-decoration: underline; }
   @media (max-width: 860px) { .kt { grid-template-columns: minmax(0, 1fr); } }
 </style>
