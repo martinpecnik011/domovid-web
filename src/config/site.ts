@@ -4,7 +4,7 @@ export const SITE_URL = 'https://domovid.sk/';
 /** Who answers and from which address the confirmation e-mail comes (Apps Script runs under this account). */
 /** Genitive for "od …" (from …). */
 export const OWNER_FROM = 'Martina Pecníka';
-export const CONTACT_EMAIL = 'martinpecnik011@gmail.com';
+export const CONTACT_EMAIL = 'info@domovid.sk';
 
 /** Lead form endpoint: Google Apps Script web app (see apps-script/SETUP.md). Empty string = form not connected. */
 export const FORM_ENDPOINT =
@@ -12,7 +12,7 @@ export const FORM_ENDPOINT =
 
 export const SITE_TITLE = 'Domovid – videá, vizualizácie a obsah na siete pre realitných maklérov';
 export const SITE_DESCRIPTION =
-  'Z fotiek vašej ponuky urobíme video do 48 hodín, prázdny byt premeníme na zariadený a postaráme sa o obsah na vaše sociálne siete. Pre realitných maklérov, od 50 € bez DPH.';
+  'Z fotiek vašej ponuky urobíme video do 48 hodín, prázdny byt premeníme na zariadený a postaráme sa o obsah na vaše sociálne siete. Pre realitných maklérov, od 50 €.';
 export const OG_TITLE = 'Domovid – videá, vizualizácie a sociálne siete pre makléra';
 
 /* ---------- Structured data / discoverability (single source for page copy and JSON-LD) ---------- */
@@ -30,17 +30,26 @@ export const AREA_SERVED = ['SK', 'CZ'];
 
 /** Delivery promise used across the site (accusative after "do"). */
 export const DELIVERY = '48 hodín';
-/** Slovak standard VAT rate; prices are stored net and shown with VAT underneath. */
+/** We are not a company yet: paid work runs only on a student agreement (dohoda o brigádnickej práci študentov). */
+export const STUDENT_AGREEMENT_FULL = 'dohoda o brigádnickej práci študentov';
+/** Prices are what we get net; the gross pay on the agreement is net × this factor, so tax and possible contributions are covered. */
+export const GROSS_FACTOR = 1.23;
+/** Gross pay on the student agreement formatted the Slovak way, e.g. 61,50 €. */
+export const grossPay = (net: number) =>
+  (Math.round(net * GROSS_FACTOR * 100) / 100).toLocaleString('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+/** Legacy VAT display still used by the app (/app/) price texts; the public web no longer shows VAT. */
 export const VAT_RATE = 0.23;
-/** Gross price formatted the Slovak way, e.g. 356,70 €. */
 export const withVat = (net: number) =>
   (Math.round(net * (1 + VAT_RATE) * 100) / 100).toLocaleString('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 /** How payment works, one sentence per step (pricing page, FAQ, app). */
 export const PAYMENT_STEPS = [
   'Prvé video na ukážku je zadarmo.',
-  'Potom polovicu ceny zaplatíte pred začatím práce.',
-  'Druhú polovicu zaplatíte po odovzdaní hotového videa.',
+  'Ďalšiu prácu robíme len na základe dohody o brigádnickej práci študentov, ktorú spolu podpíšeme pred začatím.',
+  'Odmenu nám vyplatíte po odovzdaní hotovej práce.',
 ];
+/** One-paragraph explanation of the prices under every price list. */
+export const PAY_NOTE =
+  `Zatiaľ nie sme firma ani platcovia DPH, preto spolupracujeme len na študentskú dohodu (${STUDENT_AGREEMENT_FULL}). Suma v cenníku je naša odmena v čistom. Hrubú odmenu na dohode nastavíme tak, aby po zrážkach (daň, prípadné odvody) vyšla práve táto suma, orientačne je to hrubá odmena uvedená pri cene. Podrobnosti si prejdeme pri podpise dohody.`;
 
 export interface PricePlan {
   name: string;
@@ -104,7 +113,7 @@ export const SERVICES: Service[] = [
   },
 ];
 
-/** All prices in EUR, without VAT. Every page and every FAQ answer reads them from here. */
+/** All prices in EUR, net (what we receive on the student agreement). Every page and every FAQ answer reads them from here. */
 export const PRICES = {
   video: { single: 50, monthly: 140, monthlyCount: 4 },
   viz: { single: 62, monthly: 200, monthlyCount: 4, maxViz: 5 },
@@ -127,7 +136,7 @@ export const PRICES = {
     ],
   },
   consentNote: 'Vyžaduje váš písomný súhlas s použitím hlasu a podoby.',
-  payment: 'Prvé video na ukážku je zadarmo. Potom polovicu zaplatíte pred začatím a druhú polovicu po odovzdaní, prevodom na účet (IBAN).',
+  payment: `Prvé video na ukážku je zadarmo. Ďalšia spolupráca prebieha len na študentskú dohodu (${STUDENT_AGREEMENT_FULL}) a odmenu vyplácate po odovzdaní hotovej práce.`,
 } as const;
 
 const V = PRICES.video;
@@ -167,11 +176,11 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: 'Ako rýchlo dostanem hotové video?',
-    a: `Do 48 hodín od prijatia fotiek. Mesačný balík má prednostné spracovanie, rýchlejšie spracovanie viete doobjednať aj k jednotlivému videu (expresne do 12 h, +${PRICES.addons.video[1].price} € bez DPH).`,
+    a: `Do 48 hodín od prijatia fotiek. Mesačný balík má prednostné spracovanie, rýchlejšie spracovanie viete doobjednať aj k jednotlivému videu (expresne do 12 h, +${PRICES.addons.video[1].price} €).`,
   },
   {
     q: 'Koľko stojí video z fotiek?',
-    a: `Jedno video stojí ${V.single} € bez DPH a je bez záväzku. Mesačný balík stojí ${V.monthly} € bez DPH mesačne a obsahuje ${V.monthlyCount} videá. Vizualizácie začínajú na ${Z.single} € bez DPH za video.`,
+    a: `Jedno video stojí ${V.single} € a je bez záväzku. Mesačný balík stojí ${V.monthly} € mesačne a obsahuje ${V.monthlyCount} videá. Vizualizácie začínajú na ${Z.single} € za video.`,
   },
   {
     q: 'Aké fotky treba priložiť?',
@@ -179,7 +188,11 @@ export const FAQ: FaqItem[] = [
   },
   {
     q: 'Čo ak sa mi výsledok nepáči?',
-    a: 'Prvá verzia príde ako náhľad na schválenie. Ak niečo nesedí, upravíme to. Stiahnutie v plnej kvalite je možné až po platbe prevodom na účet (IBAN).',
+    a: 'Prvá verzia príde ako náhľad na schválenie. Ak niečo nesedí, upravíme to. Stiahnutie v plnej kvalite je možné až po vyplatení odmeny podľa študentskej dohody.',
+  },
+  {
+    q: 'Ste firma?',
+    a: `Zatiaľ nie. Sme študenti a kým nebudeme plnohodnotná firma, spolupracujeme na študentskú dohodu (${STUDENT_AGREEMENT_FULL}). Viac na stránke O nás.`,
   },
   {
     q: 'Ako začať?',
@@ -194,7 +207,7 @@ export const FAQ_VIDEO: FaqItem[] = [
   },
   {
     q: 'Ako rýchlo dostanem hotové video?',
-    a: `Do 48 hodín od prijatia fotiek. Ak to potrebujete ešte skôr, expresné spracovanie do 12 h je za +${PRICES.addons.video[1].price} € bez DPH za video.`,
+    a: `Do 48 hodín od prijatia fotiek. Ak to potrebujete ešte skôr, expresné spracovanie do 12 h je za +${PRICES.addons.video[1].price} € za video.`,
   },
   {
     q: 'Aké fotky potrebujete?',
@@ -202,15 +215,15 @@ export const FAQ_VIDEO: FaqItem[] = [
   },
   {
     q: 'Koľko video stojí?',
-    a: `Jedno video stojí ${V.single} € bez DPH, bez záväzku. Mesačný balík stojí ${V.monthly} € bez DPH mesačne a zahŕňa ${V.monthlyCount} videá, teda ${V.monthly / V.monthlyCount} € bez DPH za video.`,
+    a: `Jedno video stojí ${V.single} €, bez záväzku. Mesačný balík stojí ${V.monthly} € mesačne a zahŕňa ${V.monthlyCount} videá, teda ${V.monthly / V.monthlyCount} € za video.`,
   },
   {
     q: 'Môžem dostať video na výšku aj na šírku?',
-    a: `Formát si vyberiete: 9:16 na sociálne siete alebo 16:9 na realitný portál a web. Oba formáty spolu sú za +${PRICES.addons.video[0].price} € bez DPH za video.`,
+    a: `Formát si vyberiete: 9:16 na sociálne siete alebo 16:9 na realitný portál a web. Oba formáty spolu sú za +${PRICES.addons.video[0].price} € za video.`,
   },
   {
     q: 'Čo ak sa mi výsledok nepáči?',
-    a: 'Prvá verzia príde ako náhľad na schválenie. Ak niečo nesedí, upravíme to. Plnú kvalitu si stiahnete až po schválení a platbe prevodom na účet (IBAN).',
+    a: 'Prvá verzia príde ako náhľad na schválenie. Ak niečo nesedí, upravíme to. Plnú kvalitu si stiahnete po schválení a vyplatení odmeny podľa študentskej dohody.',
   },
 ];
 
@@ -225,7 +238,7 @@ export const FAQ_VIZ: FaqItem[] = [
   },
   {
     q: 'Koľko vizualizácie stoja?',
-    a: `Jedno video stojí ${Z.single} € bez DPH. Mesačný balík stojí ${Z.monthly} € bez DPH mesačne a zahŕňa ${Z.monthlyCount} nehnuteľnosti mesačne.`,
+    a: `Jedno video stojí ${Z.single} €. Mesačný balík stojí ${Z.monthly} € mesačne a zahŕňa ${Z.monthlyCount} nehnuteľnosti mesačne.`,
   },
   {
     q: 'Aké podklady potrebujete?',
@@ -248,7 +261,7 @@ export const FAQ_SOCIAL: FaqItem[] = [
   },
   {
     q: 'Aké balíky ponúkate?',
-    a: `${S.plans.map((p) => `${p.videos} videí za ${p.price} €`).join(', ')} mesačne, všetko bez DPH. Pri väčšom balíku vychádza video lacnejšie: ${S.plans.map((p) => `${p.price / p.videos} €`).join(', ')} bez DPH za video.`,
+    a: `${S.plans.map((p) => `${p.videos} videí za ${p.price} €`).join(', ')} mesačne v čistom. Pri väčšom balíku vychádza video lacnejšie: ${S.plans.map((p) => `${p.price / p.videos} €`).join(', ')} za video.`,
   },
   {
     q: 'Čo je v cene každého videa?',
@@ -260,7 +273,7 @@ export const FAQ_SOCIAL: FaqItem[] = [
   },
   {
     q: 'Môžem mať obsah s vlastným hlasom alebo avatarom?',
-    a: `Áno. Klon hlasu je +${PRICES.addons.social[0].price} € bez DPH mesačne, digitálne dvojča (hlas aj avatar) +${PRICES.addons.social[1].price} € bez DPH mesačne. ${PRICES.consentNote}`,
+    a: `Áno. Klon hlasu je +${PRICES.addons.social[0].price} € mesačne, digitálne dvojča (hlas aj avatar) +${PRICES.addons.social[1].price} € mesačne. ${PRICES.consentNote}`,
   },
   {
     q: 'Ako prebieha schvaľovanie a platba?',
@@ -270,27 +283,27 @@ export const FAQ_SOCIAL: FaqItem[] = [
 
 export const FAQ_PRICING: FaqItem[] = [
   {
-    q: 'Sú ceny s DPH alebo bez DPH?',
-    a: `Hlavná cena je bez DPH, pod ňou je vždy uvedená aj cena s DPH ${Math.round(VAT_RATE * 100)} %.`,
+    q: 'Prečo pri cenách nie je DPH?',
+    a: `Zatiaľ nie sme firma ani platcovia DPH. Spolupracujeme len na študentskú dohodu (${STUDENT_AGREEMENT_FULL}). Hlavná suma je naša odmena v čistom, pod ňou je orientačná hrubá odmena na dohode.`,
   },
   {
     q: 'Koľko stojí video z fotiek?',
-    a: `Jedno video ${V.single} € bez DPH. Mesačný balík ${V.monthly} € bez DPH mesačne zahŕňa ${V.monthlyCount} videá.`,
+    a: `Jedno video ${V.single} €. Mesačný balík ${V.monthly} € mesačne zahŕňa ${V.monthlyCount} videá. Sumy sú v čistom.`,
   },
   {
     q: 'Koľko stoja vizualizácie?',
-    a: `Jedno video ${Z.single} € bez DPH. Mesačný balík ${Z.monthly} € bez DPH mesačne zahŕňa ${Z.monthlyCount} nehnuteľnosti, na každú najviac ${Z.maxViz} vizualizácií.`,
+    a: `Jedno video ${Z.single} €. Mesačný balík ${Z.monthly} € mesačne zahŕňa ${Z.monthlyCount} nehnuteľnosti, na každú najviac ${Z.maxViz} vizualizácií.`,
   },
   {
     q: 'Koľko stojí obsah na sociálne siete?',
-    a: `${S.plans.map((p) => `${p.videos} videí ${p.price} €`).join(', ')} bez DPH mesačne, bez viazanosti.`,
+    a: `${S.plans.map((p) => `${p.videos} videí ${p.price} €`).join(', ')} mesačne, bez viazanosti.`,
   },
   {
     q: 'Aké doplnky si viem priobjednať?',
-    a: `Pri videách: oba formáty +${PRICES.addons.video[0].price} € a expresne do 12 h +${PRICES.addons.video[1].price} € za video. Pri sociálnych sieťach: klon hlasu +${PRICES.addons.social[0].price} € a digitálne dvojča +${PRICES.addons.social[1].price} € mesačne. Všetko bez DPH.`,
+    a: `Pri videách: oba formáty +${PRICES.addons.video[0].price} € a expresne do 12 h +${PRICES.addons.video[1].price} € za video. Pri sociálnych sieťach: klon hlasu +${PRICES.addons.social[0].price} € a digitálne dvojča +${PRICES.addons.social[1].price} € mesačne. Sumy sú v čistom.`,
   },
   {
     q: 'Ako platím?',
-    a: `${PAYMENT_STEPS.join(' ')} Platí sa prevodom na účet (IBAN).`,
+    a: `${PAYMENT_STEPS.join(' ')} Odmenu vyplácate ako pri každej dohode, na účet študenta.`,
   },
 ];

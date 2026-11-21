@@ -4,12 +4,12 @@
 
 ## Služby
 
-- Videá nehnuteľností: z 4–6 fotiek vám pripravíme vertikálne video, jednotlivo alebo v mesačnom balíku. Prvá verzia príde ako náhľad na schválenie; stiahnutie v plnej kvalite je možné až po platbe.
+- Videá nehnuteľností: z 4–6 fotiek vám pripravíme vertikálne video, jednotlivo alebo v mesačnom balíku. Prvá verzia príde ako náhľad na schválenie; stiahnutie v plnej kvalite je možné až po vyplatení odmeny.
 - Vizualizácie: video s vizualizáciou prostredia, jednotlivo alebo v mesačnom balíku, najviac 5 vizualizácií na nehnuteľnosť.
 - Sociálne siete: mesačné vedenie obsahu na sociálnych sieťach (10, 15 alebo 30 videí mesačne), viazanosť 3 mesiace.
 - Videá vytvára AI zo statických fotiek; ukážky na webe sú AI koncepty štýlu Domovid, nie reálne inzeráty.
 
-## Cenník (bez DPH, platba prevodom na účet – IBAN)
+## Cenník (odmena v čistom; zatiaľ nie sme firma ani platcovia DPH, platba len cez dohodu o brigádnickej práci študentov, hrubá odmena ≈ čistá × 1,23)
 
 - Video: 50 € za video, alebo 140 € mesačne (4 nehnuteľnosti).
 - Video s vizualizáciou: 62 € za video, alebo 200 € mesačne.
@@ -20,11 +20,11 @@
 
 1. Pošlite 4–6 fotiek nehnuteľnosti cez WhatsApp alebo formulár na webe. Stačí mobil.
 2. Pripravíme video a pošleme vám náhľad na schválenie.
-3. Po schválení a platbe prevodom na účet (IBAN) si stiahnete video v plnej kvalite a publikujete ho.
+3. Prvé video je zadarmo. Ďalšia práca len na študentskú dohodu; po odovzdaní a vyplatení odmeny si stiahnete video v plnej kvalite a publikujete ho.
 
 ## Kontakt
 
-- E-mail: martinpecnik011@gmail.com
+- E-mail: info@domovid.sk
 - WhatsApp: +421 915 384 940 (https://wa.me/421915384940)
 - Instagram: https://www.instagram.com/domo_vid/
 - Facebook: https://www.facebook.com/1216967761499957
@@ -38,6 +38,7 @@
 - [Vizualizácie](https://domovid.sk/vizualizacie/)
 - [Sociálne siete](https://domovid.sk/socialne-siete/)
 - [Ukážky](https://domovid.sk/ukazky/)
+- [O nás](https://domovid.sk/o-nas/): kto sme, prečo zatiaľ nie sme firma a ako funguje študentská dohoda
 - [Cenník](https://domovid.sk/cennik/)
 - [Kontakt](https://domovid.sk/kontakt/)
 - [Ochrana osobných údajov](https://domovid.sk/ochrana-sukromia/)
