@@ -465,18 +465,15 @@ async function miniChatScenario(tag, viewport, mobile) {
   await page.reload();
   await page.waitForTimeout(1600);
   check(`${tag} sign-up prompt is not repeated within the visit`, await t('register-prompt').isHidden());
-  check(`${tag} mini chat stays closed until clicked`, await page.locator('#cb-panel').isHidden());
+  check(`${tag} chat button links straight to the full chat`, (await page.locator('.cb-bubble').getAttribute('href')) === '/app/' && (await page.locator('[data-chat-link]').first().getAttribute('href')) === '/app/');
+  await page.evaluate(() => { document.querySelector('.cb-bubble').setAttribute('href', '/app/?mock=1'); });
   await page.locator('.cb-bubble').click();
-  check(`${tag} minichat: sign-up and sign-in offered`, (await page.getByRole('link', { name: 'Zaregistrovať sa' }).isVisible()) && (await page.locator('[data-cb-auth]').getByRole('link', { name: 'Prihlásiť sa' }).isVisible()));
-  await page.evaluate(() => { document.getElementById('cb').dataset.app = '/app/?mock=1'; });
-  await page.locator('#cb-text').fill('Dobrý deň, mám byt v centre.');
-  await page.locator('.cb-send').click();
   await page.waitForURL(/\/app\//);
   await t('login-email').fill('mini@example.com');
   await t('login-submit').click();
   await t('code-0').fill('123456');
   await t('composer-text').waitFor();
-  check(`${tag} minichat: typed text is prefilled in the full chat`, (await t('composer-text').inputValue()) === 'Dobrý deň, mám byt v centre.');
+  check(`${tag} chat button: after sign-in the full chat is open`, await t('composer-text').isVisible());
   const rec = await page.evaluate(() => localStorage.getItem('domovid-login-at'));
   check(`${tag} sign-in time is recorded for the 30-day limit`, !!rec && JSON.parse(rec).t > Date.now() - 60000, rec);
   await page.evaluate(() => { const r = JSON.parse(localStorage.getItem('domovid-login-at')); r.t = Date.now() - 31 * 864e5; localStorage.setItem('domovid-login-at', JSON.stringify(r)); });
@@ -484,8 +481,8 @@ async function miniChatScenario(tag, viewport, mobile) {
   await t('login').waitFor();
   check(`${tag} after 30 days the customer is signed out with an explanation`, (await t('app-error').innerText()).includes('po 30 dňoch'));
   await page.goto(SITE + '/app/?mock=1&registracia=1');
-  check(`${tag} minichat: sign-up link opens "Vytvorte si účet" (or the chat when signed in)`, (await t('login-signup-note').count()) === 1 || (await t('composer-text').count()) === 1);
-  check(`${tag} minichat no console/page errors`, errs.length === 0, errs.join(' | '));
+  check(`${tag} sign-up link opens "Vytvorte si účet" (or the chat when signed in)`, (await t('login-signup-note').count()) === 1 || (await t('composer-text').count()) === 1);
+  check(`${tag} chat button no console/page errors`, errs.length === 0, errs.join(' | '));
   await ctx.close();
 }
 
